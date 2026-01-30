@@ -1,0 +1,87 @@
+# Domain: Digital Marketplace for Services (non-retail)
+# Problem Statement: Service Quality, Rating & Dispute Management Platform
+# Last Updated: 2026-01-30
+
+Customer:
+  definition: >
+    An individual or entity seeking to hire a professional to perform a specific 
+    task or job.
+  examples:
+    - "The Customer browse the catalog for a plumber."
+    - "A Customer initiated a booking request for next Tuesday."
+  aliases:
+    - Client
+    - Homeowner
+    - Buyer
+
+Service Provider:
+  definition: >
+    A professional, skilled worker, or agency offering their labor and expertise 
+    for hire to complete tasks.
+  examples:
+    - "The Service Provider accepted the cleaning job."
+    - "A Service Provider updated their portfolio with recent work photos."
+  aliases:
+    - Professional
+    - Vendor
+    - Freelancer
+
+Service Listing:
+  definition: >
+    A catalog entry created by a Service Provider that describes a specific 
+    skill, package, or task they are willing to perform, including its price and duration.
+  examples:
+    - "The electrician published a new Service Listing for 'Fan Installation'."
+    - "The price in the Service Listing includes material costs."
+  aliases:
+    - Gig
+    - Service Package
+    - Offer
+
+Booking:
+  definition: >
+    A mutual agreement where a Customer reserves a Service Provider's time 
+    for a specific job in exchange for payment.
+  examples:
+    - "The Booking was confirmed for Friday morning."
+    - "The Service Provider cancelled the Booking due to an emergency."
+  aliases:
+    - Appointment
+    - Reservation
+    - Job Order
+
+Feedback:
+  definition: >
+    A qualitative and quantitative assessment given by a Customer regarding 
+    the quality of work delivered by a Service Provider.
+  examples:
+    - "Positive Feedback helps a provider get more jobs."
+    - "The Feedback mentioned that the provider was punctual."
+  aliases:
+    - Review
+    - Rating
+    - Testimonial
+
+Dispute:
+  definition: >
+    A formal disagreement raised when the delivered work fails to meet the 
+    agreed standards or expectations set during the booking.
+  examples:
+    - "The Customer filed a Dispute claiming the appliance is still broken."
+    - "The Dispute was resolved after the provider agreed to redo the work."
+  aliases:
+    - Complaint
+    - Conflict
+    - Grievance
+
+Refund:
+  definition: >
+    The return of monetary funds to a Customer due to service cancellation 
+    or a successful dispute claim.
+  examples:
+    - "The bank processed the Refund within 24 hours."
+    - "A partial Refund was issued for the unfinished portion of the job."
+  aliases:
+    - Reimbursement
+    - Money Back
+    - Reversal
