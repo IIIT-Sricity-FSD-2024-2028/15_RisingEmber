@@ -1,83 +1,94 @@
-# Team 15_RisingEmber
-## Problem: Service Quality, Rating & Dispute Management System
+# Service Quality, Rating & Dispute Management System
+### Team 15_RisingEmber
 
-**Domain:** Service Quality & Dispute Management
+![Project Status](https://img.shields.io/badge/Status-In%20Development-orange?style=flat-square)
+![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+
+---
+
+## 📋 Project Overview
+
+**Domain:** Digital Marketplace Servicec (non-retail)
+
+The **Service Quality & Dispute Management System** is a secure, intermediate platform designed to eliminate financial risk and operational friction in the gig economy. By integrating an **automated escrow vault** with a human-in-the-loop **arbitration layer**, the system bridges the trust gap between Customers and Service Providers.
+
+Unlike traditional booking platforms that leave users vulnerable to fraud or substandard work, our system acts as a neutral guardian of the transaction. It ensures that funds are protected, identities are verified, and conflicts are resolved objectively using immutable evidence.
 
 ---
 
 ## 📌 Problem Statement
-Service marketplaces currently lack a transparent, evidence-based mechanism to handle conflicts, resulting in financial loss and mistrust between Customers and Service Providers when service standards are not met.
 
-## 📖 Description
-The **Service Quality & Dispute Management System** is a secure intermediary platform designed to bridge the trust gap between Customers and Service Providers. By integrating an arbitration layer directly into the booking workflow, we ensure that payments are protected and disputes are resolved fairly using non-repudiable evidence.
-
-Unlike standard booking applications, our system acts as a neutral guardian of the transaction through three key mechanisms:
-1.  **Escrow Payments:** Funds are secured in a holding vault upon booking and are only released when the service is successfully delivered.
-2.  **Identity Verification:** All service providers undergo mandatory ID verification to ensure accountability.
-3.  **Arbitration Layer:** In the event of a disagreement, a neutral third-party Arbitrator reviews non-repudiable evidence (chat logs, photos, and contracts) to issue a binding ruling, ensuring a fair outcome for both parties.
+In current service marketplaces, trust is a significant barrier to adoption. Customers hesitate to pay upfront due to fear of low-quality work, while Service Providers face risks of non-payment or unjustified chargebacks. Existing platforms lack a transparent, evidence-based mechanism to handle these conflicts, often resulting in:
+* Financial loss for one or both parties.
+* Arbitrary dispute resolutions without proper evidence.
+* A deterioration of platform trust and user retention.
 
 ---
 
-## 🎭 Identified Actors
-Based on our system architecture, the following actors interact with the platform:
+## 🛡️ Core Solution Architecture
 
-1.  **Customer:** The primary user who searches for services, makes bookings, and pays for them.
-2.  **Service Provider:** The professional who lists their services, performs the work, and receives payment upon successful completion.
-3.  **Arbitrator:** A neutral third-party responsible for reviewing evidence and resolving disputes between the Customer and Provider.
-4.  **Banking Server (External):** An external financial system that handles the actual processing of refunds and secure transactions.
+Our solution enforces fairness through three non-negotiable mechanisms:
 
----
-
-## 🛠️ Planned Features (Per Actor)
-
-### 👤 Customer
-* **Search & Filter Services:** Browse available services based on category, price, and rating.
-* **Book Service:** Initiate a booking request and secure the time slot.
-* **Make Payment:** Deposit funds into the secure escrow system.
-* **Access Chat Window:** Communicate with the provider for job details (logged for evidence).
-* **Provide Feedback:** Rate and review the provider after job completion.
-* **Report & Escalate Issue:** Raise a formal dispute and submit evidence (photos/chats) if the service is unsatisfactory.
-
-### 👷 Service Provider
-* **Manage Service Listings:** Create, update, or delete service offerings and prices.
-* **ID Verification:** Upload credentials to prove identity and build trust (KYC).
-* **Access Chat Window:** Communicate with the customer regarding booking details.
-
-### ⚖️ Arbitrator
-* **Evidence Verification:** Review the chat logs, photos, and documents submitted by both parties.
-* **Give Ruling (Verdict):** Issue a binding decision on the dispute.
-    * *Triggers:* **Notification of Ruling** sent to all parties.
-    * *Triggers:* **Sanctions & Warnings** for the party at fault.
-    * *Triggers:* **Process Refunds** or release of funds based on the verdict.
-
-### 🏦 Banking Server (External System)
-* **Process Refunds:** Execute the financial transaction to return money to the Customer or transfer it to the Provider based on the Arbitrator's ruling.
+1.  **Escrow-First Payments:** Funds are secured in a holding vault immediately upon booking. They are not released to the Provider until the Customer confirms satisfactory delivery, nor can they be withdrawn by the Customer without cause.
+2.  **Mandatory Identity Verification (KYC):** All Service Providers undergo strict identity verification to prevent anonymous fraud and ensure accountability.
+3.  **Evidence-Based Arbitration:** In the event of a dispute, a neutral Arbitrator reviews a complete audit trail—including chat logs, shared media, and contract terms—to issue a binding verdict.
 
 ---
 
-## 👥 Collaborators
+## 🎭 Identified Actors & Roles
 
-<table>
+| Actor | Role Description |
+| :--- | :--- |
+| **👤 Customer** | The primary end-user who searches for services, initiates bookings, and deposits funds into escrow. |
+| **👷 Service Provider** | The skilled professional who lists services, undergoes KYC verification, and executes the work. |
+| **⚖️ Arbitrator** | A neutral third-party official with access to sensitive dispute dashboards to review evidence and issue rulings. |
+| **🏦 Banking Server** | An external financial system responsible for processing secure transactions, holding escrow funds, and executing refund/release triggers. |
+
+---
+
+## 🛠️ Functional Capabilities
+
+### For Customers
+* **Service Discovery:** Advanced filtering by category, price, and verified ratings.
+* **Secure Booking:** Initiate requests with real-time slot locking.
+* **Escrow Deposit:** Securely transfer funds to the holding vault.
+* **Evidence Logging:** In-app chat and media sharing are automatically archived for dispute protection.
+* **Dispute Escalation:** One-click escalation to the Arbitration Council if service standards are not met.
+
+### For Service Providers
+* **Listing Management:** Dynamic control over service offerings and pricing.
+* **Credential Verification:** Secure upload portal for government ID and certifications.
+* **Payment Assurance:** Guarantee of funds availability before work begins (via Escrow status).
+
+### For Arbitrators
+* **Case Dashboard:** Centralized view of all active disputes and their urgency levels.
+* **Evidence Audit:** Read-only access to the specific transaction's chat logs, photos, and contracts.
+* **Binding Verdicts:** Ability to trigger immediate fund release or refunds based on the investigation.
+
+---
+
+## 👥 Team: 15_RisingEmber
+
+<table align="center">
   <tr>
-    <td align="center" width="200px">
-      👤 <br/>
-      <b>Ashwin</b>
+    <td align="center" width="150px">
+      👤<br/><b>Ashwin</b><br/>
     </td>
-    <td align="center" width="200px">
-      👤 <br/>
-      <b>Ayush</b>
+    <td align="center" width="150px">
+      👤<br/><b>Ayush</b><br/>
     </td>
-    <td align="center" width="200px">
-      👤 <br/>
-      <b>Durga</b>
+    <td align="center" width="150px">
+      👤<br/><b>Durga</b><br/>
     </td>
-    <td align="center" width="200px">
-      👤 <br/>
-      <b>Jayanth</b>
+    <td align="center" width="150px">
+      👤<br/><b>Jayanth</b><br/>
     </td>
-    <td align="center" width="200px">
-      👤 <br/>
-      <b>Kenneth</b>
+    <td align="center" width="150px">
+      👤<br/><b>Kenneth</b><br/>
     </td>
   </tr>
 </table>
+
+---
+
+*This project is being developed as part of the Software Engineering curriculum at IIIT Sri City.*
