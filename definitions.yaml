@@ -85,3 +85,67 @@ Refund:
     - Reimbursement
     - Money Back
     - Reversal
+
+TicketingSystem: Ticketing System
+definition:
+  A centralized system used to log, track, manage, and resolve customer complaints, feedback, service issues, and disputes throughout their lifecycle.
+examples:
+  - A customer raises a service complaint which is assigned a ticket ID and tracked until resolution.
+aliases:
+  - Case Management System
+  - Issue Tracking System
+
+IVR: Interactive Voice Response
+definition:
+  An automated phone-based system that interacts with customers using voice or keypad inputs to provide information or route calls to the appropriate support channel.
+examples:
+  - A customer calling support hears menu options and is routed to dispute resolution.
+aliases:
+  - Automated Call Routing
+  - Voice Menu System
+
+ServiceLevelExpectation: Service-Level Expectation
+definition:
+  The agreed-upon response or resolution time promised to a customer for handling service requests, complaints, or disputes.
+examples:
+  - Commitment to resolve high-priority disputes within 48 hours.
+aliases:
+  - SLA Expectation
+  - Service Commitment
+
+EscalationMatrix: Escalation Matrix
+definition:
+  A predefined hierarchy that specifies how and when unresolved, complex, or high-severity issues are escalated to higher authorities or specialized roles.
+examples:
+  - Escalating unresolved disputes from support staff to an arbitrator.
+aliases:
+  - Escalation Path
+  - Issue Escalation Framework
+
+MakerChecker: Maker-Checker
+definition:
+  A control mechanism where one role initiates or processes a request (maker) and another independent role reviews and validates it (checker) to ensure accuracy and compliance.
+examples:
+  - One staff member processes a refund request while another validates it before execution.
+aliases:
+  - Four-Eyes Principle
+  - Dual Control Mechanism
+
+ProcessOwner: Process Owner
+definition:
+  A designated subject matter expert responsible for governance, decisions, and accountability of a specific business or system process.
+examples:
+  - An arbitrator acting as the process owner for dispute resolution workflows.
+aliases:
+  - Process Lead
+  - Business Owner
+
+TransactionLogs: Transaction Logs
+definition:
+  Backend system records that capture detailed transaction activities used to verify claims, audit actions, and validate evidence during disputes.
+examples:
+  - Payment logs used to confirm whether a service payment was successfully processed.
+aliases:
+  - Audit Logs
+  - System Logs
+  
