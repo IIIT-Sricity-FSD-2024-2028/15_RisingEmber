@@ -48,23 +48,27 @@ Our solution enforces fairness through three non-negotiable mechanisms:
 
 ## 🛠️ Functional Capabilities
 
-### For Customers
+### 👤 For Customers
 * **Service Discovery:** Advanced filtering by category, price, and verified ratings.
 * **Secure Booking:** Initiate requests with real-time slot locking.
 * **Escrow Deposit:** Securely transfer funds to the holding vault.
 * **Evidence Logging:** In-app chat and media sharing are automatically archived for dispute protection.
 * **Dispute Escalation:** One-click escalation to the Arbitration Council if service standards are not met.
 
-### For Service Providers
+### 👷 For Service Providers
 * **Listing Management:** Dynamic control over service offerings and pricing.
 * **Credential Verification:** Secure upload portal for government ID and certifications.
 * **Payment Assurance:** Guarantee of funds availability before work begins (via Escrow status).
 
-### For Arbitrators
+### ⚖️ For Arbitrators
 * **Case Dashboard:** Centralized view of all active disputes and their urgency levels.
 * **Evidence Audit:** Read-only access to the specific transaction's chat logs, photos, and contracts.
 * **Binding Verdicts:** Ability to trigger immediate fund release or refunds based on the investigation.
 
+### 🏦 For Banking Server (External System)
+* **Transaction Processing:** securely handles real-time debit and credit operations via API.
+* **Escrow Management:** Maintains funds in a "Locked/Holding" state until an explicit release signal is received.
+* **Refund Execution:** Processes partial or full refunds instantly upon receiving a verdict trigger from the Arbitrator.
 ---
 
 ## 👥 Team: 15_RisingEmber
