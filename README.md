@@ -8,9 +8,9 @@
 
 ## 📋 Project Overview
 
-**Domain:** Digital Marketplace Servicec (non-retail)
+**Domain:** Digital Marketplace Services (non-retail)
 
-The **Service Quality & Dispute Management System** is a secure, intermediate platform designed to eliminate financial risk and operational friction in the gig economy. By integrating an **automated escrow vault** with a human-in-the-loop **arbitration layer**, the system bridges the trust gap between Customers and Service Providers.
+The **Service Quality, Rating & Dispute Management System** is a secure, intermediate platform designed to eliminate financial risk and operational friction in the gig economy. By integrating an **automated escrow vault** with a human-in-the-loop **arbitration layer**, the system bridges the trust gap between Customers and Service Providers.
 
 Unlike traditional booking platforms that leave users vulnerable to fraud or substandard work, our system acts as a neutral guardian of the transaction. It ensures that funds are protected, identities are verified, and conflicts are resolved objectively using immutable evidence.
 
@@ -66,9 +66,10 @@ Our solution enforces fairness through three non-negotiable mechanisms:
 * **Binding Verdicts:** Ability to trigger immediate fund release or refunds based on the investigation.
 
 ### 🏦 For Banking Server (External System)
-* **Transaction Processing:** securely handles real-time debit and credit operations via API.
+* **Transaction Processing:** Securely handles real-time debit and credit operations via API.
 * **Escrow Management:** Maintains funds in a "Locked/Holding" state until an explicit release signal is received.
 * **Refund Execution:** Processes partial or full refunds instantly upon receiving a verdict trigger from the Arbitrator.
+
 ---
 
 ## 👥 Team: 15_RisingEmber
