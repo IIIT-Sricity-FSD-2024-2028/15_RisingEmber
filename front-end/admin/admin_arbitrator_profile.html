@@ -152,8 +152,15 @@
             return `data:text/plain;charset=utf-8,${encodeURIComponent(summary)}`;
         }
 
-        function initProfile() {
-            if(!currentArb) { alert("Arbitrator not found!"); window.location.href='admin_arbitrators.html'; return; }
+        async function initProfile() {
+            if(!currentArb) {
+                await showAppModal("Arbitrator Not Found", "That arbitrator record is no longer available.", {
+                    type: "danger",
+                    okText: "Back to Arbitrators"
+                });
+                window.location.href='admin_arbitrators.html';
+                return;
+            }
 
             // Hero
             document.getElementById('p-avatar').src = currentArb.avatar;
@@ -205,11 +212,15 @@
             document.getElementById('in-notes').value = currentArb.adminNotes || "";
         }
 
-        function saveProfileChanges() {
+        async function saveProfileChanges() {
             const name = document.getElementById('in-name').value.trim();
             const email = document.getElementById('in-email').value.trim();
             if (!name || !email) {
                 alert("Arbitrator name and email are required.");
+                return;
+            }
+            if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
+                alert("Please enter a valid full name using letters only.");
                 return;
             }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -233,7 +244,7 @@
 
             saveAdminData();
             logAdminActivity(`Updated arbitrator ${currentArb.id}`);
-            alert("Arbitrator profile updated successfully!");
+            await showAppModal("Arbitrator Updated", "Arbitrator profile updated successfully.", { okText: "Refresh Profile" });
             location.reload();
         }
 
@@ -253,7 +264,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', initProfile);
+        document.addEventListener('DOMContentLoaded', () => { initProfile(); });
     </script>
 </body>
 </html>

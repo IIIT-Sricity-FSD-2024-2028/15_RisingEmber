@@ -97,7 +97,7 @@
             document.getElementById("userPass").type = "text"; 
         }
 
-        document.getElementById('createUserForm').addEventListener('submit', function(e) {
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
             try {
@@ -106,11 +106,15 @@
                     throw new Error("Local Database (AdminData) is not initialized correctly.");
                 }
 
-                const name = document.getElementById('fullName').value;
-                const email = document.getElementById('emailAddr').value;
+                const name = document.getElementById('fullName').value.trim();
+                const email = document.getElementById('emailAddr').value.trim();
                 const role = document.getElementById('userRole').value;
                 const statusRadio = document.querySelector('input[name="status"]:checked');
                 const status = statusRadio ? statusRadio.value : "Active";
+
+                if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
+                    throw new Error("Please enter a valid full name using letters only.");
+                }
 
                 const newUser = {
                     id: "USR-" + Math.floor(1000 + Math.random() * 9000),
@@ -133,11 +137,11 @@
                 // Save
                 saveAdminData();
 
-                alert("Success: User " + name + " created.");
+                await showAppModal("User Created", "Success: User " + name + " created.", { okText: "Back to Users" });
                 window.location.href = 'admin_users.html';
             } catch (err) {
                 console.error("Submission Error Details:", err);
-                alert("Critical Error: " + err.message + "\nCheck browser console for details.");
+                await showAppModal("User Creation Failed", "Critical Error: " + err.message + "\nCheck browser console for details.", { type: "danger" });
             }
         });
     </script>

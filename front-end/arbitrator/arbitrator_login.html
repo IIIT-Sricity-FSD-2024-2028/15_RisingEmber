@@ -173,7 +173,7 @@
     }
 
     if (forgotPasswordLink) {
-      forgotPasswordLink.addEventListener('click', (event) => {
+      forgotPasswordLink.addEventListener('click', async (event) => {
         event.preventDefault();
         const email = document.getElementById('loginEmail').value.trim();
         if (!email) {
@@ -181,8 +181,13 @@
           return;
         }
 
-        const nextPassword = window.prompt('Enter a new password for this arbitrator account.');
-        if (nextPassword === null) return;
+        const nextPassword = typeof window.showAppPrompt === 'function'
+          ? await window.showAppPrompt('Reset Password', `Enter a new password for this arbitrator account: ${email}`, {
+              inputType: 'password',
+              placeholder: 'New password (8+ chars)'
+            })
+          : window.prompt('Enter a new password for this arbitrator account.');
+        if (nextPassword === null || nextPassword === false) return;
 
         try {
           resetArbitratorPassword(email, nextPassword);

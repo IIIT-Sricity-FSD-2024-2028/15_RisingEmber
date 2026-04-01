@@ -144,10 +144,13 @@
             if (typeof caseItem.notes !== 'string') caseItem.notes = "";
         }
 
-        function loadCaseData() {
+        async function loadCaseData() {
             refreshCurrentCase();
             if(!currentCase) {
-                alert("Case not found!");
+                await showAppModal("Case Not Found", "We couldn't find that case record anymore.", {
+                    type: "danger",
+                    okText: "Back to Cases"
+                });
                 window.location.href='admin_cases.html';
                 return;
             }
@@ -218,6 +221,10 @@
                 alert("Title, type, customer name, and provider name are all required.");
                 return;
             }
+            if (!(typeof isValidHumanName === 'function' ? isValidHumanName(customerName) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(customerName))) {
+                alert("Please enter a valid customer name using letters only.");
+                return;
+            }
 
             currentCase.title = title;
             currentCase.type = type;
@@ -253,7 +260,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadCaseData);
+        document.addEventListener('DOMContentLoaded', () => { loadCaseData(); });
     </script>
 </body>
 </html>

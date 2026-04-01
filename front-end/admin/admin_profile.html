@@ -180,13 +180,17 @@
             `).join('');
         }
 
-        function saveProfile() {
+        async function saveProfile() {
             const name = document.getElementById('in-name').value.trim();
             const email = document.getElementById('in-email').value.trim();
             const phone = document.getElementById('in-phone').value.trim();
 
             if (!name || !email || !phone) {
                 alert("Name, email, and phone are required.");
+                return;
+            }
+            if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
+                alert("Please enter a valid full name using letters only.");
                 return;
             }
 
@@ -202,7 +206,7 @@
 
             logAdminActivity("Updated personal information");
             saveAdminData();
-            alert("Profile settings saved.");
+            await showAppModal("Profile Saved", "Profile settings saved.", { okText: "Refresh Profile" });
             location.reload();
         }
 

@@ -136,8 +136,8 @@
             const effectivePassword = password || savedPassword;
 
             // Strict Validation
-            if (!name || name.length < 2) { 
-                return showError('name', 'Full Name must be at least 2 characters.'); 
+            if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) { 
+                return showError('name', 'Please enter a valid full name using letters only.'); 
             }
             
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

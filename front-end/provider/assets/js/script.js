@@ -637,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!fullName) {
         setFieldError(profileNameInput, 'Full name is required.');
         isValid = false;
-      } else if (fullName.length < 2 || !/^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(fullName)) {
+      } else if (typeof isValidHumanName === 'function' ? !isValidHumanName(fullName) : !/^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(fullName)) {
         setFieldError(profileNameInput, 'Please enter a valid full name.');
         isValid = false;
       }
@@ -1909,7 +1909,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (disputeJobIdInput) disputeJobIdInput.focus();
         return;
       }
-      if (!customerName || customerName.length < 2 || !/^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(customerName)) {
+      if (!customerName || (typeof isValidHumanName === 'function' ? !isValidHumanName(customerName) : !/^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(customerName))) {
         showToast('Please enter the customer’s full name.', 'error');
         if (disputeCustomerInput) disputeCustomerInput.focus();
         return;

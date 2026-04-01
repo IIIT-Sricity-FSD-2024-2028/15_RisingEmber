@@ -134,9 +134,12 @@
         const userId = urlParams.get('id');
         let currentUser = AdminData.users.find(u => u.id === userId);
 
-        function loadUserData() {
+        async function loadUserData() {
             if(!currentUser) {
-                alert("User not found!");
+                await showAppModal("User Not Found", "That user record could not be found in the admin database.", {
+                    type: "danger",
+                    okText: "Back to Users"
+                });
                 window.location.href = 'admin_users.html';
                 return;
             }
@@ -177,11 +180,15 @@
             });
         }
 
-        function saveChanges() {
+        async function saveChanges() {
             const name = document.getElementById('edit-name').value.trim();
             const email = document.getElementById('edit-email').value.trim();
             if (!name || !email) {
                 alert("Name and email are required.");
+                return;
+            }
+            if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
+                alert("Please enter a valid full name using letters only.");
                 return;
             }
 
@@ -208,7 +215,7 @@
             // Write to localStorage
             saveAdminData();
             logAdminActivity(`Updated user ${currentUser.id}`);
-            alert("Success! Profile updated and changes saved to local memory.");
+            await showAppModal("User Updated", "Success! Profile updated and changes saved to local memory.", { okText: "Refresh Profile" });
             location.reload();
         }
 
@@ -221,7 +228,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', loadUserData);
+        document.addEventListener('DOMContentLoaded', () => { loadUserData(); });
     </script>
 </body>
 </html>
