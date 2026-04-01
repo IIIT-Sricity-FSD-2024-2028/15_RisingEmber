@@ -5,7 +5,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const bookingsGrid = document.getElementById("bookings-grid");
   const tabs = document.querySelectorAll(".tab-pill");
 
-  let allBookings = JSON.parse(localStorage.getItem("serviceHub_bookings")) || [];
+  let allBookings = app && typeof app.getCustomerBookings === "function"
+    ? app.getCustomerBookings()
+    : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
   if (!Array.isArray(allBookings)) {
     allBookings = [];
   }

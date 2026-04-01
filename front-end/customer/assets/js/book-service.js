@@ -2,10 +2,18 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = window.CustomerApp;
-  const pendingBooking = JSON.parse(localStorage.getItem("pendingBooking"));
+  const pendingBooking = app && typeof app.readJSON === "function"
+    ? app.readJSON("pendingBooking", null)
+    : (() => {
+        try {
+          return JSON.parse(localStorage.getItem("pendingBooking") || "null");
+        } catch (error) {
+          return null;
+        }
+      })();
   const confirmButton = document.getElementById("confirmBookingBtn");
 
-  if (!pendingBooking) {
+  if (!pendingBooking || !pendingBooking.id || !pendingBooking.title) {
     window.location.href = "browse-services.html";
     return;
   }
@@ -102,7 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       setAddressValidity("");
 
-      const bookings = JSON.parse(localStorage.getItem("serviceHub_bookings")) || [];
+      const bookings = app && typeof app.getCustomerBookings === "function"
+        ? app.getCustomerBookings()
+        : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
       const bookingId = `BK-${Math.floor(Math.random() * 90000 + 10000)}`;
       const newBooking = {
         bookingId,
@@ -113,13 +123,21 @@ document.addEventListener("DOMContentLoaded", () => {
         date: bookingDate,
         time: bookingTime,
         address,
+        durationHours: hours,
+        unitPrice: Number(pendingBooking.price) || 0,
         total: Number(total.toFixed(2)),
         status: "Confirmed",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        customerEmail: customer ? customer.email : "",
+        customerId: customer ? customer.id : ""
       };
 
-      bookings.unshift(newBooking);
-      localStorage.setItem("serviceHub_bookings", JSON.stringify(bookings));
+      const nextBookings = [newBooking].concat(Array.isArray(bookings) ? bookings : []);
+      if (app && typeof app.saveCustomerBookings === "function") {
+        app.saveCustomerBookings(nextBookings);
+      } else {
+        localStorage.setItem("serviceHub_bookings", JSON.stringify(nextBookings));
+      }
       localStorage.setItem("latestBookingId", bookingId);
       localStorage.setItem("selectedBookingId", bookingId);
       localStorage.removeItem("pendingBooking");

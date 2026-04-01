@@ -8,7 +8,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const emptyState = document.getElementById("disputes-empty-state");
   const raiseDisputeButton = document.getElementById("raiseDisputeBtn");
 
-  const allDisputes = JSON.parse(localStorage.getItem("serviceHub_disputes")) || [];
+  const allDisputes = app && typeof app.getCustomerDisputes === "function"
+    ? app.getCustomerDisputes()
+    : (JSON.parse(localStorage.getItem("serviceHub_disputes")) || []);
   let filteredData = Array.isArray(allDisputes) ? [...allDisputes] : [];
   let currentPage = 1;
   const itemsPerPage = 4;

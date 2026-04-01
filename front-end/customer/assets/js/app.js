@@ -13,7 +13,9 @@
     BOOKINGS: "serviceHub_bookings",
     DISPUTES: "serviceHub_disputes",
     NOTIFICATIONS: "serviceHub_notifications",
+    PENDING_BOOKING: "pendingBooking",
     PENDING_DISPUTE: "pendingDisputeContext",
+    SELECTED_SERVICE: "selectedServiceId",
     SELECTED_DISPUTE: "selectedDisputeId",
     LATEST_DISPUTE: "latestDisputeId",
     LATEST_BOOKING: "latestBookingId",
@@ -256,6 +258,27 @@
     return date.toLocaleDateString("en-US", options || { month: "long", day: "numeric", year: "numeric" });
   }
 
+  function toNumber(value, fallback) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : (fallback !== undefined ? fallback : 0);
+  }
+
+  function toIsoDate(value, fallback) {
+    const date = new Date(value || fallback || Date.now());
+    if (Number.isNaN(date.getTime())) {
+      return new Date().toISOString().split("T")[0];
+    }
+    return date.toISOString().split("T")[0];
+  }
+
+  function toIsoTimestamp(value, fallback) {
+    const date = new Date(value || fallback || Date.now());
+    if (Number.isNaN(date.getTime())) {
+      return new Date().toISOString();
+    }
+    return date.toISOString();
+  }
+
   function formatRelativeTime(value) {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Just now";
@@ -391,6 +414,147 @@
     if (!session || !session.email) return null;
 
     return getCustomerAccounts().find((account) => account.email === normalizeEmail(session.email)) || null;
+  }
+
+  async function requestConfirmation(title, message, options) {
+    if (typeof window.showAppModal === "function") {
+      return Boolean(await window.showAppModal(title, message, options || {}));
+    }
+
+    if (typeof window.confirm === "function") {
+      return window.confirm(message);
+    }
+
+    return true;
+  }
+
+  async function requestPrompt(title, message, options) {
+    if (typeof window.showAppPrompt === "function") {
+      return window.showAppPrompt(title, message, options || {});
+    }
+
+    const placeholder = options && options.placeholder ? `\n\n${options.placeholder}` : "";
+    if (typeof window.prompt === "function") {
+      return window.prompt(`${message}${placeholder}`, "");
+    }
+
+    return null;
+  }
+
+  function showDialogMessage(title, message, options) {
+    if (typeof window.showAppModal === "function") {
+      return window.showAppModal(title, message, options || {});
+    }
+
+    showToast(message, options && options.type === "danger" ? "error" : "info");
+    return Promise.resolve(true);
+  }
+
+  function normalizeBookingStatus(status) {
+    const value = String(status || "").trim().toLowerCase();
+    if (value === "completed" || value === "done" || value === "resolved") return "Completed";
+    if (value === "cancelled" || value === "canceled") return "Cancelled";
+    return "Confirmed";
+  }
+
+  function normalizeBookingRecord(rawBooking, index) {
+    const source = rawBooking && typeof rawBooking === "object" ? rawBooking : {};
+    const durationHours = Math.max(1, toNumber(source.durationHours, 2));
+    const explicitTotal = toNumber(source.total, NaN);
+    const unitPrice = toNumber(source.unitPrice, toNumber(source.price, 0));
+    const normalizedDate = toIsoDate(
+      source.date || source.serviceDate || source.bookingDate || source.scheduledDate,
+      Date.now() + (index + 1) * 86400000
+    );
+
+    return {
+      bookingId: String(source.bookingId || source.id || `BK-${Date.now() + index}`).trim(),
+      serviceId: String(source.serviceId || source.serviceRef || source.service || "").trim(),
+      title: String(source.title || source.service || source.serviceName || source.name || "Booked Service").trim(),
+      provider: String(source.provider || source.providerName || source.professional || source.company || "Service Professional").trim(),
+      providerImage: String(source.providerImage || source.providerAvatar || "").trim(),
+      date: normalizedDate,
+      time: String(source.time || source.timeSlot || source.slot || "10:00 AM").trim(),
+      address: String(source.address || source.serviceAddress || source.location || "").trim(),
+      durationHours,
+      unitPrice,
+      total: Number.isFinite(explicitTotal) ? Number(explicitTotal.toFixed(2)) : Number((unitPrice * durationHours).toFixed(2)),
+      status: normalizeBookingStatus(source.status),
+      createdAt: toIsoTimestamp(source.createdAt || source.bookedAt, `${normalizedDate}T09:00:00`),
+      cancellationReason: source.cancellationReason || "",
+      cancellationNotes: source.cancellationNotes || "",
+      cancelledAt: source.cancelledAt ? toIsoTimestamp(source.cancelledAt, `${normalizedDate}T09:00:00`) : "",
+      customerEmail: normalizeEmail(source.customerEmail || source.email || ""),
+      customerId: String(source.customerId || "").trim()
+    };
+  }
+
+  function getCustomerBookings() {
+    const bookings = readJSON(KEYS.BOOKINGS, []);
+    if (!Array.isArray(bookings)) return [];
+    return bookings.map(normalizeBookingRecord);
+  }
+
+  function saveCustomerBookings(bookings) {
+    const safeBookings = Array.isArray(bookings) ? bookings.map(normalizeBookingRecord) : [];
+    return writeJSON(KEYS.BOOKINGS, safeBookings);
+  }
+
+  function normalizeDisputeStatus(status) {
+    const value = String(status || "").trim().toLowerCase();
+    if (value === "resolved" || value === "closed") return "resolved";
+    if (value === "review" || value === "under review" || value === "under_review" || value === "in_review") return "review";
+    return "pending";
+  }
+
+  function normalizeEvidenceFile(file, index, fallbackTimestamp) {
+    const source = file && typeof file === "object" ? file : {};
+    const name = String(source.name || source.fileName || `Evidence-${index + 1}`).trim();
+    return {
+      name,
+      size: Math.max(0, toNumber(source.size, 0)),
+      type: String(source.type || "application/octet-stream").trim(),
+      uploadedAt: toIsoTimestamp(source.uploadedAt || source.createdAt, fallbackTimestamp),
+      dataUrl: String(source.dataUrl || source.fileLink || "").trim()
+    };
+  }
+
+  function normalizeDisputeRecord(rawDispute, index) {
+    const source = rawDispute && typeof rawDispute === "object" ? rawDispute : {};
+    const submittedAt = toIsoTimestamp(source.submittedAt || source.createdAt || source.date, Date.now() - index * 86400000);
+    const timeline = Array.isArray(source.timeline) ? source.timeline : [];
+
+    return {
+      id: String(source.id || `DSP-${String(Date.now() + index).slice(-8)}`).trim(),
+      bookingId: String(source.bookingId || source.bookingRef || "").trim(),
+      service: String(source.service || source.title || "Service Issue").trim(),
+      provider: String(source.provider || source.providerName || "Service Professional").trim(),
+      category: String(source.category || "other").trim(),
+      status: normalizeDisputeStatus(source.status),
+      date: toIsoDate(source.date || submittedAt, submittedAt),
+      submittedAt,
+      desc: String(source.desc || source.description || source.details || "").trim(),
+      evidence: (Array.isArray(source.evidence) ? source.evidence : []).map((file, evidenceIndex) => (
+        normalizeEvidenceFile(file, evidenceIndex, submittedAt)
+      )),
+      timeline: timeline.map((item, timelineIndex) => ({
+        title: String(item && item.title || `Update ${timelineIndex + 1}`).trim(),
+        detail: String(item && (item.detail || item.description) || "").trim(),
+        status: String(item && item.status || "pending").trim(),
+        at: item && item.at ? toIsoTimestamp(item.at, submittedAt) : ""
+      }))
+    };
+  }
+
+  function getCustomerDisputes() {
+    const disputes = readJSON(KEYS.DISPUTES, []);
+    if (!Array.isArray(disputes)) return [];
+    return disputes.map(normalizeDisputeRecord);
+  }
+
+  function saveCustomerDisputes(disputes) {
+    const safeDisputes = Array.isArray(disputes) ? disputes.map(normalizeDisputeRecord) : [];
+    return writeJSON(KEYS.DISPUTES, safeDisputes);
   }
 
   function createDefaultNotifications(customer) {
@@ -556,13 +720,8 @@
       saveNotifications(createDefaultNotifications(getCurrentCustomer() || firstAccount));
     }
 
-    if (!Array.isArray(readJSON(KEYS.BOOKINGS, null))) {
-      writeJSON(KEYS.BOOKINGS, []);
-    }
-
-    if (!Array.isArray(readJSON(KEYS.DISPUTES, null))) {
-      writeJSON(KEYS.DISPUTES, []);
-    }
+    saveCustomerBookings(getCustomerBookings());
+    saveCustomerDisputes(getCustomerDisputes());
   }
 
   function protectCustomerPages() {
@@ -752,10 +911,15 @@
     removeKeys(
       KEYS.SESSION,
       KEYS.USER,
+      KEYS.REDIRECT_AFTER_AUTH,
+      KEYS.PENDING_BOOKING,
       KEYS.PENDING_DISPUTE,
+      KEYS.SELECTED_SERVICE,
       KEYS.SELECTED_DISPUTE,
       KEYS.LATEST_DISPUTE,
-      KEYS.SELECTED_BOOKING
+      KEYS.LATEST_BOOKING,
+      KEYS.SELECTED_BOOKING,
+      KEYS.LATEST_CANCELLATION
     );
   }
 
@@ -1020,7 +1184,7 @@
       link.dataset.logoutBound = "true";
       link.addEventListener("click", async (event) => {
         event.preventDefault();
-        const confirmed = await window.showAppModal("Confirm Logout", "Are you sure you want to log out?", {
+        const confirmed = await requestConfirmation("Confirm Logout", "Are you sure you want to log out?", {
           confirm: true,
           type: "danger",
           okText: "Logout"
@@ -1098,7 +1262,7 @@
           return;
         }
 
-        const nextPassword = await window.showAppPrompt("Reset Password", `Enter a new password for account: ${identifier}`, {
+        const nextPassword = await requestPrompt("Reset Password", `Enter a new password for account: ${identifier}`, {
           inputType: "password",
           placeholder: "New password (8+ chars)"
         });
@@ -1108,7 +1272,7 @@
           resetCustomerPassword(identifier, nextPassword);
           showToast("Success! Your password has been updated. You can now log in.", "success");
         } catch (error) {
-          window.showAppModal("Reset Failed", error.message, { type: "danger" });
+          showDialogMessage("Reset Failed", error.message, { type: "danger" });
         }
       });
     }
@@ -1212,6 +1376,10 @@
     getCustomerSession,
     getCustomerAccounts,
     saveCustomerAccounts,
+    getCustomerBookings,
+    saveCustomerBookings,
+    getCustomerDisputes,
+    saveCustomerDisputes,
     getSessionAccount,
     loginCustomer,
     registerCustomer,
@@ -1233,7 +1401,9 @@
     formatRelativeTime,
     buildAvatarUrl,
     saveCurrentCustomer,
-    updatePasswordStrengthBars
+    updatePasswordStrengthBars,
+    normalizeBookingRecord,
+    normalizeDisputeRecord
   };
 
   document.addEventListener("DOMContentLoaded", init);

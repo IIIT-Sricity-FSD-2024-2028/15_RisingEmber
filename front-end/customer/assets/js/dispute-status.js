@@ -2,7 +2,9 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = window.CustomerApp;
-  const disputes = JSON.parse(localStorage.getItem("serviceHub_disputes")) || [];
+  const disputes = app && typeof app.getCustomerDisputes === "function"
+    ? app.getCustomerDisputes()
+    : (JSON.parse(localStorage.getItem("serviceHub_disputes")) || []);
   const selectedDisputeId = localStorage.getItem("selectedDisputeId") || localStorage.getItem("latestDisputeId");
   const dispute = Array.isArray(disputes)
     ? disputes.find((item) => item.id === selectedDisputeId) || disputes[0]

@@ -3,7 +3,9 @@
 document.addEventListener("DOMContentLoaded", () => {
   const app = window.CustomerApp;
   const latestBookingId = localStorage.getItem("latestBookingId") || localStorage.getItem("selectedBookingId");
-  const bookings = JSON.parse(localStorage.getItem("serviceHub_bookings")) || [];
+  const bookings = app && typeof app.getCustomerBookings === "function"
+    ? app.getCustomerBookings()
+    : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
   const booking = Array.isArray(bookings)
     ? bookings.find((item) => item.bookingId === latestBookingId)
     : null;
