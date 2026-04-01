@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ServiceHub | Arbitrator</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+            ServiceHub
+        </div>
+        <div class="nav-auth">
+            <a href="arbitrator_login.html" class="btn btn-dark" id="landingLoginBtn" style="text-decoration:none;">Login</a>
+            <button class="btn btn-blue" id="landingRegisterBtn" type="button" style="margin-left: 10px;">Register</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Secure Service booking with escrow & dispute management system.</h1>
+                <p>Our platform enables secure and trustworthy service transactions through an escrow-based payment system and a structured dispute resolution process.</p>
+                <p>Payments are safely held until the service is completed, protecting both customers and providers.</p>
+                <p>If a dispute arises, a neutral arbitrator reviews evidence such as chat logs and service details to deliver a fair and transparent decision.</p>
+                
+                <div style="display: flex; gap: 15px; margin-top: 30px;">
+                    <button class="btn btn-blue" id="landingPrimaryBtn" type="button">Get Started</button>
+                    <button class="btn btn-white" id="landingSecondaryBtn" type="button">Learn More</button>
+                </div>
+                <p id="landingStatusNote" style="margin-top: 14px; font-size: 0.95rem; color: #4B5563;"></p>
+            </div>
+
+            <div class="side-content">
+                <div class="glance-card">
+                    <h3>Platform at a Glance</h3>
+                    <div class="stat-row"><b>1000+</b> <span>Services Completed</span></div>
+                    <div class="stat-row"><b>5,000+</b> <span>Verified Professionals</span></div>
+                    <div class="stat-row"><b>98%</b> <span>Customer Satisfaction Rate</span></div>
+                </div>
+                <div class="secure-info-card">
+                    <h4>Secure & Reliable Platform</h4>
+                    <p>Our platform ensures secure transactions, verified users, and transparent communication to create a trustworthy environment for both customers and service providers.</p>
+                </div>
+            </div>
+        </section>
+
+        <h2 class="section-title" id="howItWorksSection">How our Platform Works</h2>
+        <div class="works-grid">
+            <div class="work-card blue-fill">
+                <h4><u>Book a Service</u></h4>
+                <p>Browse through a wide range of verified service providers and select the service that best meets your needs. The platform allows customers to book services while maintaining complete transparency.</p>
+            </div>
+            <div class="work-card white-outline">
+                <h4><u>Escrow Payment Protection</u></h4>
+                <p>All payments are securely held in an escrow system once a booking is confirmed. Funds are only released to the service provider after the customer confirms satisfaction.</p>
+            </div>
+            <div class="work-card blue-fill">
+                <h4><u>Dispute Resolution</u></h4>
+                <p>If a conflict arises between the customer and service provider, the system enables both parties to submit evidence. A neutral arbitrator reviews the case and delivers a fair ruling.</p>
+            </div>
+        </div>
+
+        <footer class="footer">
+            © 2026 Service Quality, Rating & Dispute Management System
+        </footer>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        function startNewLandingApplication() {
+            goToArbitratorApplication();
+        }
+
+        function continueLandingApplication() {
+            resumeArbitratorApplication();
+        }
+
+        function scrollToHowItWorks() {
+            const section = document.getElementById('howItWorksSection');
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function configureLandingActions() {
+            const registerBtn = document.getElementById('landingRegisterBtn');
+            const primaryBtn = document.getElementById('landingPrimaryBtn');
+            const secondaryBtn = document.getElementById('landingSecondaryBtn');
+            const statusNote = document.getElementById('landingStatusNote');
+            const loginBtn = document.getElementById('landingLoginBtn');
+            const draftProgress = getArbitratorDraftProgress();
+
+            const startFreshHandler = () => {
+                if (draftProgress.hasDraft) {
+                    const shouldResetDraft = window.confirm('A saved arbitrator application draft was found on this browser. Start a new application instead?');
+                    if (!shouldResetDraft) return;
+                }
+
+                startNewLandingApplication();
+            };
+
+            if (draftProgress.hasDraft) {
+                registerBtn.textContent = 'Continue';
+                primaryBtn.textContent = 'Continue Application';
+                secondaryBtn.textContent = 'Start Fresh';
+                statusNote.textContent = `Saved application found in this browser. Next step: ${draftProgress.nextStepLabel}.`;
+
+                registerBtn.addEventListener('click', continueLandingApplication);
+                primaryBtn.addEventListener('click', continueLandingApplication);
+                secondaryBtn.addEventListener('click', startFreshHandler);
+
+                if (loginBtn) {
+                    loginBtn.title = 'Log in to an existing arbitrator account';
+                }
+
+                return;
+            }
+
+            registerBtn.textContent = 'Register';
+            primaryBtn.textContent = 'Get Started';
+            secondaryBtn.textContent = 'Learn More';
+            statusNote.textContent = 'New arbitrator application data is stored safely in this browser until you submit or reset it.';
+
+            registerBtn.addEventListener('click', startFreshHandler);
+            primaryBtn.addEventListener('click', startFreshHandler);
+            secondaryBtn.addEventListener('click', scrollToHowItWorks);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (redirectAuthenticatedArbitrator()) {
+                return;
+            }
+
+            configureLandingActions();
+        });
+    </script>
+</body>
+</html>

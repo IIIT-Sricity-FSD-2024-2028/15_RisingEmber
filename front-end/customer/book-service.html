@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Book Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .checkout-grid { display: grid; grid-template-columns: 1fr 380px; gap: 32px; align-items: start; }
+    @media (max-width: 1100px) { .checkout-grid { grid-template-columns: 1fr; } }
+
+    .checkout-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+    .checkout-section h2 { font-size: 1.25rem; font-weight: 700; color: var(--text-dark); margin-bottom: 24px; }
+
+    .service-snapshot { display: flex; gap: 20px; align-items: center; }
+    .service-snapshot img { width: 120px; height: 90px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); }
+    .snapshot-info h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; color: var(--text-dark); }
+    .snapshot-provider { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text-mid); margin-bottom: 6px; }
+    .snapshot-provider img { width: 24px; height: 24px; border-radius: 50%; }
+    .snapshot-price { font-size: 1.3rem; font-weight: 800; color: var(--primary); display: block; }
+    .snapshot-price span { font-size: 0.95rem; font-weight: 500; color: var(--text-soft); }
+
+    .row-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .input-wrapper { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .input-wrapper label { font-size: 1rem; font-weight: 600; color: var(--text-dark); }
+    
+    .input-field { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 1rem; width: 100%; outline: none; background: var(--surface); color: var(--text-dark); transition: border-color 0.2s; }
+    .input-field:focus { border-color: var(--primary); }
+
+    .payment-option { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px; cursor: pointer; transition: 0.2s; background: var(--surface); }
+    .payment-option.active { border: 2px solid var(--primary); background: var(--primary-light); }
+    
+    .card-icon { width: 48px; height: 32px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; font-style: italic; border: 1px solid var(--border); }
+    .card-info strong { display: block; font-size: 1rem; color: var(--text-dark); font-weight: 700; }
+    .card-info span { font-size: 0.85rem; color: var(--text-soft); }
+
+    .summary-row { display: flex; justify-content: space-between; font-size: 1rem; color: var(--text-mid); margin-bottom: 16px; }
+    .summary-total { display: flex; justify-content: space-between; font-size: 1.35rem; font-weight: 800; color: var(--text-dark); padding-top: 20px; border-top: 1px solid var(--border); margin-top: 16px; }
+    
+    .error-msg { color: var(--red); font-size: 0.9rem; margin-top: 6px; display: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Ashwin&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html" class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html" class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html" class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header"><h1>Book Service</h1></div>
+
+      <div class="checkout-grid">
+        <div>
+          <div class="checkout-section">
+            <h2>Service Details</h2>
+            <div class="service-snapshot">
+              <img id="serviceHero" src="" alt="Service" />
+              <div class="snapshot-info">
+                <h3 id="serviceTitle">Loading Service...</h3>
+                <div class="snapshot-provider">
+                  <img id="providerImg" src="" alt="P" />
+                  <span id="providerName">Loading...</span>
+                </div>
+                <span class="snapshot-price" id="serviceRate">$0 <span>/hour</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="checkout-section">
+            <h2>Booking Information</h2>
+            <div class="row-inputs">
+              <div class="input-wrapper">
+                <label>Select Date</label>
+                <input type="date" class="input-field" id="bookingDate" />
+              </div>
+              <div class="input-wrapper">
+                <label>Select Time</label>
+                <select class="input-field" id="bookingTime">
+                  <option value="09:00 AM">09:00 AM</option>
+                  <option value="10:00 AM">10:00 AM</option>
+                  <option value="11:00 AM">11:00 AM</option>
+                  <option value="01:00 PM">01:00 PM</option>
+                  <option value="02:00 PM">02:00 PM</option>
+                  <option value="03:00 PM">03:00 PM</option>
+                  <option value="04:00 PM">04:00 PM</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="input-wrapper">
+              <label>Service Address</label>
+              <input type="text" class="input-field" id="serviceAddress" placeholder="Enter your complete address" />
+              <span class="error-msg" id="addressError"><i class="fa-solid fa-circle-exclamation"></i> Please enter a valid service address.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="order-summary-sidebar">
+          <div class="checkout-section">
+            <h2>Order Summary</h2>
+            <div class="summary-row"><span>Service Price (2 hours)</span><span id="summaryPrice">$0.00</span></div>
+            <div class="summary-row"><span>Platform Fee (5%)</span><span id="summaryFee">$0.00</span></div>
+            <div class="summary-total"><span>Total</span><span id="summaryTotal">$0.00</span></div>
+
+            <button class="btn btn--primary btn--full" id="confirmBookingBtn" style="margin-top: 32px; padding: 16px;">Confirm Booking</button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/book-service.js"></script> 
+</body>
+</html>

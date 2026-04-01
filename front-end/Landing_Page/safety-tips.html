@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Safety Tips – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand"><div class="logo-icon"><i class="fa-solid fa-wrench"></i></div><span class="logo-text">ServiceHub</span></a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions"><a href="role-selection.html?action=login" class="btn btn-text">Login</a><a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a></div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Trust & Safety</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Your security is our priority. Follow these guidelines for a safe experience.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container trust-grid">
+      <div class="trust-card text-left">
+        <div class="trust-icon bg-blue-light text-blue"><i class="fa-solid fa-credit-card"></i></div>
+        <h3>Keep Payments on Platform</h3>
+        <p>Never pay a provider in cash or via external wire transfers. Using ServiceHub's escrow ensures your funds are protected and eligible for arbitration if something goes wrong.</p>
+      </div>
+      <div class="trust-card text-left">
+        <div class="trust-icon bg-green-light text-green"><i class="fa-solid fa-comments"></i></div>
+        <h3>Communicate via ServiceHub</h3>
+        <p>Keep all messages and agreements within the platform. If a dispute arises, our arbitrators can only review communication that occurred on our official channels.</p>
+      </div>
+      <div class="trust-card text-left">
+        <div class="trust-icon bg-orange-light text-orange"><i class="fa-solid fa-id-badge"></i></div>
+        <h3>Verify Identity</h3>
+        <p>When a provider arrives, verify their identity matches their ServiceHub profile. All our providers undergo background checks, but it's always good practice to check.</p>
+      </div>
+      <div class="trust-card text-left">
+        <div class="trust-icon bg-purple-light text-purple"><i class="fa-solid fa-flag"></i></div>
+        <h3>Report Suspicious Behavior</h3>
+        <p>If a user asks you to bypass our safety systems or makes you feel uncomfortable, report them immediately using the flag icon on their profile.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container footer-bottom" style="border-top: none; justify-content: center;"><p>&copy; 2024 ServiceHub. All rights reserved.</p></div></footer>
+  <script>document.getElementById('mobileMenuBtn').addEventListener('click', () => { document.getElementById('navLinks').classList.toggle('active'); });</script>
+</body>
+</html>

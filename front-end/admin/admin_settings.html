@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Platform Settings | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .settings-container { max-width: 1000px; margin: 0 auto; }
+        .settings-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; margin-bottom: 25px; }
+        .section-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; }
+        .form-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .set-input { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .set-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+
+        /* Toggle & Checkbox Styling */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f8fafc; }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info h4 { margin: 0; font-size: 0.9rem; color: #1e293b; }
+        .toggle-info p { margin: 4px 0 0 0; font-size: 0.75rem; color: #64748b; }
+
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #2563eb; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        .check-group { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; }
+        .check-group input { margin-top: 4px; width: 16px; height: 16px; cursor: pointer; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Platform Settings</h1>
+                <p>Configure system preferences and arbitration platform settings.</p>
+            </div>
+
+            <div class="settings-container">
+                <div class="settings-card">
+                    <div class="section-title">General Settings</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Platform Name</label><input type="text" id="g-name" class="set-input"></div>
+                        <div class="form-group"><label>Platform Email</label><input type="email" id="g-email" class="set-input"></div>
+                        <div class="form-group"><label>Support Contact Number</label><input type="text" id="g-phone" class="set-input"></div>
+                        <div class="form-group">
+                            <label>Timezone</label>
+                            <select id="g-tz" class="set-input">
+                                <option value="UTC-5 (Eastern Time)">UTC-5 (Eastern Time)</option>
+                                <option value="UTC+0 (GMT)">UTC+0 (GMT)</option>
+                                <option value="UTC+5:30 (IST)">UTC+5:30 (IST)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="section-title">Arbitration Rules Configuration</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Maximum Case Resolution Time (days)</label><input type="number" id="a-time" class="set-input"></div>
+                        <div class="form-group"><label>Default Hearing Duration (hours)</label><input type="number" id="a-dur" class="set-input"></div>
+                        <div class="form-group"><label>Maximum Evidence File Size (MB)</label><input type="number" id="a-size" class="set-input"></div>
+                        <div class="form-group"><label>Allowed File Types</label><input type="text" id="a-types" class="set-input"></div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="section-title">User Management Settings</div>
+                    <div class="toggle-row">
+                        <div class="toggle-info"><h4>Allow New User Registrations</h4><p>Enable new users to register on the platform</p></div>
+                        <label class="switch"><input type="checkbox" id="u-reg"><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info"><h4>Require Email Verification</h4><p>Users must verify their email before accessing the platform</p></div>
+                        <label class="switch"><input type="checkbox" id="u-verify"><span class="slider"></span></label>
+                    </div>
+                    <div class="toggle-row">
+                        <div class="toggle-info"><h4>Allow Arbitrator Applications</h4><p>Enable users to apply to become arbitrators</p></div>
+                        <label class="switch"><input type="checkbox" id="u-arb"><span class="slider"></span></label>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="section-title">Notification Settings</div>
+                    <div class="check-group">
+                        <input type="checkbox" id="n-case">
+                        <div><strong style="font-size:0.85rem;">Email Notifications for New Cases</strong><p style="font-size:0.75rem; color:#64748b; margin:2px 0;">Send email notifications when new cases are filed</p></div>
+                    </div>
+                    <div class="check-group">
+                        <input type="checkbox" id="n-hear">
+                        <div><strong style="font-size:0.85rem;">Hearing Reminder Notifications</strong><p style="font-size:0.75rem; color:#64748b; margin:2px 0;">Send reminders for upcoming hearings</p></div>
+                    </div>
+                    <div class="check-group">
+                        <input type="checkbox" id="n-award">
+                        <div><strong style="font-size:0.85rem;">Award Issued Notifications</strong><p style="font-size:0.75rem; color:#64748b; margin:2px 0;">Notify when arbitration awards are issued</p></div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="section-title">Security Settings</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Password Minimum Length</label><input type="number" id="s-pass" class="set-input"></div>
+                        <div class="form-group">
+                            <label>Two-Factor Authentication</label>
+                            <select id="s-2fa" class="set-input"><option value="Enabled">Enabled</option><option value="Disabled">Disabled</option></select>
+                        </div>
+                        <div class="form-group"><label>Session Timeout Duration (minutes)</label><input type="number" id="s-timeout" class="set-input"></div>
+                    </div>
+                </div>
+
+                <div style="display:flex; justify-content:flex-end; margin-bottom:50px;">
+                    <button class="btn-primary-sm" style="padding:12px 40px; font-size:0.9rem;" onclick="saveAllSettings()">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        function init() {
+            const s = AdminData.settings;
+            
+            // Populate General
+            document.getElementById('g-name').value = s.general.name;
+            document.getElementById('g-email').value = s.general.email;
+            document.getElementById('g-phone').value = s.general.phone;
+            document.getElementById('g-tz').value = s.general.timezone;
+
+            // Populate Arbitration
+            document.getElementById('a-time').value = s.arbitration.maxResolutionTime;
+            document.getElementById('a-dur').value = s.arbitration.defaultHearingDuration;
+            document.getElementById('a-size').value = s.arbitration.maxFileSize;
+            document.getElementById('a-types').value = s.arbitration.allowedFileTypes;
+
+            // Populate User Mgmt
+            document.getElementById('u-reg').checked = s.userManagement.allowNewUserRegistrations;
+            document.getElementById('u-verify').checked = s.userManagement.requireEmailVerification;
+            document.getElementById('u-arb').checked = s.userManagement.allowArbitratorApplications;
+
+            // Populate Notifications
+            document.getElementById('n-case').checked = s.notifications.emailNewCases;
+            document.getElementById('n-hear').checked = s.notifications.hearingReminders;
+            document.getElementById('n-award').checked = s.notifications.awardIssued;
+
+            // Populate Security
+            document.getElementById('s-pass').value = s.security.minPasswordLength;
+            document.getElementById('s-2fa').value = s.security.twoFactorAuth;
+            document.getElementById('s-timeout').value = s.security.sessionTimeout;
+        }
+
+        function saveAllSettings() {
+            const s = AdminData.settings;
+            const generalEmail = document.getElementById('g-email').value.trim();
+            const generalName = document.getElementById('g-name').value.trim();
+            const generalPhone = document.getElementById('g-phone').value.trim();
+            const resolutionDays = Number(document.getElementById('a-time').value);
+            const durationHours = Number(document.getElementById('a-dur').value);
+            const maxFileSize = Number(document.getElementById('a-size').value);
+            const minPasswordLength = Number(document.getElementById('s-pass').value);
+            const sessionTimeout = Number(document.getElementById('s-timeout').value);
+
+            if (!generalName || !generalEmail || !generalPhone) {
+                alert("Platform name, email, and phone are required.");
+                return;
+            }
+
+            if ([resolutionDays, durationHours, maxFileSize, minPasswordLength, sessionTimeout].some(val => Number.isNaN(val) || val <= 0)) {
+                alert("Numeric settings must all be greater than zero.");
+                return;
+            }
+
+            // General
+            s.general.name = generalName;
+            s.general.email = generalEmail;
+            s.general.phone = generalPhone;
+            s.general.timezone = document.getElementById('g-tz').value;
+
+            // Arbitration
+            s.arbitration.maxResolutionTime = resolutionDays;
+            s.arbitration.defaultHearingDuration = durationHours;
+            s.arbitration.maxFileSize = maxFileSize;
+            s.arbitration.allowedFileTypes = document.getElementById('a-types').value;
+
+            // User Management
+            s.userManagement.allowNewUserRegistrations = document.getElementById('u-reg').checked;
+            s.userManagement.requireEmailVerification = document.getElementById('u-verify').checked;
+            s.userManagement.allowArbitratorApplications = document.getElementById('u-arb').checked;
+
+            // Notifications
+            s.notifications.emailNewCases = document.getElementById('n-case').checked;
+            s.notifications.hearingReminders = document.getElementById('n-hear').checked;
+            s.notifications.awardIssued = document.getElementById('n-award').checked;
+
+            // Security
+            s.security.minPasswordLength = minPasswordLength;
+            s.security.twoFactorAuth = document.getElementById('s-2fa').value;
+            s.security.sessionTimeout = sessionTimeout;
+
+            logAdminActivity("Updated platform configuration settings");
+            saveAdminData();
+            alert("Settings have been successfully updated and synchronized.");
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

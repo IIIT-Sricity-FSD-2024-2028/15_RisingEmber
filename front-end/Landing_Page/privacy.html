@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Privacy Policy – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand">
+        <div class="logo-icon"><i class="fa-solid fa-wrench"></i></div>
+        <span class="logo-text">ServiceHub</span>
+      </a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="locations.html">Locations</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full text-center mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full text-center mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="role-selection.html?action=login" class="btn btn-text">Login</a>
+        <a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Privacy Policy</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">How we collect, use, and protect your personal information.</p>
+    </div>
+  </header>
+
+  <section class="section-padding" style="padding-top: 40px;">
+    <div class="legal-container">
+      <div class="legal-content">
+        <p class="legal-updated">Last Updated: March 2024</p>
+        
+        <p>At ServiceHub, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our website or use our mobile applications.</p>
+
+        <h2>1. Information We Collect</h2>
+        <p>We collect information that you voluntarily provide to us when you register for an account, express an interest in obtaining information about us or our products, or otherwise contact us.</p>
+        <ul>
+          <li><strong>Personal Information:</strong> Name, email address, phone number, and physical address.</li>
+          <li><strong>Financial Data:</strong> Payment details, bank account information for payouts (processed securely via our third-party payment gateways).</li>
+          <li><strong>Verification Data:</strong> For Service Providers, government-issued ID and background check data.</li>
+        </ul>
+
+        <h2>2. How We Use Your Information</h2>
+        <p>Having accurate information about you permits us to provide you with a smooth, efficient, and customized experience. We use your data to:</p>
+        <ul>
+          <li>Create and manage your account.</li>
+          <li>Facilitate the matching of Customers and Service Providers based on location.</li>
+          <li>Process payments, payouts, and escrow holds securely.</li>
+          <li>Resolve disputes and troubleshoot problems via our Arbitration system.</li>
+        </ul>
+
+        <h2>3. Information Sharing</h2>
+        <p>We do not sell your personal information to third parties. Information is only shared in the following situations:</p>
+        <p><strong>Between Users:</strong> Customers and Providers will see basic contact and location information regarding each other once a job is actively booked.<br>
+        <strong>During Arbitration:</strong> If a dispute is raised, chat logs, photos, and job details are shared with a designated Arbitrator to reach a resolution.<br>
+        <strong>Service Providers:</strong> We share data with third-party vendors who perform services for us, such as payment processing and background checks.</p>
+
+        <h2>4. Data Security</h2>
+        <p>We use administrative, technical, and physical security measures to help protect your personal information. While we have taken reasonable steps to secure the personal information you provide to us, please be aware that despite our efforts, no security measures are perfect or impenetrable.</p>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-bottom" style="border-top: none; justify-content: center;">
+      <p>&copy; 2024 ServiceHub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

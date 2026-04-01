@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Success Stories – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand"><div class="logo-icon"><i class="fa-solid fa-wrench"></i></div><span class="logo-text">ServiceHub</span></a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full mt-16">Login</a></li><li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions"><a href="role-selection.html?action=login" class="btn btn-text">Login</a><a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a></div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Provider Success Stories</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">See how independent professionals are scaling their businesses with ServiceHub.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container testimonials-grid">
+      <div class="testimonial-card">
+        <h3 style="margin-bottom: 12px;">"Tripled my monthly revenue"</h3>
+        <p class="quote">"Before ServiceHub, I spent 40% of my time chasing invoices. Now, the escrow system guarantees my payment the moment I finish a job. I was able to hire two assistants and expand my plumbing business."</p>
+        <div class="user">
+          <img src="https://ui-avatars.com/api/?name=David+R&background=random" alt="User"/>
+          <div><h4>David R.</h4><span>Master Plumber, Chicago</span></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <h3 style="margin-bottom: 12px;">"Fair dispute resolution"</h3>
+        <p class="quote">"I had a client try to cancel a job halfway through. ServiceHub's arbitration team stepped in, reviewed the photos I uploaded to the app, and ensured I was compensated fairly for the work completed."</p>
+        <div class="user">
+          <img src="https://ui-avatars.com/api/?name=Jessica+M&background=random" alt="User"/>
+          <div><h4>Jessica M.</h4><span>Electrician, Austin</span></div>
+        </div>
+      </div>
+      <div class="testimonial-card">
+        <h3 style="margin-bottom: 12px;">"Total schedule freedom"</h3>
+        <p class="quote">"I set my own hours and accept the jobs that make sense for me. The platform brings the clients right to my dashboard. It's the ultimate tool for a freelance carpenter."</p>
+        <div class="user">
+          <img src="https://ui-avatars.com/api/?name=Mark+T&background=random" alt="User"/>
+          <div><h4>Mark T.</h4><span>Carpenter, Seattle</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container footer-bottom" style="border-top: none; justify-content: center;"><p>&copy; 2024 ServiceHub. All rights reserved.</p></div></footer>
+  <script>document.getElementById('mobileMenuBtn').addEventListener('click', () => { document.getElementById('navLinks').classList.toggle('active'); });</script>
+</body>
+</html>

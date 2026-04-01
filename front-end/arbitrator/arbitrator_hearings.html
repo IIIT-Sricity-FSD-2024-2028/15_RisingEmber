@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hearings & Schedule | ServiceHub</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .schedule-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; align-items: stretch; }
+        
+        /* Dynamic Calendar Styling */
+        .calendar-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid var(--arb-border); height: 100%; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-weight: 800; font-size: 1.2rem; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+        .cal-day-label { font-size: 0.75rem; font-weight: 700; color: var(--arb-text-gray); padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+        .cal-date { padding: 12px 5px; font-size: 0.9rem; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; min-height: 45px; display: flex; align-items: center; justify-content: center; }
+        .cal-date:hover { background: #f3f4f6; }
+        .cal-date.has-event { background: #DBEAFE; color: #1E40AF; font-weight: 800; border: 1px solid #1E40AF; }
+        .cal-date.today { border: 2px solid #F59E0B; }
+        .cal-date.muted { color: #D1D5DB; cursor: default; }
+
+        /* Schedule Form Card */
+        .schedule-form-card { background: #1E3A8A; color: white; padding: 30px; border-radius: 20px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+        .schedule-form-card h2 { margin-bottom: 25px; font-size: 1.8rem; font-weight: 800; }
+        .form-row { display: grid; grid-template-columns: 1fr 1.8fr; align-items: center; gap: 15px; margin-bottom: 15px; text-align: left; }
+        .form-row label { font-size: 1.1rem; font-weight: 500; }
+        .form-row input { padding: 12px; border-radius: 8px; border: none; width: 100%; outline: none; color: #111827; font-weight: 600; }
+        .save-hearing-btn { background: #374151; color: white; border: none; padding: 12px 40px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; font-size: 1rem; }
+        .save-hearing-btn:hover { background: #111827; }
+
+        /* Delete Button */
+        .delete-btn { color: #EF4444; cursor: pointer; font-size: 1.1rem; transition: 0.2s; }
+        .delete-btn:hover { transform: scale(1.2); }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content">
+                <h1 style="font-size: 1.8rem; font-weight: 800;">Hearing Schedule</h1>
+                <p style="color: #6B7280; margin-bottom: 30px;">Manage arbitration hearings and browse the global calendar.</p>
+
+                <div class="schedule-container">
+                    <div class="calendar-card">
+                        <div class="cal-header">
+                            <span id="monthYearDisplay">May 2025</span>
+                            <div style="display: flex; gap: 15px;">
+                                <i class="fa-solid fa-chevron-left" style="cursor:pointer;" onclick="changeMonth(-1)"></i>
+                                <i class="fa-solid fa-chevron-right" style="cursor:pointer;" onclick="changeMonth(1)"></i>
+                            </div>
+                        </div>
+                        <div class="cal-grid" id="calendarGrid"></div>
+                    </div>
+
+                    <div class="schedule-form-card">
+                        <h2>Schedule Hearing</h2>
+                        <div class="form-row">
+                            <label>Case ID</label>
+                            <input type="text" id="schedule-id" placeholder="e.g. CASE-20391">
+                        </div>
+                        <div class="form-row">
+                            <label>Date</label>
+                            <input type="date" id="schedule-date">
+                        </div>
+                        <div class="form-row">
+                            <label>Time</label>
+                            <input type="time" id="schedule-time">
+                        </div>
+                        <div class="form-row">
+                            <label>Hearing Type</label>
+                            <input type="text" id="schedule-type" placeholder="e.g. Virtual Hearing">
+                        </div>
+                        <button class="save-hearing-btn" onclick="saveHearing()">Save Hearing</button>
+                    </div>
+                </div>
+
+                <div class="arb-panel">
+                    <h3 style="margin-bottom: 20px;">Upcoming Hearings</h3>
+                    <table class="arb-table">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th><th>Parties</th><th>Date</th><th>Time</th><th>Type</th><th>Status</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hearings-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    <script>
+        let currentViewDate = new Date(2026, 2, 1); // March 2026
+
+        function parseDateString(dateStr) {
+            // Parse "28 Mar 2026" format
+            const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+            const parts = dateStr.split(' ');
+            if (parts.length === 3) {
+                return new Date(parseInt(parts[2]), months[parts[1]], parseInt(parts[0]));
+            }
+            return null;
+        }
+
+        function formatHearingTime(timeValue) {
+            if (!timeValue) return "";
+
+            const [hours, minutes] = timeValue.split(':');
+            const normalizedDate = new Date();
+            normalizedDate.setHours(Number(hours), Number(minutes), 0, 0);
+            return normalizedDate.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const display = document.getElementById('monthYearDisplay');
+            if (!grid || !display) return;
+            grid.innerHTML = '';
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            display.innerText = `${monthNames[currentViewDate.getMonth()]} ${currentViewDate.getFullYear()}`;
+
+            ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(day => {
+                const div = document.createElement('div');
+                div.className = 'cal-day-label';
+                div.innerText = day;
+                grid.appendChild(div);
+            });
+
+            const firstDay = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), 1).getDay();
+            const daysInMonth = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth() + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) {
+                const empty = document.createElement('div');
+                empty.className = 'cal-date muted';
+                grid.appendChild(empty);
+            }
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'cal-date';
+                dateDiv.innerText = d;
+
+                const checkDate = `${d} ${monthNames[currentViewDate.getMonth()].substring(0, 3)} ${currentViewDate.getFullYear()}`;
+
+                let hasEvent = false;
+                if (typeof ArbitratorData !== 'undefined' && ArbitratorData.hearingsList) {
+                    hasEvent = ArbitratorData.hearingsList.some(h => {
+                        const hDate = parseDateString(h.date);
+                        if (!hDate) return false;
+                        return `${hDate.getDate()} ${monthNames[hDate.getMonth()].substring(0, 3)} ${hDate.getFullYear()}` === checkDate;
+                    });
+                }
+
+                if (hasEvent) dateDiv.classList.add('has-event');
+                grid.appendChild(dateDiv);
+            }
+        }
+
+        function changeMonth(step) {
+            currentViewDate.setMonth(currentViewDate.getMonth() + step);
+            renderCalendar();
+        }
+
+        function renderHearingsTable() {
+            const tbody = document.getElementById('hearings-tbody');
+            if (!tbody || typeof ArbitratorData === 'undefined') return;
+
+            const sortedHearings = [...ArbitratorData.hearingsList].sort((left, right) => {
+                const leftDate = parseDateString(left.date);
+                const rightDate = parseDateString(right.date);
+                return (leftDate ? leftDate.getTime() : 0) - (rightDate ? rightDate.getTime() : 0);
+            });
+
+            if (!sortedHearings.length) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding: 32px; text-align: center; color: #9CA3AF;">No hearings scheduled yet.</td></tr>';
+                renderCalendar();
+                return;
+            }
+
+            tbody.innerHTML = sortedHearings.map((h, index) => `
+                <tr>
+                    <td style="font-weight: 700; color: #1E3A8A;"><a href="${buildCaseDetailsUrl(h.id)}" style="color: #1E3A8A; text-decoration: none;">${h.id}</a></td>
+                    <td style="color: #4B5563; font-size: 0.85rem;">${h.parties}</td>
+                    <td style="color: #6B7280; font-size: 0.85rem;">${h.date}</td>
+                    <td style="font-size: 0.85rem;">${h.time}</td>
+                    <td><span class="arb-badge ${h.statusClass}">${h.type}</span></td>
+                    <td><span class="arb-badge arb-badge-blue">${h.status}</span></td>
+                    <td><i class="fa-solid fa-trash-can delete-btn" onclick="deleteHearing('${h.id}')"></i></td>
+                </tr>
+            `).join('');
+
+            renderCalendar();
+        }
+
+        function saveHearing() {
+            const idInput = document.getElementById('schedule-id');
+            const dateInput = document.getElementById('schedule-date');
+            const timeInput = document.getElementById('schedule-time');
+            const typeInput = document.getElementById('schedule-type');
+
+            if (!idInput.value || !dateInput.value || !timeInput.value) {
+                alert("Please fill in Case ID, Date, and Time");
+                return;
+            }
+
+            const caseInfo = ArbitratorData.allCases.find(c => c.id.toUpperCase() === idInput.value.toUpperCase());
+            if (!caseInfo) {
+                alert("Please enter a valid assigned case ID.");
+                return;
+            }
+
+            const formattedDate = createArbitratorDisplayDate(new Date(dateInput.value));
+            const formattedTime = formatHearingTime(timeInput.value);
+            const hearingRecord = {
+                id: idInput.value.toUpperCase(),
+                parties: `${caseInfo.claimant} vs ${caseInfo.respondent}`,
+                date: formattedDate,
+                time: formattedTime,
+                type: typeInput.value || "General Hearing",
+                status: "Scheduled",
+                statusClass: "arb-badge-blue"
+            };
+
+            const existingIndex = ArbitratorData.hearingsList.findIndex((item) => item.id === hearingRecord.id);
+            if (existingIndex !== -1) {
+                ArbitratorData.hearingsList.splice(existingIndex, 1, hearingRecord);
+            } else {
+                ArbitratorData.hearingsList.unshift(hearingRecord);
+            }
+
+            caseInfo.next = formattedDate;
+            caseInfo.hearingDate = formattedDate;
+            caseInfo.hearingTime = formattedTime;
+            caseInfo.hearingType = hearingRecord.type;
+            if (caseInfo.status !== 'Closed') {
+                caseInfo.status = 'Hearing Scheduled';
+                caseInfo.statusColor = '#065F46';
+                caseInfo.statusClass = 'arb-badge-green';
+            }
+
+            saveData();
+
+            idInput.value = '';
+            dateInput.value = '';
+            timeInput.value = '';
+            typeInput.value = '';
+
+            alert("Hearing saved to schedule!");
+            renderHearingsTable();
+        }
+
+        function deleteHearing(caseId) {
+            if (confirm("Remove this hearing from the schedule?")) {
+                const deletedHearing = ArbitratorData.hearingsList.find((item) => item.id === caseId);
+                ArbitratorData.hearingsList = ArbitratorData.hearingsList.filter((item) => item.id !== caseId);
+
+                const caseInfo = ArbitratorData.allCases.find((item) => item.id === caseId);
+                if (caseInfo && deletedHearing && caseInfo.hearingDate === deletedHearing.date) {
+                    caseInfo.next = '—';
+                    caseInfo.hearingDate = '';
+                    caseInfo.hearingTime = '';
+                    caseInfo.hearingType = '';
+                    if (caseInfo.status === 'Hearing Scheduled') {
+                        caseInfo.status = 'Under Review';
+                        caseInfo.statusColor = '#1E40AF';
+                        caseInfo.statusClass = 'arb-badge-blue';
+                    }
+                }
+
+                saveData();
+                renderHearingsTable();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!guardArbitratorPage()) return;
+            const requestedCaseId = getArbitratorCaseIdFromUrl();
+            if (requestedCaseId && getArbitratorCaseById(requestedCaseId)) {
+                document.getElementById('schedule-id').value = requestedCaseId;
+            }
+            renderCalendar();
+            renderHearingsTable();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Arbitrator Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="arbitrator_styles.css" />
+  <style>
+    :root {
+      --primary:        #2F54EB;
+      --primary-dark:   #1D3FBF;
+      --primary-light:  #EEF2FF;
+      --bg:             #F4F6FB;
+      --surface:        #FFFFFF;
+      --border:         #E8ECF4;
+      --text-dark:      #111827;
+      --text-mid:       #4B5563;
+      --text-soft:      #9CA3AF;
+      --shadow-md:      0 10px 25px rgba(0,0,0,0.05);
+      --font:           'Plus Jakarta Sans', sans-serif;
+      --green:          #10B981;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); color: var(--text-mid); line-height: 1.6; background: var(--bg); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    a { text-decoration: none; color: inherit; }
+
+    .login-wrapper { width: 100%; max-width: 900px; margin: 0 auto; padding: 20px; }
+    .login-card { background: var(--surface); border-radius: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.08); display: flex; overflow: hidden; min-height: 520px; }
+
+    .login-form-side { flex: 1; padding: 60px 70px; display: flex; flex-direction: column; justify-content: center; }
+    .login-image-side { flex: 1; background: var(--primary-light); display: flex; align-items: center; justify-content: center; padding: 40px; }
+
+    .login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 36px; }
+    .login-logo-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; }
+    .login-logo-text { font-size: 1.25rem; font-weight: 800; color: var(--text-dark); }
+
+    .login-header { margin-bottom: 28px; }
+    .login-header h1 { font-size: 1.6rem; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; }
+    .login-header p { font-size: 0.9rem; color: var(--text-soft); }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+    .form-group input { font-family: var(--font); font-size: 0.9rem; color: var(--text-dark); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; outline: none; transition: border-color 0.2s; width: 100%; }
+    .form-group input:focus { border-color: var(--primary); }
+    .form-group input::placeholder { color: var(--text-soft); }
+
+    .password-input-wrapper { position: relative; display: flex; align-items: center; }
+    .password-input-wrapper input { padding-right: 44px; }
+    .toggle-password { position: absolute; right: 14px; color: var(--text-soft); background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 4px; }
+    .toggle-password:hover { color: var(--text-dark); }
+
+    .login-options { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; font-size: 0.85rem; }
+    .login-options label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+    .login-options input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--primary); }
+    .login-options a { color: var(--primary); font-weight: 600; }
+    .login-options a:hover { text-decoration: underline; }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 8px; font-family: var(--font); font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; }
+    .btn--primary { background: var(--primary); color: #fff; }
+    .btn--primary:hover { background: var(--primary-dark); }
+    .btn--full { width: 100%; }
+    .btn--submit { margin-top: 8px; padding: 14px 20px; font-size: 0.95rem; }
+
+    .login-footer { margin-top: 28px; text-align: center; font-size: 0.88rem; color: var(--text-mid); }
+    .login-footer a { color: var(--primary); font-weight: 700; }
+    .login-footer a:hover { text-decoration: underline; }
+
+    .login-image-wrapper { width: 100%; max-width: 360px; }
+    .login-image-wrapper img { width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: var(--shadow-md); }
+
+    .back-link { display: block; text-align: center; margin-top: 20px; color: var(--text-soft); font-size: 0.88rem; }
+    .back-link:hover { color: var(--text-dark); }
+
+    @media (max-width: 768px) {
+      .login-card { flex-direction: column; }
+      .login-image-side { display: none; }
+      .login-form-side { padding: 40px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-form-side">
+      <a href="arbitrator_landing.html" class="login-brand">
+        <div class="login-logo-icon"><i class="fa-solid fa-gavel"></i></div>
+        <span class="login-logo-text">ServiceHub</span>
+      </a>
+
+      <div class="login-header">
+        <h1>Arbitrator Login</h1>
+        <p>Access your arbitration dashboard</p>
+      </div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="loginEmail" placeholder="Enter your email" required />
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="loginPassword" placeholder="Enter your password" required />
+            <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)">
+              <i class="fa-regular fa-eye-slash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="login-options">
+          <label><input type="checkbox" /><span>Remember me</span></label>
+          <a href="../Landing_Page/contact.html" id="forgotPasswordLink">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--full btn--submit" id="loginBtn">Login</button>
+      </form>
+
+      <div class="login-footer">
+        <p>New arbitrator? <a href="arbitrator_landing.html" id="applyToJoinLink">Apply to join</a></p>
+      </div>
+
+      <a href="../Landing_Page/index.html" class="back-link"><i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Back to Home</a>
+    </div>
+
+    <div class="login-image-side">
+      <div class="login-image-wrapper">
+        <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=600" alt="Arbitration" />
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="mock_data.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="arbitrator_app.js"></script>
+<script>
+  function togglePassword(inputId, button) {
+    const input = document.getElementById(inputId);
+    const icon = button.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.classList.remove('fa-eye-slash');
+      icon.classList.add('fa-eye');
+    } else {
+      input.type = 'password';
+      icon.classList.remove('fa-eye');
+      icon.classList.add('fa-eye-slash');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (redirectAuthenticatedArbitrator()) {
+      return;
+    }
+
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const applyToJoinLink = document.getElementById('applyToJoinLink');
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+
+    if (applyToJoinLink) {
+      applyToJoinLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        goToArbitratorApplication();
+      });
+    }
+
+    if (forgotPasswordLink) {
+      forgotPasswordLink.addEventListener('click', (event) => {
+        event.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        if (!email) {
+          alert('Enter your arbitrator email first so we can reset the correct account.');
+          return;
+        }
+
+        const nextPassword = window.prompt('Enter a new password for this arbitrator account.');
+        if (nextPassword === null) return;
+
+        try {
+          resetArbitratorPassword(email, nextPassword);
+          document.getElementById('loginPassword').value = nextPassword;
+          alert('Password reset complete. You can log in with the new password now.');
+        } catch (error) {
+          alert(error.message);
+        }
+      });
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const originalText = loginBtn.innerHTML;
+
+      if (!email || !password) {
+        alert('Please enter your email address and password.');
+        return;
+      }
+
+      loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
+      loginBtn.style.opacity = '0.8';
+      loginBtn.style.pointerEvents = 'none';
+
+      try {
+        await arbitratorLogin(email, password, 'arbitrator');
+        window.location.replace('arbitrator_dashboard.html');
+      } catch (error) {
+        alert(error.message);
+        loginBtn.innerHTML = originalText;
+        loginBtn.style.opacity = '1';
+        loginBtn.style.pointerEvents = 'auto';
+      }
+    });
+  });
+</script>
+</body>
+</html>

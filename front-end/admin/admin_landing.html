@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Hub | ServiceHub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .back-link { 
+            display: block; margin-top: 15px; font-size: 0.85rem; 
+            color: #64748b; text-decoration: none; cursor: pointer; 
+        }
+        .back-link:hover { color: var(--admin-accent); }
+        .error-hint { color: #ef4444; font-size: 0.75rem; margin-top: 5px; display: none; }
+    </style>
+</head>
+<body class="admin-landing-body">
+
+    <div class="admin-split-container">
+        <div class="admin-brand-side">
+            <div class="brand-content">
+                <div class="admin-logo-badge">
+                    <i class="fa-solid fa-scale-balanced"></i>
+                    <span>Admin Hub</span>
+                </div>
+                <h1>Admin Control Panel</h1>
+                <p>Access the unified governance dashboard to manage dispute resolutions, verify legal professionals, and monitor system-wide service quality.</p>
+                
+                <div class="admin-features-list">
+                    <div class="feat-item"><i class="fa-solid fa-check-double"></i> User Verification & KYC</div>
+                    <div class="feat-item"><i class="fa-solid fa-shield-halved"></i> Dispute Governance</div>
+                    <div class="feat-item"><i class="fa-solid fa-chart-pie"></i> Real-time Analytics</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-form-side">
+            <div class="admin-login-card" id="authCard">
+                <div id="loginView" class="fade-in">
+                    <div class="admin-user-icon">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <h2>Admin Login</h2>
+                    <p class="subtitle">Access your administrative dashboard</p>
+
+                    <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-envelope"></i>
+                                <input type="email" id="adminEmail" placeholder="admin@example.com" required>
+                            </div>
+                            <span id="email-error" class="error-hint">Please enter a valid email address.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="input-wrapper">
+                                <i class="fa-solid fa-lock"></i>
+                                <input type="password" id="adminPass" placeholder="••••••••" required>
+                            </div>
+                            <span id="pass-error" class="error-hint">Password must be at least 1 character.</span>
+                        </div>
+
+                        <button type="submit" class="admin-btn-primary">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login to Dashboard
+                        </button>
+
+                        <a href="javascript:void(0)" class="forgot-link" onclick="toggleView('forgotView')">Forgot Password?</a>
+                    </form>
+                </div>
+
+                <div id="forgotView" class="fade-in" style="display: none;">
+                    <div class="admin-user-icon" style="color: #f59e0b; background: #fffbeb;">
+                        <i class="fa-solid fa-key"></i>
+                    </div>
+                    <h2>Reset Password</h2>
+                    <p class="subtitle">Enter your email to receive reset instructions</p>
+
+                    <div class="form-group">
+                        <label>Admin Email</label>
+                        <div class="input-wrapper">
+                            <i class="fa-solid fa-envelope"></i>
+                            <input type="email" id="resetEmail" placeholder="Enter your email">
+                        </div>
+                    </div>
+
+                    <button class="admin-btn-primary" style="background: #1e293b;" onclick="handleResetRequest()">
+                        <i class="fa-solid fa-paper-plane"></i> Send Reset Link
+                    </button>
+
+                    <a class="back-link" onclick="toggleView('loginView')">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Login
+                    </a>
+                </div>
+
+                <div class="admin-notice">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <p><strong>Authorized administrators only.</strong> Access is monitored via secure encrypted protocols.</p>
+                </div>
+            </div>
+            <p class="footer-security">Protected by enterprise-grade security <i class="fa-solid fa-shield-halved"></i></p>
+        </div>
+    </div>
+
+    <script src="admin_mock_data.js"></script>
+    <script>
+        function toggleView(viewId) {
+            document.getElementById('loginView').style.display = viewId === 'loginView' ? 'block' : 'none';
+            document.getElementById('forgotView').style.display = viewId === 'forgotView' ? 'block' : 'none';
+        }
+
+        function validateEmail(email) {
+            return String(email)
+                .toLowerCase()
+                .match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
+        }
+
+        function handleAdminLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('adminEmail').value.trim();
+            const pass = document.getElementById('adminPass').value.trim();
+            
+            const emailErr = document.getElementById('email-error');
+            const passErr = document.getElementById('pass-error');
+
+            let isValid = true;
+
+            // Email Syntax Check
+            if (!validateEmail(email)) {
+                emailErr.style.display = 'block';
+                isValid = false;
+            } else {
+                emailErr.style.display = 'none';
+            }
+
+            // Password Length Check (More than 1 character)
+            if (pass.length < 1) {
+                passErr.style.display = 'block';
+                isValid = false;
+            } else {
+                passErr.style.display = 'none';
+            }
+
+            if(isValid) {
+                // Mock session update
+                AdminData.session.isLoggedIn = true;
+                AdminData.session.lastLogin = new Date().toLocaleString();
+                
+                // Update profile name if a new one is used (optional)
+                // AdminData.profile.email = email; 
+                
+                saveAdminData();
+                window.location.href = 'admin_dashboard.html';
+            }
+        }
+
+        function handleResetRequest() {
+            const email = document.getElementById('resetEmail').value;
+            if(validateEmail(email)) {
+                alert("Success: Reset link sent to " + email);
+                toggleView('loginView');
+            } else {
+                alert("Please enter a valid email address.");
+            }
+        }
+    </script>
+</body>
+</html>

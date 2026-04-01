@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Post a Job – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand"><div class="logo-icon"><i class="fa-solid fa-wrench"></i></div><span class="logo-text">ServiceHub</span></a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="locations.html">Locations</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions"><a href="role-selection.html?action=login" class="btn btn-text">Login</a><a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a></div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">What do you need help with?</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Describe your project and we'll connect you with top-rated professionals in your area.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container" style="max-width: 700px;">
+      <div class="trust-card text-left" style="padding: 40px;">
+        <form id="postJobForm" style="display: flex; flex-direction: column; gap: 20px;" novalidate>
+          <div>
+            <label class="landing-label" for="serviceCategory">Service Category</label>
+            <select class="landing-input" id="serviceCategory" name="serviceCategory" required>
+              <option value="">Select a service category</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Electrical">Electrical</option>
+              <option value="Cleaning">Cleaning</option>
+              <option value="HVAC">HVAC</option>
+              <option value="Carpentry">Carpentry</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div>
+            <label class="landing-label" for="postalCode">Zip/Postal Code</label>
+            <input type="text" class="landing-input" id="postalCode" name="postalCode" placeholder="e.g. 94105" inputmode="text" autocomplete="postal-code" maxlength="10" required />
+          </div>
+          <div>
+            <label class="landing-label" for="projectDetails">Project Details</label>
+            <textarea class="landing-input" id="projectDetails" name="projectDetails" placeholder="Describe the issue or project in detail..." style="min-height: 120px;" minlength="20" maxlength="1500" required></textarea>
+          </div>
+          <div>
+            <label class="landing-label" for="serviceDate">When do you need it done?</label>
+            <input type="date" class="landing-input" id="serviceDate" name="serviceDate" required />
+          </div>
+          <button type="submit" class="btn btn-primary mt-16">Post Job</button>
+          <div id="postJobStatus" class="landing-form-status"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container footer-bottom" style="border-top: none; justify-content: center;"><p>&copy; 2024 ServiceHub. All rights reserved.</p></div></footer>
+  <script src="js/landing.js"></script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documents Repository | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body, html { overflow-x: hidden; width: 100%; margin: 0; padding: 0; background-color: #f8fafc; }
+        .admin-main-content { width: calc(100% - 260px); margin-left: 260px; box-sizing: border-box; }
+
+        .repo-layout { display: grid; grid-template-columns: 1fr 280px; gap: 20px; }
+        .filter-section { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; margin-bottom: 25px; }
+        .filter-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        
+        .status-pill { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .status-verified { background: #ecfdf5; color: #10b981; }
+        .status-pending { background: #fff7ed; color: #f97316; }
+        .status-flagged { background: #fef2f2; color: #ef4444; }
+
+        .summary-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; }
+        .sum-icon { width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .sum-val { display: block; font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; }
+        .sum-label { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+
+        .actions-cell { display: flex; gap: 12px; align-items: center; }
+        .action-btn { background: none; border: none; cursor: pointer; font-size: 1rem; color: #64748b; transition: 0.2s; }
+        .btn-edit:hover { color: #3b82f6; }
+        .btn-download:hover { color: #10b981; }
+        .btn-delete:hover { color: #ef4444; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1>Documents Repository</h1>
+                    <p>Monitor and manage all uploaded evidence and case documents.</p>
+                </div>
+                <button class="btn-primary-sm" style="background:#2563eb;" onclick="exportDocList()">
+                    <i class="fa-solid fa-file-export"></i> Export List
+                </button>
+            </div>
+
+            <div class="repo-layout">
+                <div class="list-col">
+                    <div class="filter-section">
+                        <div class="filter-grid">
+                            <div class="search-bar" style="width: 100%;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="docSearch" placeholder="Search by name, ID, or uploader..." oninput="applyFilters()">
+                            </div>
+                            <select id="typeFilter" class="custom-select" onchange="applyFilters()">
+                                <option value="All">All Types</option>
+                                <option value="Legal Contract">Legal Contract</option>
+                                <option value="Evidence">Evidence</option>
+                                <option value="Expert Report">Expert Report</option>
+                            </select>
+                            <select id="uploaderFilter" class="custom-select" onchange="applyFilters()">
+                                <option value="All">All Uploaders</option>
+                                <option value="Customer">Customer</option>
+                                <option value="Service Provider">Service Provider</option>
+                            </select>
+                        </div>
+                        <button class="btn-outline" onclick="document.getElementById('fileInput').click()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Upload New Document
+                        </button>
+                        <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(this)">
+                    </div>
+
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Document Name</th>
+                                    <th>Case ID</th>
+                                    <th>Uploaded By</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="doc-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="stats-col">
+                    <div class="summary-card">
+                        <div class="sum-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fa-solid fa-folder-open"></i></div>
+                        <div><span class="sum-val" id="stat-total">0</span><span class="sum-label">Total Documents</span></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="sum-icon" style="background: #fef2f2; color: #ef4444;"><i class="fa-solid fa-flag"></i></div>
+                        <div><span class="sum-val" id="stat-flagged">0</span><span class="sum-label">Flagged</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        let filteredDocs = [];
+
+        function buildDocumentDownloadHref(doc) {
+            if (doc && doc.fileLink) {
+                return doc.fileLink;
+            }
+
+            const summary = [
+                `Document ID: ${doc.id}`,
+                `Name: ${doc.name}`,
+                `Case ID: ${doc.caseId}`,
+                `Uploader: ${doc.uploader}`,
+                `Type: ${doc.type}`,
+                `Status: ${doc.status}`,
+                `Generated by the Admin Hub document repository.`
+            ].join('\n');
+
+            return `data:text/plain;charset=utf-8,${encodeURIComponent(summary)}`;
+        }
+
+        function triggerDownload(href, filename) {
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = filename || 'document.txt';
+            link.rel = 'noopener';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function init() {
+            updateStats();
+            applyFilters();
+        }
+
+        function updateStats() {
+            const list = AdminData.documents || [];
+            document.getElementById('stat-total').innerText = list.length;
+            document.getElementById('stat-flagged').innerText = list.filter(d => d.status === 'Flagged').length;
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('docSearch').value.toLowerCase();
+            const type = document.getElementById('typeFilter').value;
+            const uploaderRole = document.getElementById('uploaderFilter').value;
+
+            filteredDocs = (AdminData.documents || []).filter(d => {
+                const matchesSearch = d.name.toLowerCase().includes(query) || d.id.toLowerCase().includes(query) || d.uploader.toLowerCase().includes(query);
+                const matchesType = type === 'All' || d.type === type;
+                const matchesUploader = uploaderRole === 'All' || d.uploaderRole === uploaderRole;
+                return matchesSearch && matchesType && matchesUploader;
+            });
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('doc-table-body');
+            tbody.innerHTML = filteredDocs.length > 0 ? filteredDocs.map(d => `
+                <tr>
+                    <td style="font-weight:700;">${d.id}</td>
+                    <td><strong>${d.name}</strong><br><small style="color:#94a3b8">${d.size || 'N/A'}</small></td>
+                    <td style="color:#2563eb; font-weight:600;">${d.caseId}</td>
+                    <td>${d.uploader}</td>
+                    <td>${d.type}</td>
+                    <td><span class="status-pill status-${d.status.toLowerCase()}">${d.status}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="action-btn btn-edit" onclick="editDoc('${d.id}')" title="Edit Metadata"><i class="fa-solid fa-pen-to-square"></i></button>
+                            <button class="action-btn btn-download" onclick="downloadDoc('${d.id}')" title="Download"><i class="fa-solid fa-download"></i></button>
+                            <button class="action-btn btn-delete" onclick="deleteDoc('${d.id}')" title="Delete"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('') : `
+                <tr>
+                    <td colspan="7" style="text-align:center; padding:24px; color:#94a3b8;">No documents match the current filters.</td>
+                </tr>
+            `;
+        }
+
+        function editDoc(id) {
+            window.location.href = `admin_document_details.html?id=${encodeURIComponent(id)}`;
+        }
+
+        function downloadDoc(id) {
+            const doc = (AdminData.documents || []).find((item) => item.id === id);
+            if (!doc) return;
+
+            const safeFilename = (doc.name || id || 'document')
+                .replace(/[^\w.\-]+/g, '_')
+                .replace(/^_+|_+$/g, '') || 'document';
+
+            triggerDownload(buildDocumentDownloadHref(doc), safeFilename);
+        }
+
+        function deleteDoc(id) {
+            if(confirm(`Permanently remove document ${id}?`)) {
+                AdminData.documents = AdminData.documents.filter(d => d.id !== id);
+                logAdminActivity(`Deleted Document ${id}`);
+                init();
+            }
+        }
+
+        function handleFileUpload(input) {
+            if(input.files && input.files[0]) {
+                const file = input.files[0];
+                const newId = "#DOC-" + Math.floor(1000 + Math.random() * 8999);
+                const persistUpload = (fileLink) => {
+                    const newDoc = {
+                        id: newId,
+                        name: file.name,
+                        caseId: "CS-PENDING",
+                        uploader: "Admin",
+                        uploaderRole: "Admin",
+                        type: "Evidence",
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        status: "Pending",
+                        size: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                        fileLink: fileLink || ""
+                    };
+                    AdminData.documents.unshift(newDoc);
+                    logAdminActivity(`Uploaded: ${file.name}`);
+                    saveAdminData();
+                    input.value = "";
+                    init();
+                };
+
+                if (typeof FileReader === 'function') {
+                    const reader = new FileReader();
+                    reader.onload = () => persistUpload(typeof reader.result === 'string' ? reader.result : "");
+                    reader.onerror = () => persistUpload("");
+                    reader.readAsDataURL(file);
+                    return;
+                }
+
+                persistUpload("");
+            }
+        }
+
+        function exportDocList() {
+            if (filteredDocs.length === 0) return;
+            const headers = ["ID", "Name", "Case ID", "Uploader", "Type", "Status"];
+            const rows = filteredDocs.map(d => [d.id, d.name, d.caseId, d.uploader, d.type, d.status].join(","));
+            const csvData = [headers.join(","), ...rows].join("\n");
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Doc_Export.csv`);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

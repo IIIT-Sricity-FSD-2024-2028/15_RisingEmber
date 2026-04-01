@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hearing Details | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .content-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item label { display: block; font-size: 0.75rem; color: #64748b; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .info-item div { font-size: 1rem; color: #1e293b; font-weight: 600; padding: 8px 0; }
+        
+        .party-card { background: #f8fafc; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; min-height: 80px; }
+        .party-label { font-size: 0.7rem; color: #64748b; font-weight: 800; display: block; margin-bottom: 5px; }
+        .party-name { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+
+        .hidden { display: none !important; }
+        .edit-input { width: 100%; padding: 10px; border: 1px solid #3b82f6; border-radius: 8px; outline: none; box-sizing: border-box; font-size: 0.9rem; }
+        
+        .status-badge { padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; display: inline-block; }
+        .status-scheduled { background: #eff6ff; color: #2563eb; }
+        .status-live { background: #ecfdf5; color: #10b981; }
+        .status-completed { background: #f1f5f9; color: #64748b; }
+        .status-cancelled { background: #fee2e2; color: #ef4444; }
+
+        .action-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn-edit { background: #2563eb; color: white; }
+        .btn-save { background: #22c55e; color: white; }
+        .btn-cancel { background: #f1f5f9; color: #64748b; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1>Hearing Profile</h1>
+                    <p id="h-id-title" style="color:#64748b; font-weight:600;">---</p>
+                </div>
+                <button class="btn-primary-sm" id="toggle-edit-btn" onclick="toggleEdit()">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit Details
+                </button>
+            </div>
+
+            <div class="details-grid">
+                <div class="main-col">
+                    <div class="content-card">
+                        <div class="card-title">Session Schedule</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Case Reference</label>
+                                <div class="view-m" id="v-case">---</div>
+                                <input type="text" id="e-case" class="edit-input edit-m hidden">
+                            </div>
+                            <div class="info-item">
+                                <label>Arbitrator Name</label>
+                                <div class="view-m" id="v-arb">---</div>
+                                <input type="text" id="e-arb" class="edit-input edit-m hidden">
+                            </div>
+                            <div class="info-item">
+                                <label>Hearing Date</label>
+                                <div class="view-m" id="v-date">---</div>
+                                <input type="date" id="e-date" class="edit-input edit-m hidden">
+                            </div>
+                            <div class="info-item">
+                                <label>Time Slot</label>
+                                <div class="view-m" id="v-time">---</div>
+                                <input type="text" id="e-time" class="edit-input edit-m hidden" placeholder="e.g. 10:00 AM">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Linked Party Identities</div>
+                        <div class="info-grid">
+                            <div class="party-card">
+                                <span class="party-label">CUSTOMER</span>
+                                <div id="party-customer" class="party-name">---</div>
+                            </div>
+                            <div class="party-card">
+                                <span class="party-label">SERVICE PROVIDER</span>
+                                <div id="party-provider" class="party-name">---</div>
+                            </div>
+                        </div>
+                        <p id="link-status-msg" style="font-size:0.75rem; margin-top:12px; font-style:italic;"></p>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Setup & Settings</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Hearing Type</label>
+                                <div class="view-m" id="v-type">---</div>
+                                <select id="e-type" class="edit-input edit-m hidden">
+                                    <option value="Virtual">Virtual</option>
+                                    <option value="In-Person">In-Person</option>
+                                </select>
+                            </div>
+                            <div class="info-item">
+                                <label>Status</label>
+                                <div class="view-m"><span id="v-status-pill" class="status-badge">---</span></div>
+                                <select id="e-status" class="edit-input edit-m hidden">
+                                    <option value="Scheduled">Scheduled</option>
+                                    <option value="Live">Live</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-col">
+                    <div class="content-card">
+                        <div class="card-title">Quick Actions</div>
+                        <div class="view-m">
+                            <button class="action-btn btn-edit" onclick="toggleEdit()">Modify Schedule</button>
+                            <button class="action-btn btn-cancel" onclick="window.location.href='admin_hearings.html'">Back to List</button>
+                        </div>
+                        <div class="edit-m hidden">
+                            <button class="action-btn btn-save" onclick="saveChanges()">Save Changes</button>
+                            <button class="action-btn btn-cancel" onclick="toggleEdit()">Discard Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const hId = decodeURIComponent(urlParams.get('id') || "H-2024-001");
+        let currentH = AdminData.hearings.find(h => h.id === hId);
+
+        function init() {
+            if(!currentH) {
+                alert("Hearing not found!");
+                window.location.href='admin_hearings.html';
+                return;
+            }
+            
+            // Populate Header
+            document.getElementById('h-id-title').innerText = `Hearing Reference: ${currentH.id}`;
+            
+            // Populate View Labels
+            document.getElementById('v-case').innerText = currentH.caseId;
+            document.getElementById('v-arb').innerText = currentH.arbitrator;
+            document.getElementById('v-date').innerText = currentH.date;
+            document.getElementById('v-time').innerText = currentH.time;
+            document.getElementById('v-type').innerText = currentH.type;
+            
+            const pill = document.getElementById('v-status-pill');
+            pill.innerText = currentH.status;
+            pill.className = `status-badge status-${currentH.status.toLowerCase()}`;
+
+            // Populate Edit Inputs
+            document.getElementById('e-case').value = currentH.caseId;
+            document.getElementById('e-arb').value = currentH.arbitrator;
+            document.getElementById('e-date').value = currentH.date;
+            document.getElementById('e-time').value = currentH.time;
+            document.getElementById('e-type').value = currentH.type;
+            document.getElementById('e-status').value = currentH.status;
+
+            // Trigger Party Identities Lookup
+            lookupParties(currentH.caseId);
+        }
+
+        function lookupParties(cid) {
+            const custEl = document.getElementById('party-customer');
+            const provEl = document.getElementById('party-provider');
+            const msgEl = document.getElementById('link-status-msg');
+
+            if(!cid) return;
+
+            // resilient search: case insensitive and stripping symbols like '#'
+            const searchId = cid.trim().toLowerCase();
+            const linkedCase = AdminData.cases.find(c => {
+                const cId = c.id.toLowerCase();
+                return cId === searchId || cId === '#' + searchId || cId.replace('#', '') === searchId;
+            });
+
+            if(linkedCase) {
+                const cName = (typeof linkedCase.customer === 'object') ? linkedCase.customer.name : linkedCase.customer;
+                const pName = (typeof linkedCase.provider === 'object') ? (linkedCase.provider.company || linkedCase.provider.name) : linkedCase.provider;
+                
+                custEl.innerText = cName;
+                provEl.innerText = pName;
+                custEl.style.color = "#1e293b";
+                msgEl.innerText = "✓ Parties successfully retrieved from Case Database.";
+                msgEl.style.color = "#10b981";
+            } else {
+                custEl.innerText = "Case Not Found";
+                provEl.innerText = "Case Not Found";
+                custEl.style.color = "#ef4444";
+                msgEl.innerText = "⚠ No case exists with ID: " + cid;
+                msgEl.style.color = "#ef4444";
+            }
+        }
+
+        function toggleEdit() {
+            document.querySelectorAll('.view-m').forEach(el => el.classList.toggle('hidden'));
+            document.querySelectorAll('.edit-m').forEach(el => el.classList.toggle('hidden'));
+            
+            const isEditing = !document.getElementById('e-case').classList.contains('hidden');
+            document.getElementById('toggle-edit-btn').innerHTML = isEditing ? 
+                '<i class="fa-solid fa-xmark"></i> Cancel' : '<i class="fa-solid fa-pen-to-square"></i> Edit Details';
+        }
+
+        function saveChanges() {
+            const oldId = currentH.id;
+            const caseId = document.getElementById('e-case').value.trim();
+            const arbitrator = document.getElementById('e-arb').value.trim();
+            const date = document.getElementById('e-date').value;
+            const time = document.getElementById('e-time').value.trim();
+
+            if (!caseId || !arbitrator || !date || !time) {
+                alert("Case ID, arbitrator, date, and time are required.");
+                return;
+            }
+            
+            // Update the data in memory
+            currentH.caseId = caseId;
+            currentH.arbitrator = arbitrator;
+            currentH.date = date;
+            currentH.time = time;
+            currentH.type = document.getElementById('e-type').value;
+            currentH.status = document.getElementById('e-status').value;
+
+            // Log activity
+            if(window.logAdminActivity) {
+                logAdminActivity(`Updated Hearing ${oldId} details`);
+            }
+            
+            saveAdminData();
+            alert("Changes Saved Successfully!");
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

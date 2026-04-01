@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Booking Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .details-container { max-width: 900px; margin: 40px auto; padding: 0 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: var(--text-soft); font-size: 0.9rem; font-weight: 600; margin-bottom: 16px; transition: color 0.2s; }
+    .back-link:hover { color: var(--primary); }
+    
+    .booking-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; box-shadow: var(--shadow-sm); }
+    
+    .booking-card__header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .booking-card__header h1 { font-size: 1.75rem; font-weight: 800; color: var(--text-dark); margin: 0; }
+    .status-badge { padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .details-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; }
+    @media (max-width: 768px) { .details-grid { grid-template-columns: 1fr; } }
+
+    .detail-section { margin-bottom: 24px; }
+    .detail-label { font-size: 0.75rem; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: block; }
+    
+    .provider-box { display: flex; align-items: center; gap: 12px; }
+    .provider-box img { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); }
+    .provider-box strong { font-size: 1.1rem; color: var(--text-dark); font-weight: 700; }
+
+    .schedule-item { display: flex; align-items: center; gap: 10px; font-size: 1rem; color: var(--text-dark); font-weight: 600; margin-bottom: 8px; }
+    .schedule-item i { color: var(--text-soft); width: 20px; font-size: 1.1rem; }
+
+    .location-text { font-size: 1rem; color: var(--text-dark); font-weight: 500; line-height: 1.5; margin: 0; }
+
+    .payment-amount { font-size: 1.75rem; font-weight: 800; color: var(--primary); margin: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="details-container">
+    <a href="my-bookings.html" class="back-link"><i class="fa-solid fa-arrow-left"></i> Back to My Bookings</a>
+    <h2 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 24px;">Booking Details</h2>
+
+    <div class="booking-card">
+      <div class="booking-card__header">
+        <h1 id="disp-title">Loading...</h1>
+        <span id="disp-status" class="status-badge">Status</span>
+      </div>
+
+      <div class="details-grid">
+        <div>
+          <div class="detail-section">
+            <span class="detail-label">Professional</span>
+            <div class="provider-box">
+              <img id="disp-provider-img" src="https://ui-avatars.com/api/?name=P&background=random" alt="Provider">
+              <strong id="disp-provider-name">Provider Name</strong>
+            </div>
+          </div>
+
+          <div class="detail-section" style="margin-top: 32px;">
+            <span class="detail-label">Service Location</span>
+            <p id="disp-address" class="location-text">Address Loading...</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="detail-section">
+            <span class="detail-label">Schedule</span>
+            <div class="schedule-item">
+              <i class="fa-solid fa-calendar-day"></i> <span id="disp-date">Date</span>
+            </div>
+            <div class="schedule-item">
+              <i class="fa-regular fa-clock"></i> <span id="disp-time">Time</span>
+            </div>
+          </div>
+
+          <div class="detail-section" style="margin-top: 32px;">
+            <span class="detail-label">Payment</span>
+            <p id="disp-total" class="payment-amount">$0.00</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/booking-details.js"></script>
+</body>
+</html>

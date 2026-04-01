@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Dispute Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 24px; }
+    .info-card h3 { font-size: 1.05rem; color: var(--text-dark); margin-bottom: 20px; }
+    
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px; }
+    @media(max-width: 768px) { .info-grid { grid-template-columns: 1fr; } }
+    
+    .info-item { display: flex; flex-direction: column; gap: 6px; }
+    .info-label { font-size: 0.75rem; color: var(--text-soft); font-weight: 600; text-transform: uppercase; }
+    .info-value { font-size: 0.95rem; color: var(--text-dark); font-weight: 600; }
+
+    /* Evidence Files */
+    .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .evidence-item { display: flex; align-items: center; gap: 12px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: #F9FAFB; }
+    .evidence-icon { width: 40px; height: 40px; border-radius: 8px; background: var(--blue-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .evidence-icon.pdf { background: #FEE2E2; color: var(--red); }
+    .evidence-details { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; }
+    .evidence-name { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .evidence-meta { font-size: 0.75rem; color: var(--text-soft); }
+    
+    .action-row { display: flex; justify-content: center; gap: 16px; margin-top: 40px; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=John+Smith&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link active"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Dispute Status</h1>
+        <p>Track the progress of your dispute resolution</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Dispute Information</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Dispute ID</span>
+            <span class="info-value" id="statusDisputeId">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Service Name</span>
+            <span class="info-value" id="statusServiceName">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Booking Reference</span>
+            <span class="info-value" id="statusBookingId">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Issue Category</span>
+            <span class="info-value" id="statusCategory">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Date Submitted</span>
+            <span class="info-value" id="statusSubmittedDate">Loading...</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Current Status</span>
+            <div id="statusBadge"><span class="status-dot-pill status-dot-pill--review"><i></i> Loading...</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <h3>Issue Summary</h3>
+        <p id="statusDescription" style="font-size: 0.95rem; color: var(--text-mid); line-height: 1.6; margin: 0;">Loading dispute summary...</p>
+      </div>
+
+      <div class="info-card">
+        <h3>Dispute Timeline</h3>
+        <div class="timeline" id="disputeTimeline"></div>
+      </div>
+
+      <div class="info-card">
+        <h3>Submitted Evidence</h3>
+        <div class="evidence-grid" id="evidenceGrid"></div>
+      </div>
+
+      <div class="action-row">
+        <a href="disputes.html" class="btn btn--outline" style="padding: 12px 24px; min-width: 160px;"><i class="fa-solid fa-arrow-left"></i> Back to Disputes</a>
+        <a href="customer_dashboard.html" class="btn btn--primary" style="padding: 12px 24px; min-width: 160px;"><i class="fa-solid fa-house"></i> Back to Dashboard</a>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/disputes.js"></script>
+  <script src="assets/js/dispute-status.js"></script>
+</body>
+</html>

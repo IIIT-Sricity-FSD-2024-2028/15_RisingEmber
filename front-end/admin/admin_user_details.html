@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Details | Edit User</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .details-card { background: white; border: 1px solid var(--admin-border); border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .user-hero { display: flex; align-items: center; gap: 20px; }
+        .user-hero img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+        .hero-info h2 { margin: 0; font-size: 1.5rem; }
+        .hero-info span { font-size: 0.9rem; margin-right: 15px; }
+        
+        .section-title { font-size: 1rem; font-weight: 700; margin-bottom: 20px; color: #1e293b; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item { display: flex; flex-direction: column; gap: 5px; }
+        .info-item label { font-size: 0.8rem; font-weight: 600; color: #64748b; }
+        .info-item input { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.2s; }
+        .info-item input:focus { border-color: var(--admin-accent); }
+        
+        .stat-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f8fafc; }
+        .stat-row span { font-size: 0.9rem; color: #64748b; }
+        .stat-row strong { color: #1e293b; }
+        .text-green { color: #16a34a !important; }
+        .text-red { color: #dc2626 !important; }
+        .text-blue { color: #2563eb !important; }
+
+        .btn-full { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-save { background: var(--admin-accent); color: white; }
+        .btn-cancel { background: #f1f5f9; color: #475569; }
+        .btn-delete { background: #fee2e2; color: #dc2626; }
+
+        .perm-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+        .perm-item { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; cursor: pointer; }
+        
+        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--admin-accent); }
+        input:checked + .slider:before { transform: translateX(20px); }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>User Details</h1>
+                <p>Edit full user profile and system metadata.</p>
+            </div>
+
+            <div class="details-grid">
+                <div class="left-col">
+                    <div class="details-card user-hero">
+                        <img id="view-avatar" src="" alt="User">
+                        <div class="hero-info">
+                            <h2 id="view-header-name">---</h2>
+                            <span class="text-blue" id="view-header-role">---</span>
+                            <span class="text-green" id="view-header-status">---</span>
+                        </div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="section-title">Basic Information</div>
+                        <div class="info-grid">
+                            <div class="info-item"><label>Full Name</label><input type="text" id="edit-name"></div>
+                            <div class="info-item"><label>Email Address</label><input type="email" id="edit-email"></div>
+                            <div class="info-item"><label>Phone Number</label><input type="text" id="edit-phone"></div>
+                            <div class="info-item"><label>Organization</label><input type="text" id="edit-org"></div>
+                            <div class="info-item" style="grid-column: span 2;"><label>Address</label><input type="text" id="edit-address"></div>
+                            
+                            <div class="info-item"><label>Account Created</label><input type="text" id="edit-created"></div>
+                            <div class="info-item"><label>Last Login</label><input type="text" id="edit-lastlogin"></div>
+                        </div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="section-title">Role & Permissions</div>
+                        <label style="font-size: 0.8rem; font-weight: 600; color: #64748b;">Role</label>
+                        <select id="edit-role" style="width: 100%; padding: 10px; border-radius: 8px; border:1px solid #e2e8f0; margin-bottom: 20px; outline: none;">
+                            <option value="Customer">Customer</option>
+                            <option value="Service Provider">Service Provider</option>
+                            <option value="Arbitrator">Arbitrator</option>
+                        </select>
+                        <div class="perm-list">
+                            <label class="perm-item"><input type="checkbox" value="Manage Cases"> Manage Cases</label>
+                            <label class="perm-item"><input type="checkbox" value="Upload Documents"> Upload Documents</label>
+                            <label class="perm-item"><input type="checkbox" value="Schedule Hearings"> Schedule Hearings</label>
+                            <label class="perm-item"><input type="checkbox" value="Access Reports"> Access Reports</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="details-card">
+                        <div class="section-title">Activity Summary</div>
+                        <div class="stat-row"><span>Total Cases Involved</span><strong id="stat-total">0</strong></div>
+                        <div class="stat-row"><span>Cases Won</span><strong class="text-green" id="stat-won">0</strong></div>
+                        <div class="stat-row"><span>Cases Lost</span><strong class="text-red" id="stat-lost">0</strong></div>
+                        <div class="stat-row"><span>Pending Cases</span><strong class="text-blue" id="stat-pending">0</strong></div>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="section-title">Actions</div>
+                        <button class="btn-full btn-save" onclick="saveChanges()"><i class="fa-solid fa-floppy-disk"></i> Save Changes</button>
+                        <button class="btn-full btn-cancel" onclick="location.href='admin_users.html'"><i class="fa-solid fa-xmark"></i> Cancel</button>
+                        <button class="btn-full btn-delete" onclick="deleteCurrentUser()"><i class="fa-solid fa-trash"></i> Delete User</button>
+                    </div>
+
+                    <div class="details-card">
+                        <div class="section-title">Account Controls</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center">
+                            <span>Account Status (Active/Suspended)</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="status-toggle">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const userId = urlParams.get('id');
+        let currentUser = AdminData.users.find(u => u.id === userId);
+
+        function loadUserData() {
+            if(!currentUser) {
+                alert("User not found!");
+                window.location.href = 'admin_users.html';
+                return;
+            }
+
+            // Populate UI Text
+            document.getElementById('view-avatar').src = currentUser.avatar;
+            document.getElementById('view-header-name').innerText = currentUser.name;
+            document.getElementById('view-header-role').innerText = currentUser.role;
+            document.getElementById('view-header-status').innerText = currentUser.status;
+
+            // Populate Input Fields
+            document.getElementById('edit-name').value = currentUser.name;
+            document.getElementById('edit-email').value = currentUser.email;
+            document.getElementById('edit-phone').value = currentUser.phone || "";
+            document.getElementById('edit-org').value = currentUser.org || "";
+            document.getElementById('edit-address').value = currentUser.address || "";
+            
+            // Editable date fields loaded from memory
+            document.getElementById('edit-created').value = currentUser.date || "";
+            document.getElementById('edit-lastlogin').value = currentUser.lastLogin || "";
+            
+            document.getElementById('edit-role').value = currentUser.role;
+
+            // Stats
+            const s = currentUser.stats || { involved: 0, won: 0, lost: 0, pending: 0 };
+            document.getElementById('stat-total').innerText = s.involved;
+            document.getElementById('stat-won').innerText = s.won;
+            document.getElementById('stat-lost').innerText = s.lost;
+            document.getElementById('stat-pending').innerText = s.pending;
+
+            // Status Toggle
+            document.getElementById('status-toggle').checked = (currentUser.status === 'Active');
+
+            // Permissions
+            const perms = currentUser.permissions || [];
+            document.querySelectorAll('.perm-list input').forEach(cb => {
+                cb.checked = perms.includes(cb.value);
+            });
+        }
+
+        function saveChanges() {
+            const name = document.getElementById('edit-name').value.trim();
+            const email = document.getElementById('edit-email').value.trim();
+            if (!name || !email) {
+                alert("Name and email are required.");
+                return;
+            }
+
+            // Updating the object with values from the inputs
+            currentUser.name = name;
+            currentUser.email = email;
+            currentUser.phone = document.getElementById('edit-phone').value;
+            currentUser.org = document.getElementById('edit-org').value;
+            currentUser.address = document.getElementById('edit-address').value;
+            
+            // SAVING THE UPDATED DATES
+            currentUser.date = document.getElementById('edit-created').value;
+            currentUser.lastLogin = document.getElementById('edit-lastlogin').value;
+            
+            currentUser.role = document.getElementById('edit-role').value;
+            currentUser.status = document.getElementById('status-toggle').checked ? 'Active' : 'Suspended';
+
+            // Updating Permissions array
+            currentUser.permissions = [];
+            document.querySelectorAll('.perm-list input:checked').forEach(cb => {
+                currentUser.permissions.push(cb.value);
+            });
+
+            // Write to localStorage
+            saveAdminData();
+            logAdminActivity(`Updated user ${currentUser.id}`);
+            alert("Success! Profile updated and changes saved to local memory.");
+            location.reload();
+        }
+
+        function deleteCurrentUser() {
+            if(confirm(`Are you sure? This is permanent and ${currentUser.name}'s data will be lost.`)) {
+                AdminData.users = AdminData.users.filter(u => u.id !== userId);
+                saveAdminData();
+                logAdminActivity(`Deleted user ${userId}`);
+                window.location.href = 'admin_users.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadUserData);
+    </script>
+</body>
+</html>

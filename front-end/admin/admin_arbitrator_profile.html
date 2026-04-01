@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Arbitrator Profile | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .hero-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 25px; }
+        .hero-info { display: flex; align-items: center; gap: 20px; }
+        .hero-avatar { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; }
+        
+        .content-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        
+        /* Fixed Grid for Info items */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item { display: flex; flex-direction: column; }
+        .info-item label { display: block; font-size: 0.75rem; color: #64748b; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .info-item input, .info-item select { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; transition: 0.2s; box-sizing: border-box; }
+        .info-item input:focus { border-color: #3b82f6; }
+
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .metric-box { padding: 15px; border-radius: 10px; background: #f8fafc; border: 1px solid #f1f5f9; }
+        .metric-val { display: block; font-size: 1.4rem; font-weight: 800; color: #1e293b; }
+        .metric-lab { font-size: 0.75rem; color: #64748b; font-weight: 600; }
+
+        .btn-action-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-profile { flex: 1; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-approve { background: #22c55e; color: white; }
+        .btn-suspend { background: #f59e0b; color: white; }
+        .btn-remove { background: #ef4444; color: white; }
+
+        .doc-item { display: flex; justify-content: space-between; padding: 12px; border: 1px solid #f1f5f9; border-radius: 8px; margin-bottom: 10px; }
+        .doc-link { color: #3b82f6; text-decoration: none; font-weight: 600; font-size: 0.85rem; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; display: inline-block; }
+        .status-active { background: #dcfce7; color: #15803d; }
+        .status-suspended { background: #fee2e2; color: #991b1b; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header"><h1>Arbitrator Profile</h1><p>View and edit arbitrator performance and credentials.</p></div>
+
+            <div class="hero-card">
+                <div class="hero-info">
+                    <img id="p-avatar" src="" class="hero-avatar">
+                    <div>
+                        <h2 id="p-header-name" style="margin:0;">---</h2>
+                        <span id="p-header-spec" style="color:#64748b; font-size:0.9rem;">---</span><br>
+                        <span id="p-header-loc" style="font-size:0.8rem; color:#94a3b8;"><i class="fa-solid fa-location-dot"></i> ---</span>
+                    </div>
+                </div>
+                <div id="p-status-badge" class="status-pill">---</div>
+            </div>
+
+            <div class="profile-layout">
+                <div class="main-col">
+                    <div class="content-card">
+                        <div class="card-title">Basic Information</div>
+                        <div class="info-grid">
+                            <div class="info-item"><label>Full Name</label><input type="text" id="in-name"></div>
+                            <div class="info-item"><label>Email Address</label><input type="email" id="in-email"></div>
+                            <div class="info-item"><label>Phone</label><input type="text" id="in-phone"></div>
+                            <div class="info-item"><label>Organization</label><input type="text" id="in-org"></div>
+                            <div class="info-item"><label>Certification</label><input type="text" id="in-cert"></div>
+                            <div class="info-item"><label>Expertise Area</label><input type="text" id="in-exp"></div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Experience Summary</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <label>Years Experience</label>
+                                <input type="number" id="in-years">
+                            </div>
+                            <div class="info-item">
+                                <label>Cases Handled</label>
+                                <input type="number" id="in-handled">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Recent Cases History</div>
+                        <table class="admin-table">
+                            <thead><tr><th>Case ID</th><th>Title</th><th>Type</th><th>Status</th><th>Date</th></tr></thead>
+                            <tbody id="case-history-table"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Documents & Certifications</div>
+                        <div id="doc-list"></div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Admin Private Notes</div>
+                        <textarea id="in-notes" style="width:100%; height:100px; border:1px solid #e2e8f0; border-radius:8px; padding:15px; box-sizing: border-box;"></textarea>
+                        <button class="btn-primary-sm" style="margin-top:15px;" onclick="saveProfileChanges()">Save All Changes</button>
+                    </div>
+                </div>
+
+                <div class="side-col">
+                    <div class="content-card">
+                        <div class="card-title">Performance Metrics</div>
+                        <div class="metrics-grid">
+                            <div class="metric-box"><span class="metric-val" id="m-active">0</span><span class="metric-lab">Active Cases</span></div>
+                            <div class="metric-box"><span class="metric-val" id="m-closed">0</span><span class="metric-lab">Closed Cases</span></div>
+                            <div class="metric-box"><span class="metric-val" style="color:#7c3aed;" id="m-time">0</span><span class="metric-lab">Avg. Resolution</span></div>
+                            <div class="metric-box"><span class="metric-val" style="color:#f59e0b;" id="m-hear">0</span><span class="metric-lab">Upcoming</span></div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Account Actions</div>
+                        <button class="btn-profile btn-approve" onclick="updateStatus('Active')">Approve Arbitrator</button>
+                        <button class="btn-profile btn-suspend" style="margin-top:10px" onclick="updateStatus('Suspended')">Suspend Arbitrator</button>
+                        <button class="btn-profile btn-remove" style="margin-top:10px" onclick="deleteArbitrator()">Remove Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const arbId = decodeURIComponent(urlParams.get('id') || "#ARB001");
+        let currentArb = AdminData.arbitrators.find(a => a.id === arbId);
+
+        function buildArbitratorDocumentHref(doc) {
+            if (doc && doc.fileLink) {
+                return doc.fileLink;
+            }
+
+            const summary = [
+                `Arbitrator: ${currentArb ? currentArb.name : 'Unknown'}`,
+                `Document: ${doc && doc.name ? doc.name : 'Untitled document'}`,
+                `Generated preview from the Admin Hub arbitrator profile.`
+            ].join('\n');
+
+            return `data:text/plain;charset=utf-8,${encodeURIComponent(summary)}`;
+        }
+
+        function initProfile() {
+            if(!currentArb) { alert("Arbitrator not found!"); window.location.href='admin_arbitrators.html'; return; }
+
+            // Hero
+            document.getElementById('p-avatar').src = currentArb.avatar;
+            document.getElementById('p-header-name').innerText = currentArb.name;
+            document.getElementById('p-header-spec').innerText = currentArb.specialization;
+            document.getElementById('p-header-loc').innerHTML = `<i class="fa-solid fa-location-dot"></i> ${currentArb.location || 'Not Set'}`;
+            
+            const badge = document.getElementById('p-status-badge');
+            badge.innerText = currentArb.status;
+            badge.className = `status-pill status-${currentArb.status.toLowerCase()}`;
+
+            // Basic Info Inputs
+            document.getElementById('in-name').value = currentArb.name;
+            document.getElementById('in-email').value = currentArb.email;
+            document.getElementById('in-phone').value = currentArb.phone || "";
+            document.getElementById('in-org').value = currentArb.organization || "";
+            document.getElementById('in-cert').value = currentArb.certification || "";
+            document.getElementById('in-exp').value = currentArb.expertise || "";
+
+            // Metrics Inputs
+            document.getElementById('in-years').value = currentArb.experience;
+            document.getElementById('in-handled').value = currentArb.casesHandled || 0;
+
+            // Sidebar Metrics
+            document.getElementById('m-active').innerText = currentArb.metrics.activeCases;
+            document.getElementById('m-closed').innerText = currentArb.metrics.closedCases;
+            document.getElementById('m-time').innerText = currentArb.metrics.avgResolution;
+            document.getElementById('m-hear').innerText = currentArb.metrics.upcomingHearings;
+
+            // Case Table
+            document.getElementById('case-history-table').innerHTML = (currentArb.pastCases || []).map(c => `
+                <tr>
+                    <td><strong>${c.id}</strong></td>
+                    <td>${c.title}</td>
+                    <td>${c.type}</td>
+                    <td><span class="status-pill status-active" style="padding:2px 8px; font-size:0.7rem;">${c.status}</span></td>
+                    <td>${c.date}</td>
+                </tr>
+            `).join('');
+
+            // Docs
+            document.getElementById('doc-list').innerHTML = (currentArb.documents || []).map(d => `
+                <div class="doc-item">
+                    <span><i class="fa-solid fa-file-pdf" style="color:#ef4444"></i> ${d.name}</span>
+                    <a href="${buildArbitratorDocumentHref(d)}" class="doc-link" target="_blank" rel="noopener noreferrer">Preview</a>
+                </div>
+            `).join('') || `<p style="margin:0; color:#94a3b8;">No documents have been uploaded for this arbitrator yet.</p>`;
+
+            document.getElementById('in-notes').value = currentArb.adminNotes || "";
+        }
+
+        function saveProfileChanges() {
+            const name = document.getElementById('in-name').value.trim();
+            const email = document.getElementById('in-email').value.trim();
+            if (!name || !email) {
+                alert("Arbitrator name and email are required.");
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+            if (AdminData.arbitrators.some(a => a.id !== currentArb.id && String(a.email || '').toLowerCase() === email.toLowerCase())) {
+                alert("Another arbitrator is already using this email address.");
+                return;
+            }
+
+            currentArb.name = name;
+            currentArb.email = email;
+            currentArb.phone = document.getElementById('in-phone').value.trim();
+            currentArb.organization = document.getElementById('in-org').value.trim();
+            currentArb.certification = document.getElementById('in-cert').value.trim();
+            currentArb.expertise = document.getElementById('in-exp').value.trim();
+            currentArb.experience = String(Math.max(0, Number(document.getElementById('in-years').value) || 0));
+            currentArb.casesHandled = Math.max(0, Number(document.getElementById('in-handled').value) || 0);
+            currentArb.adminNotes = document.getElementById('in-notes').value.trim();
+
+            saveAdminData();
+            logAdminActivity(`Updated arbitrator ${currentArb.id}`);
+            alert("Arbitrator profile updated successfully!");
+            location.reload();
+        }
+
+        function updateStatus(newStatus) {
+            currentArb.status = newStatus;
+            saveAdminData();
+            logAdminActivity(`Set arbitrator ${currentArb.id} status to ${newStatus}`);
+            location.reload();
+        }
+
+        function deleteArbitrator() {
+            if(confirm("Are you sure? This will permanently delete this arbitrator.")) {
+                AdminData.arbitrators = AdminData.arbitrators.filter(a => a.id !== arbId);
+                saveAdminData();
+                logAdminActivity(`Deleted arbitrator ${arbId}`);
+                window.location.href = 'admin_arbitrators.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initProfile);
+    </script>
+</body>
+</html>

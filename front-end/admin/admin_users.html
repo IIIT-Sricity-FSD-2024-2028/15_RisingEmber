@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Management | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .role-badge { padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+        .role-customer { background: #F3E8FF; color: #7E22CE; }
+        .role-provider { background: #DBEAFE; color: #1D4ED8; }
+        .role-arbitrator { background: #E0F2FE; color: #0369A1; }
+        
+        .status-active { background: #DCFCE7; color: #15803D; }
+        .status-pending { background: #FEF3C7; color: #B45309; }
+        .status-suspended { background: #FEE2E2; color: #B91C1C; }
+
+        .action-link { cursor: pointer; font-weight: 600; margin-right: 10px; font-size: 0.85rem; text-decoration: none; display: inline-block; }
+        .link-blue { color: #2563eb; }
+        .link-red { color: #dc2626; }
+        .link-green { color: #16a34a; }
+        .link-gray { color: #64748b; }
+        .link-delete { color: #b91c1c; margin-left: 5px; border-left: 1px solid #e5e7eb; padding-left: 10px; }
+        .link-delete:hover { color: #7f1d1d; text-decoration: underline; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+
+        <div class="admin-view-padding">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div class="view-header" style="margin-bottom: 0;">
+                    <h1>User Management</h1>
+                    <p>Manage platform users including customers, service providers, and arbitrators.</p>
+                </div>
+                <button class="btn-primary-sm" style="padding: 12px 24px; font-size: 1rem;" onclick="window.location.href='admin_create_user.html'">
+                    <i class="fa-solid fa-plus"></i> Create New User
+                </button>
+            </div>
+
+            <div class="admin-stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-users"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="total-u">0</span>
+                        <span class="label">Total Users</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-user-check"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="active-u">0</span>
+                        <span class="label">Active Users</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-orange"><i class="fa-solid fa-clock"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="pending-u">0</span>
+                        <span class="label">Pending Approvals</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple"><i class="fa-solid fa-user-slash"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="suspended-u">0</span>
+                        <span class="label">Suspended Users</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container" style="margin-bottom: 20px; padding: 15px;">
+                <div style="display: flex; gap: 15px;">
+                    <div class="search-bar" style="flex: 1;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="userSearch" placeholder="Search by name, email, or role..." oninput="filterUsers()">
+                    </div>
+                    <select id="roleFilter" class="btn-outline" style="width: 150px;" onchange="filterUsers()">
+                        <option value="All">All Roles</option>
+                        <option value="Customer">Customer</option>
+                        <option value="Service Provider">Service Provider</option>
+                        <option value="Arbitrator">Arbitrator</option>
+                    </select>
+                    <select id="statusFilter" class="btn-outline" style="width: 150px;" onchange="filterUsers()">
+                        <option value="All">All Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Suspended">Suspended</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>User ID</th>
+                            <th>Full Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Registration Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        /**
+         * Renders the UI stats based on current AdminData in memory
+         */
+        function renderUserManagement() {
+            if (typeof AdminData === 'undefined' || !AdminData.users) {
+                console.error("AdminData or users list is missing.");
+                return;
+            }
+
+            document.getElementById('total-u').innerText = AdminData.users.length.toLocaleString();
+            document.getElementById('active-u').innerText = AdminData.users.filter(u => u.status === 'Active').length.toLocaleString();
+            document.getElementById('pending-u').innerText = AdminData.users.filter(u => u.status === 'Pending').length.toLocaleString();
+            document.getElementById('suspended-u').innerText = AdminData.users.filter(u => u.status === 'Suspended').length.toLocaleString();
+            
+            filterUsers(); 
+        }
+
+        /**
+         * Filters the users array and updates the table HTML
+         */
+        function filterUsers() {
+            const query = document.getElementById('userSearch').value.toLowerCase();
+            const role = document.getElementById('roleFilter').value;
+            const status = document.getElementById('statusFilter').value;
+
+            const filtered = AdminData.users.filter(u => {
+                const matchesSearch = u.name.toLowerCase().includes(query) || 
+                                    u.email.toLowerCase().includes(query) || 
+                                    u.id.toLowerCase().includes(query);
+                const matchesRole = (role === 'All' || u.role === role);
+                const matchesStatus = (status === 'All' || u.status === status);
+                return matchesSearch && matchesRole && matchesStatus;
+            });
+
+            const tbody = document.getElementById('user-table-body');
+            tbody.innerHTML = filtered.map(u => `
+                <tr>
+                    <td style="font-weight: 700;">${u.id}</td>
+                    <td>
+                        <div class="user-cell">
+                            <img src="${u.avatar}" alt="user">
+                            <strong>${u.name}</strong>
+                        </div>
+                    </td>
+                    <td style="color: #64748b;">${u.email}</td>
+                    <td><span class="role-badge ${getRoleClass(u.role)}">${u.role}</span></td>
+                    <td><span class="status-pill status-${u.status.toLowerCase()}">${u.status}</span></td>
+                    <td>${u.date || 'N/A'}</td>
+                    <td>
+                        ${u.status === 'Pending' ? 
+                            `<a class="action-link link-green" onclick="updateUserStatus('${u.id}', 'Active')">Approve</a>
+                             <a class="action-link link-red" onclick="updateUserStatus('${u.id}', 'Rejected')">Reject</a>` 
+                            : 
+                            `<a href="admin_user_details.html?id=${u.id}" class="action-link link-blue">View</a>
+                             <a href="admin_user_details.html?id=${u.id}" class="action-link link-gray">Edit</a>
+                             <a class="action-link link-red" onclick="updateUserStatus('${u.id}', '${u.status === 'Suspended' ? 'Active' : 'Suspended'}')">
+                                ${u.status === 'Suspended' ? 'Enable' : 'Disable'}
+                             </a>`
+                        }
+                        <a class="action-link link-delete" onclick="deleteUser('${u.id}')" title="Delete Permanent"><i class="fa-solid fa-trash-can"></i></a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getRoleClass(role) {
+            if (role === 'Customer') return 'role-customer';
+            if (role === 'Service Provider' || role === 'Provider') return 'role-provider';
+            if (role === 'Arbitrator') return 'role-arbitrator';
+            return '';
+        }
+
+        /**
+         * Quickly updates status (Approve/Reject/Disable) without leaving the page
+         */
+        function updateUserStatus(userId, newStatus) {
+            const userIndex = AdminData.users.findIndex(u => u.id === userId);
+            if (userIndex !== -1) {
+                if (newStatus === 'Rejected') {
+                    AdminData.users.splice(userIndex, 1);
+                } else {
+                    AdminData.users[userIndex].status = newStatus;
+                }
+                saveAdminData();
+                renderUserManagement();
+            }
+        }
+
+        /**
+         * Permanent delete function
+         */
+        function deleteUser(userId) {
+            if (confirm(`Are you sure you want to permanently delete user ${userId}?`)) {
+                AdminData.users = AdminData.users.filter(u => u.id !== userId);
+                saveAdminData();
+                renderUserManagement();
+            }
+        }
+
+        // Run render on load
+        document.addEventListener('DOMContentLoaded', renderUserManagement);
+    </script>
+</body>
+</html>

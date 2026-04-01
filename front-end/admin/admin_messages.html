@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Communication Monitoring | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body, html { overflow: hidden; background-color: #f8fafc; margin: 0; padding: 0; }
+        .admin-main-content { width: calc(100% - 260px); margin-left: 260px; height: 100vh; display: flex; flex-direction: column; }
+        
+        .monitor-container { 
+            display: grid; 
+            grid-template-columns: 350px 1fr; 
+            height: calc(100vh - 160px); 
+            background: white; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            margin: 0 25px 25px 25px; 
+        }
+
+        .thread-sidebar { border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; background: #fff; }
+        .thread-search { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        
+        .search-wrapper { position: relative; display: flex; align-items: center; }
+        .search-wrapper i { position: absolute; left: 12px; color: #94a3b8; }
+        .search-wrapper input { width: 100%; padding: 10px 10px 10px 35px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.9rem; }
+
+        .thread-list { overflow-y: auto; flex: 1; }
+        
+        .thread-item { 
+            padding: 18px; 
+            border-bottom: 1px solid #f8fafc; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .thread-item:hover { background: #f8fafc; }
+        .thread-item.active { background: #eff6ff; border-left: 4px solid #3b82f6; }
+        
+        .thread-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .participants { font-weight: 700; font-size: 0.95rem; color: #1e293b; padding-right: 10px; }
+        
+        /* Status Badges in Sidebar */
+        .badge-row { display: flex; gap: 5px; }
+        .dispute-tag { font-size: 0.6rem; color: #64748b; font-weight: 800; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
+        .flag-tag { font-size: 0.6rem; color: #fff; background: #ef4444; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+        .reviewed-tag { font-size: 0.6rem; color: #fff; background: #10b981; padding: 2px 6px; border-radius: 4px; font-weight: 800; }
+
+        .chat-monitor { display: flex; flex-direction: column; background: #fbfcfe; position: relative; }
+        .chat-header { padding: 15px 25px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .chat-body { flex: 1; overflow-y: auto; padding: 25px; display: flex; flex-direction: column; gap: 20px; }
+        
+        .msg-bubble { max-width: 75%; padding: 15px; border-radius: 12px; position: relative; font-size: 0.9rem; border: 1px solid transparent; }
+        .msg-left { background: white; border: 1px solid #e2e8f0; align-self: flex-start; border-bottom-left-radius: 2px; }
+        .msg-right { background: #2563eb; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+        
+        .msg-meta { font-size: 0.7rem; color: #94a3b8; margin-top: 8px; display: flex; gap: 12px; }
+        .msg-right .msg-meta { color: #bfdbfe; }
+        
+        .flag-btn { cursor: pointer; font-weight: 600; }
+        .flagged-msg { border: 2px solid #ef4444 !important; background: #fef2f2 !important; color: #1e293b !important; }
+
+        .monitor-footer { background: #fffbeb; border-top: 1px solid #fef3c7; padding: 12px; text-align: center; color: #92400e; font-size: 0.8rem; font-weight: 600; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Messages & Communication Monitoring</h1>
+                <p>Track interactions to ensure platform safety and compliance.</p>
+            </div>
+        </div>
+
+        <div class="monitor-container">
+            <div class="thread-sidebar">
+                <div class="thread-search">
+                    <div class="search-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="tSearch" placeholder="Search by name or ID..." oninput="renderThreads()">
+                    </div>
+                </div>
+                <div class="thread-list" id="thread-container"></div>
+            </div>
+
+            <div class="chat-monitor">
+                <div id="chat-header-area" class="chat-header">
+                    <div style="color:#94a3b8">Select a conversation to begin monitoring</div>
+                </div>
+                
+                <div class="chat-body" id="chat-body">
+                    <div style="margin: auto; color: #cbd5e1; text-align: center;">
+                        <i class="fa-solid fa-comment-dots" style="font-size: 4rem; margin-bottom: 15px; opacity: 0.5;"></i>
+                        <p style="font-weight: 600;">Monitoring System Ready</p>
+                    </div>
+                </div>
+
+                <div class="monitor-footer">
+                    <i class="fa-solid fa-lock"></i> ADMIN SECURE VIEW: Direct messaging is locked for this account.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        let activeThreadId = null;
+
+        function renderThreads() {
+            const query = document.getElementById('tSearch').value.toLowerCase();
+            const container = document.getElementById('thread-container');
+            
+            const filtered = (AdminData.conversations || []).filter(c => 
+                c.participants.toLowerCase().includes(query) || c.id.toLowerCase().includes(query)
+            );
+
+            container.innerHTML = filtered.map(c => `
+                <div class="thread-item ${activeThreadId === c.id ? 'active' : ''}" onclick="selectThread('${c.id}')">
+                    <div class="thread-top">
+                        <span class="participants">${c.participants}</span>
+                        <div class="badge-row">
+                            ${c.isFlagged ? '<span class="flag-tag">FLAGGED</span>' : ''}
+                            ${c.isReviewed ? '<span class="reviewed-tag"><i class="fa-solid fa-check"></i></span>' : ''}
+                            <span class="dispute-tag">${c.id}</span>
+                        </div>
+                    </div>
+                    <div style="font-size:0.8rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        ${c.lastMessage}
+                    </div>
+                    <div style="font-size:0.7rem; color:#94a3b8; display:flex; justify-content:space-between; margin-top:5px;">
+                        <span>${c.type}</span>
+                        <span>${c.time}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectThread(id) {
+            activeThreadId = id;
+            renderThreads();
+            const chat = AdminData.conversations.find(c => c.id === id);
+            
+            // Toggle Logic for Buttons
+            const flagBtnText = chat.isFlagged ? 'Unflag Dispute' : 'Flag Dispute';
+            const reviewBtnText = chat.isReviewed ? 'Reviewed' : 'Mark Reviewed';
+            const reviewBtnColor = chat.isReviewed ? '#10b981' : '#64748b';
+
+            document.getElementById('chat-header-area').innerHTML = `
+                <div>
+                    <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">${chat.participants}</h3>
+                    <span style="font-size:0.8rem; color:#64748b;">Monitoring Ref: ${chat.id}</span>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-outline" style="padding:8px 16px; border-color:${chat.isFlagged ? '#ef4444':'#e2e8f0'}; color:${chat.isFlagged ? '#ef4444':'#64748b'}" onclick="toggleThreadFlag('${id}')">
+                        <i class="fa-solid fa-triangle-exclamation"></i> ${flagBtnText}
+                    </button>
+                    <button class="btn-primary-sm" style="background:${reviewBtnColor}; border:none;" onclick="markReviewed('${id}')">
+                        <i class="fa-solid fa-check-double"></i> ${reviewBtnText}
+                    </button>
+                </div>
+            `;
+
+            const body = document.getElementById('chat-body');
+            body.innerHTML = chat.messages.map((m, idx) => `
+                <div class="msg-bubble ${idx % 2 === 0 ? 'msg-left' : 'msg-right'} ${m.flagged ? 'flagged-msg' : ''}">
+                    <div style="font-weight:800; font-size:0.7rem; margin-bottom:6px; opacity:0.8;">${m.sender.toUpperCase()}</div>
+                    <div>${m.text}</div>
+                    <div class="msg-meta">
+                        <span>${m.time}</span>
+                        <span class="flag-btn" onclick="toggleMsgFlag('${id}', ${idx})">
+                            <i class="fa-solid fa-flag"></i> ${m.flagged ? 'Unflag' : 'Flag'}
+                        </span>
+                        <span class="flag-btn" style="color:#ef4444" onclick="deleteMsg('${id}', ${idx})">
+                            <i class="fa-solid fa-trash"></i> Delete
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+            body.scrollTop = body.scrollHeight;
+        }
+
+        function toggleThreadFlag(id) {
+            const chat = AdminData.conversations.find(c => c.id === id);
+            chat.isFlagged = !chat.isFlagged;
+            logAdminActivity(`${chat.isFlagged ? 'Flagged' : 'Unflagged'} Dispute ${id}`);
+            saveAdminData();
+            selectThread(id);
+        }
+
+        function markReviewed(id) {
+            const chat = AdminData.conversations.find(c => c.id === id);
+            chat.isReviewed = !chat.isReviewed;
+            if(chat.isReviewed) logAdminActivity(`Dispute ${id} marked as Reviewed`);
+            saveAdminData();
+            selectThread(id);
+        }
+
+        function toggleMsgFlag(chatId, idx) {
+            const chat = AdminData.conversations.find(c => c.id === chatId);
+            chat.messages[idx].flagged = !chat.messages[idx].flagged;
+            saveAdminData();
+            selectThread(chatId);
+        }
+
+        function deleteMsg(chatId, idx) {
+            if(confirm("Permanently delete this message from history?")) {
+                const chat = AdminData.conversations.find(c => c.id === chatId);
+                chat.messages.splice(idx, 1);
+                saveAdminData();
+                selectThread(chatId);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderThreads);
+    </script>
+</body>
+</html>

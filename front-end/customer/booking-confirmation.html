@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Booking Confirmation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .status-container { max-width: 680px; margin: 40px auto; text-align: center; }
+    .status-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--green-bg); color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 24px; }
+    .status-title { font-size: 1.75rem; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+    .status-subtitle { font-size: 1.05rem; color: var(--text-mid); margin-bottom: 32px; }
+
+    .details-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: left; box-shadow: var(--shadow-sm); margin-bottom: 32px; }
+    .details-card__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .details-card__header h3 { font-size: 1.25rem; color: var(--text-dark); font-weight: 700; }
+    
+    .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 40px; }
+    @media (max-width: 600px) { .details-grid { grid-template-columns: 1fr; } }
+    
+    .detail-item { display: flex; flex-direction: column; gap: 6px; }
+    .detail-label { font-size: 0.8rem; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-value { font-size: 1rem; color: var(--text-dark); font-weight: 500; }
+    
+    .provider-info { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+    .provider-info img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+    .provider-info div { display: flex; flex-direction: column; }
+    
+    .total-payment { display: flex; justify-content: space-between; align-items: center; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+    .total-payment-amount { font-size: 1.5rem; font-weight: 800; color: var(--primary); }
+
+    .action-buttons { display: flex; justify-content: center; gap: 16px; margin-bottom: 40px; }
+    
+    .next-steps { background: var(--blue-info-bg); border-radius: var(--radius-sm); padding: 24px; text-align: left; border: 1px solid #BFDBFE; }
+    .next-steps h4 { font-size: 1.05rem; color: var(--text-dark); margin-bottom: 16px; font-weight: 700; }
+    .next-steps ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .next-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 0.95rem; color: var(--text-mid); }
+    .next-steps li i { margin-top: 4px; font-size: 1.1rem; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Ashwin&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link active"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 0;">
+        <a href="customer_dashboard.html" style="font-size: 0.9rem; color: var(--text-soft); display: inline-flex; align-items: center; gap: 8px; text-decoration: none; margin-bottom: 12px;"><i class="fa-solid fa-arrow-left"></i> Return to Dashboard</a>
+      </div>
+
+      <div class="status-container">
+        <div class="status-icon"><i class="fa-solid fa-check"></i></div>
+        <h2 class="status-title">Booking Confirmed Successfully</h2>
+        <p class="status-subtitle">Your service appointment has been scheduled and confirmed</p>
+
+        <div class="details-card">
+          <div class="details-card__header">
+            <h3>Booking Details</h3>
+            <span class="status status--completed" style="background: var(--green-bg); color: var(--green); padding: 6px 16px; font-size: 0.85rem;">Confirmed</span>
+          </div>
+
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="detail-label">Booking ID</span>
+              <span class="detail-value" id="confirmId">Loading...</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Scheduled Date</span>
+              <span class="detail-value" id="confirmDate">Loading...</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Service</span>
+              <span class="detail-value" id="confirmService">Loading...</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Scheduled Time</span>
+              <span class="detail-value" id="confirmTime">Loading...</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Professional</span>
+              <div class="provider-info">
+                <img id="confirmProviderImg" src="https://ui-avatars.com/api/?name=Loading" alt="Provider">
+                <div>
+                  <span class="detail-value" id="confirmProvider">Loading...</span>
+                  <span style="font-size: 0.85rem; color: var(--text-soft);">Verified Professional</span>
+                </div>
+              </div>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Service Location</span>
+              <span class="detail-value" id="confirmAddress" style="line-height: 1.4;">Loading...</span>
+            </div>
+          </div>
+
+          <div class="total-payment">
+            <div class="detail-item">
+              <span class="detail-label">Total Payment</span>
+              <span style="font-size: 0.9rem; color: var(--text-soft);">Payment will be processed after service completion</span>
+            </div>
+            <div class="total-payment-amount" id="confirmTotal">$0.00</div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <a href="my-bookings.html" class="btn btn--primary" style="padding: 12px 28px; font-size: 1rem;"><i class="fa-solid fa-eye"></i> View My Bookings</a>
+          <a href="customer_dashboard.html" class="btn btn--outline" style="padding: 12px 28px; font-size: 1rem;"><i class="fa-solid fa-house"></i> Home</a>
+        </div>
+
+        <div class="next-steps">
+          <h4>What happens next?</h4>
+          <ul>
+            <li><i class="fa-solid fa-circle-check" style="color: var(--green);"></i> You'll receive a confirmation email with all booking details</li>
+            <li><i class="fa-solid fa-phone" style="color: var(--primary);"></i> The professional will contact you 24 hours before the appointment</li>
+            <li><i class="fa-solid fa-calendar-xmark" style="color: var(--purple);"></i> You can reschedule or cancel up to 4 hours before the appointment via the "My Bookings" page</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/booking-confirmation.js"></script>
+</body>
+</html>

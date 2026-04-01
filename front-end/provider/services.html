@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – My Services</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link active"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <div class="services-top-bar">
+        <div class="page-header">
+          <h1>My Services</h1>
+          <p>Manage, edit, and add new services to your catalog</p>
+        </div>
+        <a href="add-service.html" class="btn btn--primary">
+          <i class="fa-solid fa-plus"></i> Add New Service
+        </a>
+      </div>
+
+      <div class="services-toolbar card">
+        <div class="toolbar-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="serviceSearch" placeholder="Search your services..." />
+        </div>
+        <div class="toolbar-filters">
+          <select class="filter-select">
+            <option value="all">All Categories</option>
+            <option value="plumbing">Plumbing</option>
+            <option value="electrical">Electrical</option>
+            <option value="hvac maintenance">HVAC Maintenance</option>
+            <option value="cleaning">Cleaning</option>
+            <option value="carpentry">Carpentry</option>
+            <option value="painting">Painting</option>
+            <option value="landscaping">Landscaping</option>
+            <option value="other">Other</option>
+          </select>
+          <select class="filter-select">
+            <option value="all">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="services-grid">
+        
+        <div class="service-card">
+          <div class="service-card__image">
+            <img src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400&h=250" alt="Plumbing" />
+            <span class="service-badge">Plumbing</span>
+          </div>
+          <div class="service-card__body">
+            <div class="service-card__header">
+              <h3 class="service-title">General Pipe Leak Repair</h3>
+              <span class="service-price">$65 <span>/hr</span></span>
+            </div>
+            <p class="service-desc">Professional repair for leaking pipes, faucets, and under-sink plumbing issues.</p>
+            
+            <div class="service-card__meta">
+              <div class="meta-item"><i class="fa-solid fa-star"></i> 4.9 (124 reviews)</div>
+              <div class="meta-item"><i class="fa-solid fa-briefcase"></i> 89 Jobs Done</div>
+            </div>
+          </div>
+          <div class="service-card__actions">
+            <div class="toggle-wrapper">
+              <label class="switch">
+                <input type="checkbox" checked class="status-toggle">
+                <span class="slider round"></span>
+              </label>
+              <span class="toggle-label status-text-active">Active</span>
+            </div>
+            <div class="action-buttons">
+              <a href="edit-service.html" class="btn-icon" title="Edit Service"><i class="fa-regular fa-pen-to-square"></i></a>
+              <button class="btn-icon btn-icon--danger delete-service-btn" title="Delete Service"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="service-card">
+          <div class="service-card__image">
+            <img src="https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=400&h=250" alt="Electrical" />
+            <span class="service-badge">Electrical</span>
+          </div>
+          <div class="service-card__body">
+            <div class="service-card__header">
+              <h3 class="service-title">Circuit Breaker Replacement</h3>
+              <span class="service-price">$120 <span>Fixed</span></span>
+            </div>
+            <p class="service-desc">Safe and certified replacement of faulty residential circuit breakers and panels.</p>
+            
+            <div class="service-card__meta">
+              <div class="meta-item"><i class="fa-solid fa-star"></i> 4.8 (56 reviews)</div>
+              <div class="meta-item"><i class="fa-solid fa-briefcase"></i> 42 Jobs Done</div>
+            </div>
+          </div>
+          <div class="service-card__actions">
+            <div class="toggle-wrapper">
+              <label class="switch">
+                <input type="checkbox" checked class="status-toggle">
+                <span class="slider round"></span>
+              </label>
+              <span class="toggle-label status-text-active">Active</span>
+            </div>
+            <div class="action-buttons">
+              <a href="edit-service.html" class="btn-icon"><i class="fa-regular fa-pen-to-square"></i></a>
+              <button class="btn-icon btn-icon--danger delete-service-btn"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="service-card service-card--paused">
+          <div class="service-card__image">
+            <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400&h=250" alt="Cleaning" />
+            <span class="service-badge">Cleaning</span>
+          </div>
+          <div class="service-card__body">
+            <div class="service-card__header">
+              <h3 class="service-title">Deep Home Cleaning</h3>
+              <span class="service-price">$200 <span>Fixed</span></span>
+            </div>
+            <p class="service-desc">Comprehensive deep cleaning for 2-3 bedroom homes including sanitization.</p>
+            
+            <div class="service-card__meta">
+              <div class="meta-item"><i class="fa-solid fa-star"></i> 4.5 (28 reviews)</div>
+              <div class="meta-item"><i class="fa-solid fa-briefcase"></i> 15 Jobs Done</div>
+            </div>
+          </div>
+          <div class="service-card__actions">
+            <div class="toggle-wrapper">
+              <label class="switch">
+                <input type="checkbox" class="status-toggle">
+                <span class="slider round"></span>
+              </label>
+              <span class="toggle-label status-text-paused">Paused</span>
+            </div>
+            <div class="action-buttons">
+              <a href="edit-service.html" class="btn-icon"><i class="fa-regular fa-pen-to-square"></i></a>
+              <button class="btn-icon btn-icon--danger delete-service-btn"><i class="fa-regular fa-trash-can"></i></button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

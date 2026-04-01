@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document Details | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .content-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item label { display: block; font-size: 0.75rem; color: #64748b; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .edit-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; box-sizing: border-box; font-size: 0.9rem; }
+        .edit-input:focus { border-color: #2563eb; }
+        .action-btn { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Edit Document Metadata</h1>
+                <p id="doc-sub-header">Managing File: ---</p>
+            </div>
+
+            <div class="details-grid">
+                <div class="main-col">
+                    <div class="content-card">
+                        <div class="card-title">General Metadata</div>
+                        <div class="info-grid">
+                            <div class="info-item"><label>Document ID</label><input type="text" id="in-id" class="edit-input"></div>
+                            <div class="info-item"><label>Document Name</label><input type="text" id="in-name" class="edit-input"></div>
+                            <div class="info-item"><label>Case ID Reference</label><input type="text" id="in-case" class="edit-input"></div>
+                            <div class="info-item"><label>Uploaded By</label><input type="text" id="in-uploader" class="edit-input"></div>
+                            <div class="info-item"><label>Document Type</label>
+                                <select id="in-type" class="edit-input">
+                                    <option value="Legal Contract">Legal Contract</option>
+                                    <option value="Evidence">Evidence</option>
+                                    <option value="Expert Report">Expert Report</option>
+                                    <option value="Identity Doc">Identity Doc</option>
+                                </select>
+                            </div>
+                            <div class="info-item"><label>Upload Date</label><input type="text" id="in-date" class="edit-input"></div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Processing Status</div>
+                        <div class="info-grid">
+                            <div class="info-item"><label>Current Status</label>
+                                <select id="in-status" class="edit-input">
+                                    <option value="Verified">Verified</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Flagged">Flagged</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-col">
+                    <div class="content-card">
+                        <div class="card-title">Actions</div>
+                        <button class="action-btn" style="background:#22c55e; color:white;" onclick="saveChanges()">Save Metadata</button>
+                        <button class="action-btn" style="background:#f1f5f9; color:#64748b;" onclick="window.location.href='admin_documents.html'">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const docId = decodeURIComponent(urlParams.get('id') || "");
+        let currentDoc = AdminData.documents.find(d => d.id === docId);
+
+        function init() {
+            if(!currentDoc) return window.location.href='admin_documents.html';
+            document.getElementById('doc-sub-header').innerText = `Editing System Record: ${currentDoc.id}`;
+            
+            document.getElementById('in-id').value = currentDoc.id;
+            document.getElementById('in-name').value = currentDoc.name;
+            document.getElementById('in-case').value = currentDoc.caseId;
+            document.getElementById('in-uploader').value = currentDoc.uploader;
+            document.getElementById('in-type').value = currentDoc.type;
+            document.getElementById('in-date').value = currentDoc.date;
+            document.getElementById('in-status').value = currentDoc.status;
+        }
+
+        function saveChanges() {
+            const oldId = currentDoc.id;
+            const nextId = document.getElementById('in-id').value.trim();
+            const nextName = document.getElementById('in-name').value.trim();
+            const nextCaseId = document.getElementById('in-case').value.trim();
+            const nextUploader = document.getElementById('in-uploader').value.trim();
+
+            if (!nextId || !nextName || !nextCaseId || !nextUploader) {
+                alert("Document ID, name, case ID, and uploader are required.");
+                return;
+            }
+
+            currentDoc.id = nextId;
+            currentDoc.name = nextName;
+            currentDoc.caseId = nextCaseId;
+            currentDoc.uploader = nextUploader;
+            currentDoc.type = document.getElementById('in-type').value;
+            currentDoc.date = document.getElementById('in-date').value;
+            currentDoc.status = document.getElementById('in-status').value;
+
+            logAdminActivity(`Updated Doc Metadata: ${oldId} -> ${currentDoc.id}`);
+            saveAdminData();
+            alert("Changes saved to persistent database.");
+            window.location.href = 'admin_documents.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

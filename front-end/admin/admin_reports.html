@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports & Analytics | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        .admin-main-content { width: calc(100% - 260px); margin-left: 260px; min-height: 100vh; background: #f8fafc; }
+        .stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        .stat-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px; }
+        .stat-val { font-size: 1.5rem; font-weight: 800; color: #1e293b; display: block; }
+        .stat-label { font-size: 0.8rem; color: #64748b; font-weight: 600; }
+        .stat-trend { font-size: 0.75rem; margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+        .trend-up { color: #10b981; }
+        .charts-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; margin-bottom: 25px; }
+        .chart-container { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; height: 350px; }
+        .full-width-chart { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; height: 400px; }
+        .table-section { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .arb-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
+        .arb-img { width: 32px; height: 32px; border-radius: 50%; }
+        .star-rating { color: #f59e0b; font-size: 0.8rem; }
+        .export-footer { display: flex; gap: 15px; background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 40px; }
+        
+        /* Ensure PDF capture doesn't show sidebars */
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder" class="no-print"></div>
+    <main class="admin-main-content" id="report-content">
+        <div id="admin-navbar-placeholder" class="no-print"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Reports & Analytics</h1>
+                <p>Monitor platform performance and dispute resolution statistics.</p>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#eff6ff; color:#3b82f6;"><i class="fa-solid fa-briefcase"></i></div>
+                    <span class="stat-val">1,247</span>
+                    <span class="stat-label">Total Cases</span>
+                    <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 12%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#f0fdf4; color:#10b981;"><i class="fa-solid fa-circle-check"></i></div>
+                    <span class="stat-val">1,158</span>
+                    <span class="stat-label">Resolved Cases</span>
+                    <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 18%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#f5f3ff; color:#8b5cf6;"><i class="fa-solid fa-user-tie"></i></div>
+                    <span class="stat-val">47</span>
+                    <span class="stat-label">Total Arbitrators</span>
+                    <div class="stat-trend trend-up"><i class="fa-solid fa-plus"></i> 3 new</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-bolt"></i></div>
+                    <span class="stat-val">45.2</span>
+                    <span class="stat-label">Avg Res. Days</span>
+                    <div class="stat-trend trend-up" style="color:#10b981;"><i class="fa-solid fa-arrow-down"></i> 8% faster</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container"><canvas id="lineChart"></canvas></div>
+                <div class="chart-container"><canvas id="pieChart"></canvas></div>
+            </div>
+            <div class="full-width-chart"><canvas id="barChart"></canvas></div>
+
+            <div class="table-section">
+                <h3 style="margin-bottom: 20px; font-size: 1rem; font-weight: 700;">Top Performing Arbitrators</h3>
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Arbitrator Name</th><th>Cases Handled</th><th>Cases Resolved</th><th>Average Rating</th><th>Avg Res. Time</th></tr>
+                    </thead>
+                    <tbody id="arb-table"></tbody>
+                </table>
+            </div>
+
+            <div class="export-footer no-print">
+                <button id="btn-pdf" class="btn-primary-sm" style="background:#2563eb;" onclick="exportToPDF()">
+                    <i class="fa-solid fa-file-pdf"></i> Export Report (PDF)
+                </button>
+                <button id="btn-csv" class="btn-primary-sm" style="background:#10b981;" onclick="downloadCSV()">
+                    <i class="fa-solid fa-file-csv"></i> Download Data (CSV)
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        function initCharts() {
+            new Chart(document.getElementById('lineChart'), {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{ label: 'Cases', data: [85, 92, 78, 105, 118, 125, 132, 128, 145, 140, 155, 160], borderColor: '#3b82f6', tension: 0.4, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.05)' }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Cases Filed Per Month' } } }
+            });
+
+            new Chart(document.getElementById('pieChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Consumer', 'Service', 'Contract', 'Other'],
+                    datasets: [{ data: [33.7, 25.5, 22.2, 18.6], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Dispute Distribution' } } }
+            });
+
+            new Chart(document.getElementById('barChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['Open', 'Under Review', 'Hearing Scheduled', 'Award Issued', 'Closed'],
+                    datasets: [{ label: 'Cases', data: [120, 210, 105, 310, 680], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Status Volume' } } }
+            });
+        }
+
+        function loadTopArbitrators() {
+            const data = [
+                { name: "John Mitchell", img: "https://i.pravatar.cc/150?u=1", handled: 156, resolved: 148, rating: "4.8", time: "38 days" },
+                { name: "Sarah Chen", img: "https://i.pravatar.cc/150?u=2", handled: 142, resolved: 139, rating: "4.7", time: "42 days" }
+            ];
+            document.getElementById('arb-table').innerHTML = data.map(a => `
+                <tr>
+                    <td><div class="arb-row"><img src="${a.img}" class="arb-img"><strong>${a.name}</strong></div></td>
+                    <td>${a.handled}</td><td>${a.resolved}</td>
+                    <td><div class="star-rating">${a.rating} <i class="fa-solid fa-star"></i></div></td>
+                    <td>${a.time}</td>
+                </tr>
+            `).join('');
+        }
+
+        /**
+         * FUNCTION: EXPORT TO PDF
+         * Uses html2canvas to capture the chart area and jsPDF to save it.
+         */
+        async function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const btn = document.getElementById('btn-pdf');
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+            
+            const element = document.querySelector('.admin-view-padding');
+            const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+            const imgData = canvas.toDataURL('image/png');
+            
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Platform_Analytics_Report_${new Date().toLocaleDateString()}.pdf`);
+            
+            btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Export Report (PDF)';
+        }
+
+        /**
+         * FUNCTION: DOWNLOAD CSV
+         * Generates a CSV file based on the summary data.
+         */
+        function downloadCSV() {
+            const rows = [
+                ["Metric", "Value", "Trend"],
+                ["Total Cases", "1247", "+12%"],
+                ["Active Cases", "89", "+5%"],
+                ["Resolved Cases", "1158", "+18%"],
+                ["Avg Resolution Time", "45.2 Days", "-8% Faster"]
+            ];
+
+            let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Analytics_Data_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            loadTopArbitrators();
+        });
+    </script>
+</body>
+</html>

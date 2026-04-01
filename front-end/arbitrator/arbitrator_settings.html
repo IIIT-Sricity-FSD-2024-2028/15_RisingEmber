@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings | Arbitration Portal</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .arb-dashboard-wrapper { display: flex; min-height: 100vh; }
+        .arb-main { flex: 1; background: #F9FAFB; }
+        .arb-content { padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+        .settings-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 25px; align-items: start; }
+        
+        .settings-card { background: white; border: 1px solid #E5E7EB; border-radius: 12px; padding: 30px; margin-bottom: 25px; }
+        .settings-card h3 { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 20px; }
+        
+        .form-row { margin-bottom: 20px; }
+        .form-row label { display: block; font-size: 0.85rem; font-weight: 600; color: #4B5563; margin-bottom: 8px; }
+        .form-row input, .form-row select { 
+            width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; 
+            font-size: 0.9rem; outline: none; transition: border-color 0.2s; 
+        }
+        .form-row input:focus { border-color: #1E3A8A; }
+
+        .btn-primary { background: #1E293B; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+        
+        /* Toggle Switches */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #F3F4F6; }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-info h4 { font-size: 0.9rem; color: #111827; margin-bottom: 4px; }
+        .toggle-info p { font-size: 0.75rem; color: #6B7280; }
+
+        .switch { position: relative; display: inline-block; width: 44px; height: 22px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #D1D5DB; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #D97706; }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        /* Sidebar Action Cards */
+        .action-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .btn-action { width: 100%; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .btn-logout { background: #F3F4F6; color: #111827; }
+        .btn-deactivate { background: #FEE2E2; color: #B91C1C; }
+
+        .info-box { background: #EFF6FF; border: 1px solid #DBEAFE; border-radius: 8px; padding: 15px; display: flex; gap: 12px; align-items: center; }
+        .info-box i { color: #2563EB; }
+        .info-box p { font-size: 0.75rem; color: #1E40AF; line-height: 1.4; }
+
+        .help-card { background: #1E293B; color: white; border-radius: 12px; padding: 25px; text-align: center; }
+        .help-icon { background: #F59E0B; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.2rem; }
+        .btn-contact { background: white; color: #1E293B; border: none; width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; margin-top: 15px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+            <div class="arb-content">
+                <header style="margin-bottom: 30px;">
+                    <h1 style="font-size: 1.8rem; font-weight: 800; color: #111827;">Account Settings</h1>
+                    <p style="color: #6B7280;">Manage your account preferences and security settings.</p>
+                </header>
+
+                <div class="settings-grid">
+                    <div class="main-settings">
+                        <div class="settings-card">
+                            <h3>Account Settings</h3>
+                            <form id="profileSettingsForm">
+                                <div class="form-row">
+                                    <label>Full Name</label>
+                                    <input type="text" id="set-name" placeholder="Loading...">
+                                </div>
+                                <div class="form-row">
+                                    <label>Email Address</label>
+                                    <input type="email" id="set-email" placeholder="Loading...">
+                                </div>
+                                <div class="form-row">
+                                    <label>Phone Number</label>
+                                    <input type="text" id="set-phone" placeholder="Loading...">
+                                </div>
+                                <div class="form-row">
+                                    <label>Location</label>
+                                    <input type="text" id="set-location" placeholder="Loading...">
+                                </div>
+                                <button type="button" class="btn-primary" onclick="updateProfileCRUD()">Update Profile</button>
+                            </form>
+                        </div>
+
+                        <div class="settings-card">
+                            <h3>Security Settings</h3>
+                            <form id="securitySettingsForm">
+                                <div class="form-row">
+                                    <label>Current Password</label>
+                                    <input type="password" id="current-password" placeholder="Enter current password">
+                                </div>
+                                <div class="form-row">
+                                    <label>New Password</label>
+                                    <input type="password" id="new-password" placeholder="Enter new password">
+                                </div>
+                                <div class="form-row">
+                                    <label>Confirm New Password</label>
+                                    <input type="password" id="confirm-new-password" placeholder="Confirm new password">
+                                </div>
+                                <button type="submit" class="btn-primary">Change Password</button>
+                            </form>
+                            <div class="toggle-row" style="margin-top: 20px; border-top: 1px solid #F3F4F6;">
+                                <div class="toggle-info">
+                                    <h4>Two-Factor Authentication</h4>
+                                    <p>Add an extra layer of security to your account</p>
+                                </div>
+                                <label class="switch"><input type="checkbox" id="two-factor-toggle" checked><span class="slider"></span></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="side-settings">
+                        <div class="settings-card">
+                            <div class="form-row">
+                                <label>Language</label>
+                                <select id="language-select"><option>English</option><option>Spanish</option><option>French</option></select>
+                            </div>
+                        </div>
+                        <div class="action-card">
+                            <button class="btn-action btn-logout" onclick="logoutArbitrator()">
+                                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+                            </button>
+                            <button class="btn-action btn-deactivate" onclick="handleResetData()">
+                                <i class="fa-solid fa-user-xmark"></i> Reset Application Data
+                            </button>
+                        </div>
+                        <div class="info-box">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <p><strong>Super User Access</strong><br>You have full CRUD access to your profile and case modules.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    
+    <script>
+        // Load existing data on initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
+
+            const profile = ArbitratorData.profile;
+            const settings = ArbitratorData.settings || {};
+
+            document.getElementById('set-name').value = profile.name || "";
+            document.getElementById('set-email').value = profile.email || "";
+            document.getElementById('set-phone').value = profile.phone || "";
+            document.getElementById('set-location').value = profile.location || "";
+            document.getElementById('language-select').value = settings.language || "English";
+            document.getElementById('two-factor-toggle').checked = settings.twoFactorEnabled !== false;
+
+            document.getElementById('profileSettingsForm').addEventListener('submit', (event) => {
+                event.preventDefault();
+                updateProfileCRUD();
+            });
+            document.getElementById('securitySettingsForm').addEventListener('submit', updatePasswordSettings);
+        });
+
+        /**
+         * Update Profile Logic (CRUD Operation)
+         * Saves the updated values back to the local database
+         */
+        function updateProfileCRUD() {
+            const newName = document.getElementById('set-name').value.trim();
+            const newEmail = document.getElementById('set-email').value.trim();
+            const newPhone = document.getElementById('set-phone').value.trim();
+            const newLoc = document.getElementById('set-location').value.trim();
+            const language = document.getElementById('language-select').value;
+            const twoFactorEnabled = document.getElementById('two-factor-toggle').checked;
+
+            if (!newName || !newEmail) {
+                alert("Name and Email cannot be empty.");
+                return;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(newEmail)) {
+                alert("Please enter a valid email address.");
+                return;
+            }
+
+            const normalizedEmail = newEmail.toLowerCase();
+            if (typeof getArbitratorAccounts === 'function') {
+                const currentProfileId = String((ArbitratorData.profile && ArbitratorData.profile.id) || '');
+                const duplicateAccount = getArbitratorAccounts().find((account) => {
+                    const accountEmail = String(
+                        (account.auth && account.auth.email) ||
+                        (account.profile && account.profile.email) ||
+                        ''
+                    ).trim().toLowerCase();
+
+                    return accountEmail === normalizedEmail && String(account.profile.id || '') !== currentProfileId;
+                });
+
+                if (duplicateAccount) {
+                    alert("Another arbitrator account is already using this email address.");
+                    return;
+                }
+            }
+
+            const phoneDigits = newPhone.replace(/\D/g, '');
+            if (newPhone && phoneDigits.length < 10) {
+                alert("Please enter a valid phone number.");
+                return;
+            }
+
+            // Update memory
+            const previousProfile = { ...ArbitratorData.profile };
+            ArbitratorData.profile.name = newName;
+            ArbitratorData.profile.email = normalizedEmail;
+            ArbitratorData.profile.phone = newPhone;
+            ArbitratorData.profile.location = newLoc;
+            ArbitratorData.profile.avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(newName)}&background=1E3A8A&color=fff&size=128`;
+            ArbitratorData.auth.email = normalizedEmail;
+            ArbitratorData.settings.language = language;
+            ArbitratorData.settings.twoFactorEnabled = twoFactorEnabled;
+
+            if (typeof personalizeArbitratorWorkspace === 'function') {
+                personalizeArbitratorWorkspace(ArbitratorData, ArbitratorData.profile, previousProfile);
+            }
+
+            // PERSISTENCE: Save to localStorage
+            saveData();
+            syncArbitratorSessionWithProfile();
+
+            alert("Profile updated successfully.");
+            window.location.reload();
+        }
+
+        function updatePasswordSettings(event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-new-password').value;
+            const storedPassword = String((ArbitratorData.auth && ArbitratorData.auth.password) || "");
+
+            if (storedPassword && currentPassword !== storedPassword) {
+                alert("Current password is incorrect.");
+                return;
+            }
+
+            if (!newPassword || newPassword.length < 8) {
+                alert("New password must be at least 8 characters long.");
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                alert("New password and confirmation do not match.");
+                return;
+            }
+
+            ArbitratorData.auth.password = newPassword;
+            saveData();
+
+            document.getElementById('securitySettingsForm').reset();
+            document.getElementById('two-factor-toggle').checked = ArbitratorData.settings.twoFactorEnabled !== false;
+            alert("Password updated successfully.");
+        }
+
+        function handleResetData() {
+            if (!confirm('Are you sure? This will reset only the arbitrator portal data on this browser.')) {
+                return;
+            }
+
+            resetData('arbitrator_landing.html');
+        }
+    </script>
+</body>
+</html>
