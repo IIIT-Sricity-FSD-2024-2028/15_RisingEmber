@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Provider Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-container">
+    <div class="auth-card">
+      
+      <div class="auth-form-side">
+        <a href="../Landing_Page/index.html" class="auth-brand">
+          <div class="auth-logo-icon"><i class="fa-solid fa-wrench"></i></div>
+          <span class="auth-logo-text">ServiceHub</span>
+        </a>
+
+        <div class="auth-header">
+          <h1>Login to your account</h1>
+          <p>Welcome back! Please enter your details.</p>
+        </div>
+
+        <form id="loginForm" class="auth-form">
+          <div class="form-group">
+            <label>Email or Phone</label>
+            <input type="text" id="loginEmail" placeholder="Enter your email or phone" required />
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="loginPassword" placeholder="Enter your password" required />
+              <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)"><i class="fa-regular fa-eye-slash"></i></button>
+            </div>
+          </div>
+
+          <div class="auth-options">
+            <div class="auth-checkbox">
+              <label>
+                <input type="checkbox" />
+                <span>Remember me</span>
+              </label>
+            </div>
+            <a href="../Landing_Page/contact.html" class="forgot-password" id="forgotPasswordLink">Forgot password?</a>
+          </div>
+
+          <div id="inlineMessage" style="display:none; padding:12px 16px; margin-bottom:16px; border-radius:8px; font-size:0.875rem; font-weight:500;"></div>
+
+          <button type="submit" class="btn btn--primary btn--full auth-submit" id="loginBtn">Login</button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Don't have an account? <a href="signup.html">Create one</a></p>
+        </div>
+      </div>
+
+      <div class="auth-image-side">
+        <div class="auth-image-wrapper" style="background: #fff; padding: 24px; border-radius: 16px;">
+          <img src="https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&q=80&w=600" alt="Service Professionals" style="border-radius: 8px;" />
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    function togglePassword(inputId, button) {
+      const input = document.getElementById(inputId);
+      const icon = button.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const activeUser = getActiveUser();
+      if (activeUser && activeUser.role === 'provider' && activeUser.isLoggedIn) {
+        window.location.replace('provider_dashboard.html');
+        return;
+      }
+
+      const loginForm = document.getElementById('loginForm');
+      const loginBtn = document.getElementById('loginBtn');
+      const inlineMessage = document.getElementById('inlineMessage');
+
+      function showMessage(msg, type = 'error') {
+        if (!inlineMessage) return;
+        inlineMessage.style.display = 'block';
+        inlineMessage.innerHTML = msg;
+        if (type === 'error') {
+          inlineMessage.style.backgroundColor = '#FEE2E2';
+          inlineMessage.style.color = '#B91C1C';
+          inlineMessage.style.border = '1px solid #FCA5A5';
+        } else {
+          inlineMessage.style.backgroundColor = '#ECFCCB';
+          inlineMessage.style.color = '#4D7C0F';
+          inlineMessage.style.border = '1px solid #BEF264';
+        }
+      }
+
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (inlineMessage) inlineMessage.style.display = 'none';
+
+        const loginValue = document.getElementById('loginEmail').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        const originalText = loginBtn.innerHTML;
+
+        loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in...';
+        loginBtn.style.opacity = '0.8';
+        loginBtn.style.pointerEvents = 'none';
+
+        try {
+          await providerLogin(loginValue, password, 'provider');
+          window.location.replace('provider_dashboard.html');
+        } catch (err) {
+          showMessage('<i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i> ' + err.message, 'error');
+          loginBtn.innerHTML = originalText;
+          loginBtn.style.opacity = '1';
+          loginBtn.style.pointerEvents = 'auto';
+        }
+      });
+
+      const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+      if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          const identifier = document.getElementById('loginEmail').value.trim();
+
+          if (!identifier) {
+            showMessage('<i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i> Enter your email or phone first so we can find the right provider account.', 'error');
+            return;
+          }
+
+          const nextPassword = window.prompt('Enter a new password for this provider account.');
+          if (nextPassword === null) return;
+
+          try {
+            resetProviderPassword(identifier, nextPassword);
+            document.getElementById('loginPassword').value = nextPassword;
+            showMessage('<i class="fa-regular fa-circle-check" style="margin-right:6px;"></i> <strong>Password reset complete.</strong> You can log in with the new password now.', 'success');
+          } catch (error) {
+            showMessage('<i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i> ' + error.message, 'error');
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

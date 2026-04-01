@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Profile | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .profile-layout { display: grid; grid-template-columns: 320px 1fr; gap: 25px; }
+        .content-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 25px; margin-bottom: 25px; }
+        .card-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; }
+        
+        .avatar-section { text-align: center; }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #eff6ff; margin-bottom: 15px; object-fit: cover; }
+        .profile-name-title { font-size: 1.25rem; font-weight: 800; color: #1e293b; margin-bottom: 5px; }
+        .profile-role-sub { color: #2563eb; font-weight: 600; font-size: 0.85rem; margin-bottom: 15px; display: block; }
+        
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+        .field-group label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .edit-input { padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; outline: none; }
+        .edit-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        .activity-item { display: flex; gap: 15px; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+        .activity-item:last-child { border: none; }
+        .activity-icon { width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; background: #f1f5f9; color: #64748b; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Admin Profile</h1>
+                <p>Manage your account settings and monitor recent platform activity.</p>
+            </div>
+
+            <div class="profile-layout">
+                <div class="side-col">
+                    <div class="content-card avatar-section">
+                        <img src="" id="p-avatar" class="profile-img" alt="Profile">
+                        <h2 class="profile-name-title" id="p-name-side">---</h2>
+                        <span class="profile-role-sub" id="p-role-side">---</span>
+                        <div style="font-size:0.8rem; color:#64748b; margin-bottom:20px;">
+                            <div id="p-email-side">---</div>
+                            <div id="p-phone-side">---</div>
+                        </div>
+                        
+                        <input type="file" id="photo-upload" style="display:none" accept="image/*" onchange="handlePhotoUpdate(this)">
+                        <button class="btn-primary-sm" style="width:100%;" onclick="document.getElementById('photo-upload').click()">
+                            <i class="fa-solid fa-camera"></i> Edit Profile Photo
+                        </button>
+                    </div>
+                </div>
+
+                <div class="main-col">
+                    <div class="content-card">
+                        <div class="card-title">Personal Information</div>
+                        <div class="info-grid">
+                            <div class="field-group">
+                                <label>Full Name</label>
+                                <input type="text" id="in-name" class="edit-input">
+                            </div>
+                            <div class="field-group">
+                                <label>Email Address</label>
+                                <input type="email" id="in-email" class="edit-input">
+                            </div>
+                            <div class="field-group">
+                                <label>Phone Number</label>
+                                <input type="text" id="in-phone" class="edit-input">
+                            </div>
+                            <div class="field-group">
+                                <label>Department</label>
+                                <select id="in-dept" class="edit-input">
+                                    <option value="System Administration">System Administration</option>
+                                    <option value="Legal Review">Legal Review</option>
+                                    <option value="Operations">Operations</option>
+                                </select>
+                            </div>
+                            <div class="field-group" style="grid-column: span 2;">
+                                <label>Role</label>
+                                <select id="in-role" class="edit-input">
+                                    <option value="System Administrator">System Administrator</option>
+                                    <option value="Super Admin">Super Admin</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Security Settings</div>
+                        <div class="info-grid">
+                            <div class="field-group">
+                                <label>Current Password</label>
+                                <input type="password" placeholder="Enter current password" class="edit-input">
+                            </div>
+                            <div class="field-group">
+                                <label>New Password</label>
+                                <input type="password" placeholder="Enter new password" class="edit-input">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Recent Activity</div>
+                        <div id="activity-feed">
+                            </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end; gap:15px; margin-bottom:40px;">
+                        <button class="btn-outline" onclick="location.reload()">Discard Changes</button>
+                        <button class="btn-primary-sm" style="padding:12px 30px; font-size:0.9rem;" onclick="saveProfile()">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        function init() {
+            const p = AdminData.profile;
+            
+            // Side Card population
+            document.getElementById('p-avatar').src = p.avatar;
+            document.getElementById('p-name-side').innerText = p.name;
+            document.getElementById('p-role-side').innerText = p.role;
+            document.getElementById('p-email-side').innerText = p.email;
+            document.getElementById('p-phone-side').innerText = p.phone;
+            
+            // Form inputs population
+            document.getElementById('in-name').value = p.name;
+            document.getElementById('in-email').value = p.email;
+            document.getElementById('in-phone').value = p.phone;
+            document.getElementById('in-dept').value = p.department;
+            document.getElementById('in-role').value = p.role;
+
+            renderActivity();
+        }
+
+        function handlePhotoUpdate(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Update UI immediately
+                    document.getElementById('p-avatar').src = e.target.result;
+                    // Update Database
+                    AdminData.profile.avatar = e.target.result;
+                    logAdminActivity("Updated profile photograph");
+                    saveAdminData();
+                    // Optional: alert user or refresh navbar
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function renderActivity() {
+            const container = document.getElementById('activity-feed');
+            const logs = (AdminData.logs || []).slice(0, 4); 
+            
+            if(logs.length === 0) {
+                container.innerHTML = `<p style="color:#94a3b8; font-size:0.85rem; text-align:center;">No recent activity found.</p>`;
+                return;
+            }
+
+            container.innerHTML = logs.map(l => `
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fa-solid ${l.event.toLowerCase().includes('password') || l.event.toLowerCase().includes('profile') ? 'fa-user-gear' : 'fa-bolt'}"></i>
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:0.9rem; font-weight:700; color:#1e293b;">${l.event}</div>
+                        <div style="font-size:0.75rem; color:#64748b;">Logged Action</div>
+                    </div>
+                    <div style="font-size:0.7rem; color:#94a3b8; font-weight:600;">${l.date}</div>
+                </div>
+            `).join('');
+        }
+
+        function saveProfile() {
+            const name = document.getElementById('in-name').value.trim();
+            const email = document.getElementById('in-email').value.trim();
+            const phone = document.getElementById('in-phone').value.trim();
+
+            if (!name || !email || !phone) {
+                alert("Name, email, and phone are required.");
+                return;
+            }
+
+            // Check if password fields were used to log activity
+            const newPass = document.querySelectorAll('input[type="password"]')[1].value;
+            if(newPass) logAdminActivity("Changed account password");
+
+            AdminData.profile.name = name;
+            AdminData.profile.email = email;
+            AdminData.profile.phone = phone;
+            AdminData.profile.department = document.getElementById('in-dept').value;
+            AdminData.profile.role = document.getElementById('in-role').value;
+
+            logAdminActivity("Updated personal information");
+            saveAdminData();
+            alert("Profile settings saved.");
+            location.reload();
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

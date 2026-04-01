@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Provider Sign Up</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <style>
+    /* Base Variables to ensure standalone rendering */
+    :root {
+      --primary:        #2F54EB;
+      --primary-dark:   #1D3FBF;
+      --primary-light:  #EEF2FF;
+      --bg:             #F4F6FB;
+      --surface:        #FFFFFF;
+      --border:         #E8ECF4;
+      --text-dark:      #111827;
+      --text-mid:       #4B5563;
+      --text-soft:      #9CA3AF;
+      --shadow-md:      0 10px 25px rgba(0,0,0,0.05);
+      --font:           'Plus Jakarta Sans', sans-serif;
+      --green:          #10B981;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); color: var(--text-mid); line-height: 1.6; }
+    a { text-decoration: none; color: inherit; }
+    
+    /* Authentication Layout */
+    .auth-page {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .auth-card {
+      background: var(--surface);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+      display: flex;
+      overflow: hidden;
+      min-height: 600px;
+    }
+
+    /* Form Section */
+    .auth-form-side {
+      flex: 1;
+      padding: 60px 80px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 40px;
+    }
+    .auth-logo-icon {
+      width: 32px; height: 32px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 14px;
+    }
+    .auth-logo-text { font-size: 1.25rem; font-weight: 800; color: var(--text-dark); }
+
+    .auth-header { margin-bottom: 32px; }
+    .auth-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; letter-spacing: -0.5px; }
+    .auth-header p { font-size: 0.95rem; color: var(--text-soft); }
+
+    .auth-form { display: flex; flex-direction: column; gap: 20px; }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+    .form-group input {
+      font-family: var(--font); font-size: 0.9rem; color: var(--text-dark);
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px 16px; outline: none; transition: border-color 0.2s; width: 100%;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .form-group input::placeholder { color: var(--text-soft); }
+
+    .password-input-wrapper { position: relative; display: flex; align-items: center; }
+    .password-input-wrapper input { padding-right: 44px; }
+    .toggle-password {
+      position: absolute; right: 14px; color: var(--text-soft);
+      background: transparent; border: none; font-size: 16px;
+      cursor: pointer; padding: 4px; transition: color 0.2s;
+    }
+    .toggle-password:hover { color: var(--text-dark); }
+
+    .password-strength { display: flex; gap: 6px; margin-top: 8px; margin-bottom: 4px; }
+    .strength-bar { flex: 1; height: 4px; background: var(--border); border-radius: 4px; transition: background 0.3s; }
+    .strength-bar.active { background: var(--primary); }
+    .strength-bar.strong { background: var(--green); }
+    
+    .form-hint { font-size: 0.75rem; color: var(--text-soft); }
+
+    .auth-checkbox { margin-top: 4px; }
+    .auth-checkbox label { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-mid); cursor: pointer; }
+    .auth-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary); }
+    .auth-checkbox a { color: var(--primary); font-weight: 600; }
+    .auth-checkbox a:hover { text-decoration: underline; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border-radius: 8px; font-family: var(--font); font-weight: 600;
+      cursor: pointer; transition: all 0.2s; border: none;
+    }
+    .btn--primary { background: var(--primary); color: #fff; }
+    .btn--primary:hover { background: var(--primary-dark); }
+    .btn--full { width: 100%; }
+    .auth-submit { margin-top: 8px; padding: 14px 20px; font-size: 0.95rem; }
+
+    .auth-footer { margin-top: 32px; text-align: center; font-size: 0.9rem; color: var(--text-mid); }
+    .auth-footer a { color: var(--primary); font-weight: 700; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    /* Image Section */
+    .auth-image-side {
+      flex: 1;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+    .auth-image-wrapper { width: 100%; max-width: 400px; display: flex; justify-content: center; }
+    .auth-image-wrapper img { width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: var(--shadow-md); }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .auth-card { flex-direction: column; }
+      .auth-image-side { display: none; }
+      .auth-form-side { padding: 40px 30px; }
+    }
+  </style>
+</head>
+<body class="auth-page">
+
+  <div class="auth-container">
+    <div class="auth-card">
+      
+      <div class="auth-form-side">
+        <a href="../Landing_Page/index.html" class="auth-brand">
+          <div class="auth-logo-icon"><i class="fa-solid fa-wrench"></i></div>
+          <span class="auth-logo-text">ServiceHub</span>
+        </a>
+
+        <div class="auth-header">
+          <h1>Create your account</h1>
+          <p>Join ServiceHub as a Service Provider today.</p>
+        </div>
+
+        <form id="providerSignupForm" class="auth-form">
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="fullName" placeholder="Enter your full name" required />
+          </div>
+
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="email" placeholder="Enter your email" required />
+          </div>
+
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" id="phone" placeholder="Enter your phone number" required />
+          </div>
+
+          <div class="form-group">
+            <label>Password</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="signupPassword" placeholder="Create a password" required />
+              <button type="button" class="toggle-password" onclick="togglePassword('signupPassword', this)"><i class="fa-regular fa-eye-slash"></i></button>
+            </div>
+            <div class="password-strength" id="strengthMeter">
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+            </div>
+            <span class="form-hint" style="margin-top: 4px;">Use 8+ characters with letters, numbers & symbols</span>
+          </div>
+
+          <div class="form-group">
+            <label>Confirm Password</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="confirmPassword" placeholder="Confirm your password" required />
+              <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)"><i class="fa-regular fa-eye-slash"></i></button>
+            </div>
+          </div>
+
+          <div class="auth-checkbox">
+            <label>
+              <input type="checkbox" required />
+              <span>I agree to the <a href="../Landing_Page/terms.html" target="_blank">Terms of Service</a> and <a href="../Landing_Page/privacy.html" target="_blank">Privacy Policy</a></span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn--primary btn--full auth-submit" id="submitBtn">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Already have an account? <a href="login.html">Log in</a></p>
+        </div>
+      </div>
+
+      <div class="auth-image-side">
+        <div class="auth-image-wrapper">
+          <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=600" alt="Join the team" />
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    // Toggle Password Visibility
+    function togglePassword(inputId, button) {
+      const input = document.getElementById(inputId);
+      const icon = button.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+      } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const activeUser = getActiveUser();
+      if (activeUser && activeUser.role === 'provider' && activeUser.isLoggedIn) {
+        window.location.replace('provider_dashboard.html');
+        return;
+      }
+
+      const passwordInput = document.getElementById('signupPassword');
+      const bars = document.querySelectorAll('#strengthMeter .strength-bar');
+      const signupForm = document.getElementById('providerSignupForm');
+      const submitBtn = document.getElementById('submitBtn');
+
+      passwordInput.addEventListener('input', function() {
+        const val = this.value;
+        let strength = 0;
+
+        if (val.length > 0) strength += 1;
+        if (val.length >= 8) strength += 1;
+        if (val.match(/[A-Z]/) && val.match(/[0-9]/)) strength += 1;
+        if (val.match(/[^a-zA-Z\d]/)) strength += 1;
+
+        bars.forEach((bar, index) => {
+          bar.className = 'strength-bar';
+          if (index < strength) {
+            bar.classList.add(strength === 4 ? 'strong' : 'active');
+          }
+        });
+      });
+
+      signupForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const pass = document.getElementById('signupPassword').value;
+        const confPass = document.getElementById('confirmPassword').value;
+
+        if (pass !== confPass) {
+          alert('Passwords do not match. Please try again.');
+          return;
+        }
+
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
+        submitBtn.style.opacity = '0.8';
+        submitBtn.style.pointerEvents = 'none';
+
+        try {
+          await providerSignup(fullName, email, phone, pass);
+          window.location.replace('provider_dashboard.html');
+        } catch (err) {
+          alert(err.message);
+          submitBtn.innerHTML = originalText;
+          submitBtn.style.opacity = '1';
+          submitBtn.style.pointerEvents = 'auto';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Management | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .case-id-link { color: #2563eb; font-weight: 700; text-decoration: none; cursor: pointer; }
+        .case-id-link:hover { text-decoration: underline; }
+        
+        .filter-section { 
+            background: white; border: 1px solid var(--admin-border); 
+            border-radius: 12px; padding: 20px; margin-bottom: 25px; 
+        }
+        .filter-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .filter-actions { display: flex; gap: 12px; }
+        
+        .custom-select { 
+            padding: 10px; border: 1px solid #d1d5db; 
+            border-radius: 8px; font-size: 0.9rem; outline: none; width: 100%;
+        }
+
+        .btn-delete-case {
+            color: #dc2626; background: none; border: none;
+            cursor: pointer; font-size: 1rem; transition: 0.2s; padding: 5px;
+        }
+        .btn-delete-case:hover { color: #991b1b; transform: scale(1.1); }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Case Management</h1>
+                <p>View and manage all arbitration cases.</p>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-grid">
+                    <div class="search-bar" style="width: 100%;">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="caseSearch" placeholder="Search by Case ID, Customer, Provider..." oninput="applyFilters()">
+                    </div>
+                    <select id="statusFilter" class="custom-select" onchange="applyFilters()">
+                        <option value="All Status">All Status</option>
+                        <option value="Open">Open</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Hearing Scheduled">Hearing Scheduled</option>
+                        <option value="Awarded">Awarded</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                    <select id="arbFilter" class="custom-select" onchange="applyFilters()">
+                        <option value="All Arbitrators">All Arbitrators</option>
+                    </select>
+                    <input type="date" id="dateFilter" class="custom-select" onchange="applyFilters()">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn-primary-sm" onclick="createNewCase()">
+                        <i class="fa-solid fa-plus"></i> Create Case
+                    </button>
+                    <button class="btn-outline" onclick="exportCases()">
+                        <i class="fa-solid fa-file-export"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Case ID</th>
+                            <th>Customer Name</th>
+                            <th>Service Provider</th>
+                            <th>Assigned Arbitrator</th>
+                            <th>Case Type</th>
+                            <th>Status</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="case-table-body"></tbody>
+                </table>
+                <div id="pagination-info" style="padding: 20px; color: #64748b; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span id="showing-text">Showing 0 of 0 cases</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        let currentFilteredData = [];
+
+        function getCaseCustomerName(caseItem) {
+            return typeof caseItem.customer === 'object' ? (caseItem.customer.name || "N/A") : (caseItem.customer || "N/A");
+        }
+
+        function getCaseProviderName(caseItem) {
+            return typeof caseItem.provider === 'object'
+                ? (caseItem.provider.company || caseItem.provider.name || "N/A")
+                : (caseItem.provider || "N/A");
+        }
+
+        function getCaseArbitratorName(caseItem) {
+            return typeof caseItem.arbitrator === 'object'
+                ? (caseItem.arbitrator.name || "Unassigned")
+                : (caseItem.arbitrator || "Unassigned");
+        }
+
+        function renderArbitratorFilter() {
+            const arbDropdown = document.getElementById('arbFilter');
+            const options = (AdminData.filterOptions && Array.isArray(AdminData.filterOptions.arbitrators))
+                ? AdminData.filterOptions.arbitrators
+                : ['All Arbitrators'];
+
+            arbDropdown.innerHTML = options.map((arbName) => `
+                <option value="${arbName}">${arbName}</option>
+            `).join('');
+        }
+
+        function initPage() {
+            if (!window.AdminData || !window.AdminData.cases) {
+                setTimeout(initPage, 100); // Retry if script loading is staggered
+                return;
+            }
+
+            renderArbitratorFilter();
+            applyFilters();
+        }
+
+        function renderCases(dataList) {
+            currentFilteredData = dataList;
+            const tbody = document.getElementById('case-table-body');
+
+            if (dataList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">No records found.</td></tr>';
+            } else {
+                tbody.innerHTML = dataList.map(c => {
+                    const custName = getCaseCustomerName(c);
+                    const provName = getCaseProviderName(c);
+                    const arbName = getCaseArbitratorName(c);
+
+                    return `
+                    <tr>
+                        <td><a class="case-id-link" onclick="viewCase('${c.id}')">${c.id}</a></td>
+                        <td><strong>${custName}</strong></td> 
+                        <td>${provName}</td>
+                        <td>${arbName}</td>
+                        <td>${c.type}</td>
+                        <td><span class="status-pill ${getStatusClass(c.status)}">${c.status}</span></td>
+                        <td style="text-align: center;">
+                            <button class="btn-delete-case" onclick="deleteCase('${c.id}')">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>`;
+                }).join('');
+            }
+            document.getElementById('showing-text').innerText = `Showing ${dataList.length} of ${AdminData.cases.length} total cases`;
+        }
+
+        function getStatusClass(status) {
+            const s = status.toLowerCase();
+            if (s.includes('open')) return 'stat-pending';
+            if (s.includes('review')) return 'stat-review';
+            if (s.includes('hearing')) return 'badge-hearing';
+            if (s.includes('awarded')) return 'stat-approved';
+            if (s.includes('closed')) return 'stat-rejected';
+            return '';
+        }
+
+        function applyFilters() {
+            const searchTerm = document.getElementById('caseSearch').value.toLowerCase();
+            const statusVal = document.getElementById('statusFilter').value;
+            const arbVal = document.getElementById('arbFilter').value;
+            const dateVal = document.getElementById('dateFilter').value;
+
+            const filtered = AdminData.cases.filter(c => {
+                const custName = getCaseCustomerName(c).toLowerCase();
+                const provName = getCaseProviderName(c).toLowerCase();
+                const arbName = getCaseArbitratorName(c).toLowerCase();
+
+                const matchesSearch = c.id.toLowerCase().includes(searchTerm) || (c.title || "").toLowerCase().includes(searchTerm) || custName.includes(searchTerm) || provName.includes(searchTerm);
+                const matchesStatus = (statusVal === "All Status" || c.status === statusVal);
+                const matchesArb = (arbVal === "All Arbitrators" || arbName === arbVal.toLowerCase());
+                const matchesDate = (!dateVal || c.filedDateISO === dateVal);
+
+                return matchesSearch && matchesStatus && matchesArb && matchesDate;
+            });
+
+            renderCases(filtered);
+        }
+
+        function viewCase(id) { window.location.href = `admin_case_details.html?id=${encodeURIComponent(id)}`; }
+
+        function deleteCase(caseId) {
+            if (confirm(`Delete case ${caseId}?`)) {
+                AdminData.cases = AdminData.cases.filter(c => c.id !== caseId);
+                saveAdminData();
+                logAdminActivity(`Deleted case ${caseId}`);
+                renderArbitratorFilter();
+                applyFilters();
+            }
+        }
+
+        function createNewCase() {
+            const newCase = typeof window.createAdminCaseRecord === 'function'
+                ? window.createAdminCaseRecord({ title: "New Case Intake" })
+                : {
+                    id: "CS-2026-" + Math.floor(1000 + Math.random() * 9000),
+                    title: "New Case Intake",
+                    customer: { name: "New Applicant", email: "", phone: "" },
+                    provider: { company: "Pending Assignment", name: "", email: "", phone: "" },
+                    arbitrator: { name: "Unassigned" },
+                    type: "General",
+                    status: "Open",
+                    filedDateISO: new Date().toISOString().split('T')[0],
+                    filedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                    timeline: [{ event: "Case filed", date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), completed: true }],
+                    messages: [],
+                    notes: ""
+                };
+            AdminData.cases.unshift(newCase);
+            saveAdminData();
+            logAdminActivity(`Created case ${newCase.id}`);
+            renderArbitratorFilter();
+            applyFilters();
+        }
+
+        function exportCases() {
+            const rows = [["Case ID", "Customer", "Provider", "Status"]];
+            currentFilteredData.forEach(c => rows.push([c.id, getCaseCustomerName(c), getCaseProviderName(c), c.status]));
+            const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "cases.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

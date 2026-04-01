@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrator Application | Final Review</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <style>
+        .review-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+        .review-box { 
+            background: #D1D5DB; 
+            border: 1px solid #000; 
+            border-radius: 8px; 
+            padding: 12px; 
+            min-height: 45px; 
+            box-shadow: inset 0px 4px 4px rgba(0,0,0,0.1); 
+            font-weight: 500;
+            color: #333;
+            word-wrap: break-word;
+        }
+        .doc-check-grid { display: flex; gap: 40px; margin: 40px 0; align-items: center; }
+        .check-item { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+        .check-icon { width: 35px; height: 35px; background: #228B22; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+        .confirm-area { display: flex; align-items: center; gap: 15px; margin-top: 20px; font-size: 1.2rem; font-weight: 700; }
+        .custom-check { width: 30px; height: 30px; cursor: pointer; border: 2px solid #000; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <a href="arbitrator_landing.html" class="logo">ServiceHub</a>
+            <button class="btn btn-blue" style="font-size: 0.9rem; padding: 8px 20px;">Contact : ABC@gmail.com</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1 class="form-title">Arbitrator Application Form</h1>
+        <p class="form-subtitle">Complete the steps below to apply as a verified arbitrator.</p>
+
+        <div class="stepper">
+            <div class="step-item"><div class="step-circle active"></div><div class="step-label">Personal<br>Information</div><div class="step-line" style="background: #228B22;"></div></div>
+            <div class="step-item"><div class="step-circle active"></div><div class="step-label">Professional<br>Background</div><div class="step-line" style="background: #228B22;"></div></div>
+            <div class="step-item"><div class="step-circle active"></div><div class="step-label">Documents</div><div class="step-line" style="background: #228B22;"></div></div>
+            <div class="step-item"><div class="step-circle active"></div><div class="step-label">Review</div><div class="step-line"></div></div>
+        </div>
+
+        <div class="review-grid">
+            <div class="input-group"><label>Full Name</label><div id="rev-name" class="review-box">N/A</div></div>
+            <div class="input-group"><label>Email Address</label><div id="rev-email" class="review-box">N/A</div></div>
+            <div class="input-group"><label>Phone Number</label><div id="rev-phone" class="review-box">N/A</div></div>
+            
+            <div class="input-group"><label>Country</label><div id="rev-country" class="review-box">N/A</div></div>
+            <div class="input-group"><label>LinkedIn</label><div id="rev-linkedin" class="review-box">N/A</div></div>
+            <div class="input-group"><label>Prof. Title</label><div id="rev-title" class="review-box">N/A</div></div>
+
+            <div class="input-group"><label>Experience (Yrs)</label><div id="rev-exp" class="review-box">N/A</div></div>
+            <div class="input-group"><label>Expertise</label><div id="rev-expertise" class="review-box">N/A</div></div>
+            <div class="input-group"><label>Organization</label><div id="rev-org" class="review-box">N/A</div></div>
+        </div>
+
+        <div class="input-group" style="margin-top: 20px;">
+            <label>Previous Arbitration Experience</label>
+            <div id="rev-history" class="review-box" style="height: 100px; overflow-y: auto;">N/A</div>
+        </div>
+
+        <div class="doc-check-grid">
+            <div class="check-item"><span class="check-icon">✓</span> Resume: <span id="rev-file-resume" style="margin-left:5px; font-weight:400;">Not Found</span></div>
+            <div class="check-item"><span class="check-icon">✓</span> License: <span id="rev-file-license" style="margin-left:5px; font-weight:400;">Not Found</span></div>
+        </div>
+
+        <div class="confirm-area">
+            <input type="checkbox" id="finalConfirm" class="custom-check">
+            <label for="finalConfirm">I confirm the information provided is accurate.</label>
+        </div>
+        
+        <div style="display: flex; justify-content: flex-end; gap: 20px; margin-top: 40px;">
+            <button type="button" onclick="window.location.href='arbitrator_form_3.html'" class="btn btn-blue">← Back</button>
+            <button type="button" onclick="submitFinalApplication()" class="btn btn-blue" style="width: 150px;">SUBMIT</button>
+        </div>
+
+        <footer class="footer">
+            © 2026 Service Quality, Rating & Dispute Management System
+        </footer>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!ensureApplicationStep(4)) return;
+            loadReviewData();
+        });
+
+        function loadReviewData() {
+            if (typeof ArbitratorData !== 'undefined') {
+                const data = ArbitratorData.registration.formData;
+
+                // Stage 1 Mapping
+                document.getElementById('rev-name').innerText = data.name || "N/A";
+                document.getElementById('rev-email').innerText = data.email || "N/A";
+                document.getElementById('rev-phone').innerText = data.phone || "N/A";
+                document.getElementById('rev-country').innerText = data.country || "N/A";
+                document.getElementById('rev-linkedin').innerText = data.linkedin || "N/A";
+                document.getElementById('rev-title').innerText = data.title || "N/A";
+
+                // Stage 2 Mapping
+                document.getElementById('rev-exp').innerText = data.experience || "N/A";
+                document.getElementById('rev-expertise').innerText = data.expertise || "N/A";
+                document.getElementById('rev-org').innerText = data.organization || "N/A";
+                document.getElementById('rev-history').innerText = data.prevExperience || "No history provided.";
+
+                // Stage 3 Mapping (Files)
+                if (data.fileName_resume) document.getElementById('rev-file-resume').innerText = data.fileName_resume;
+                if (data.fileName_license) document.getElementById('rev-file-license').innerText = data.fileName_license;
+            }
+        }
+
+        async function submitFinalApplication() {
+            const isConfirmed = document.getElementById('finalConfirm').checked;
+
+            if (!isConfirmed) {
+                alert("Please confirm the information accuracy by checking the box.");
+                return;
+            }
+
+            const formData = ArbitratorData.registration.formData;
+            if (!formData.password || formData.password.length < 8) {
+                alert("Please return to Step 1 and create a valid password.");
+                return;
+            }
+
+            try {
+                await arbitratorSignup(formData.name, formData.email, formData.password, {
+                    phone: formData.phone,
+                    location: formData.country,
+                    title: formData.title
+                });
+
+                window.location.href = 'arbitrator_success.html';
+            } catch (error) {
+                alert(error.message);
+            }
+        }
+    </script>
+</body>
+</html>

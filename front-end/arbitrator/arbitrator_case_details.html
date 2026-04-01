@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Details | ServiceHub</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Action Button Styles */
+        .action-btn-group { display: flex; gap: 12px; }
+        .btn-outline { 
+            background: white; border: 1px solid #D1D5DB; padding: 10px 16px; 
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; 
+        }
+        .btn-outline:hover { background: #F9FAFB; border-color: #9CA3AF; }
+        .btn-gold { 
+            background: #1E3A8A; color: white; border: none; padding: 10px 20px; 
+            border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; 
+        }
+        .btn-gold:hover { background: #162d6b; }
+        
+        /* Stats Styling */
+        .arb-card { background: white; border: 1px solid #E5E7EB; padding: 15px; border-radius: 10px; }
+        .arb-card small { color: #9CA3AF; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+        .arb-card p { margin-top: 5px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
+                    <div>
+                        <h1 id="case-detail-title" style="font-size: 1.8rem; font-weight: 800; color: #111827;">Case ID: CASE-20391</h1>
+                        <p id="case-detail-subtitle" style="color: #6B7280;">Commercial Contract Dispute</p>
+                    </div>
+                    <div class="action-btn-group">
+                        <button class="btn-outline" onclick="goToCurrentCaseHearings()">
+                            <i class="fa-solid fa-calendar-plus"></i> Schedule Hearing
+                        </button>
+                        <button class="btn-outline" onclick="goToCurrentCaseMessages()">
+                            <i class="fa-solid fa-message"></i> Message Parties
+                        </button>
+                        <button class="btn-outline" onclick="triggerFileUpload('Order')">
+                            <i class="fa-solid fa-upload"></i> Upload Order
+                        </button>
+                        <button class="btn-gold" onclick="triggerFileUpload('Decision')">
+                            <i class="fa-solid fa-gavel"></i> Issue Decision
+                        </button>
+                    </div>
+                </div>
+
+                <div class="arb-stats-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px;">
+                    <div class="arb-card"><div><small>CLAIMANT</small><p><b>Individual Customer</b></p></div></div>
+                    <div class="arb-card"><div><small>RESPONDENT</small><p><b>Delta Industries Ltd</b></p></div></div>
+                    <div class="arb-card"><div><small>AMOUNT IN DISPUTE</small><p><b>$2,400,000</b></p></div></div>
+                    <div class="arb-card"><div><small>DATE ASSIGNED</small><p><b>12 May 2025</b></p></div></div>
+                    <div class="arb-card"><div><small>CURRENT STATUS</small><p style="color: #2563EB;"><b>Under Review</b></p></div></div>
+                    <div class="arb-card"><div><small>NEXT HEARING</small><p><b>22 May 2025</b></p></div></div>
+                </div>
+
+                <div class="arb-main-grid" style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 30px; margin-top: 30px;">
+                    <div style="display: flex; flex-direction: column; gap: 30px;">
+                        <div class="arb-panel" id="parties-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
+                            <h3 style="margin-bottom: 20px;">Parties Involved</h3>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
+                                    <small style="color: #2563EB; position: absolute; right: 20px; top: 20px; font-weight: 800;">Claimant</small>
+                                    <p><small style="color: #6B7280;">Organization</small><br><b>Individual Customer</b></p>
+                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Representative</small><br><b>John Smith</b></p>
+                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Email</small><br>john.smith@abccorp.com</p>
+                                </div>
+                                <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
+                                    <small style="color: #EA580C; position: absolute; right: 20px; top: 20px; font-weight: 800;">Respondent</small>
+                                    <p><small style="color: #6B7280;">Organization</small><br><b>Delta Industries Ltd</b></p>
+                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Representative</small><br><b>Laura Chen</b></p>
+                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Email</small><br>laura.chen@delta.com</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="arb-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
+                            <h3>Case Timeline</h3>
+                            <div class="timeline" id="timeline-container" style="margin-top: 20px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 30px;">
+                        <div class="arb-panel" id="documents-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
+                            <h3>Case Documents</h3>
+                            <table class="arb-table" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="text-align: left; border-bottom: 1px solid #E5E7EB;">
+                                        <th style="padding: 10px;">Name</th>
+                                        <th style="padding: 10px;">By</th>
+                                        <th style="padding: 10px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="doc-list-body"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="arb-panel" id="hearing-info-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
+                            <h3>Hearing Information</h3>
+                            <div style="margin-top: 15px; background: #F9FAFB; padding: 15px; border-radius: 8px; border-left: 4px solid #1E3A8A;">
+                                <p><small style="color: #6B7280;">Type</small><br><b>Virtual Hearing</b></p>
+                                <p style="margin-top: 10px;"><small style="color: #6B7280;">Date & Time</small><br><b>22 May 2026, 10:00 AM</b></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <input type="file" id="caseFileUpload" style="display: none;" onchange="handleFileSelect(this)">
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    <script>
+        let currentUploadType = "";
+        let currentCase = null;
+
+        function triggerFileUpload(type) {
+            currentUploadType = type;
+            document.getElementById('caseFileUpload').click();
+        }
+
+        function goToCurrentCaseHearings() {
+            if (!currentCase) return;
+            window.location.href = buildHearingsUrl(currentCase.id);
+        }
+
+        function goToCurrentCaseMessages() {
+            if (!currentCase) return;
+            window.location.href = buildMessagesUrl(currentCase.id);
+        }
+
+        function getDocumentBadgeClass(type) {
+            if (type === 'Award Document') return 'arb-badge-green';
+            if (type === 'Evidence') return 'arb-badge-yellow';
+            return 'arb-badge-blue';
+        }
+
+        function buildCaseDocumentHref(doc) {
+            if (doc.fileLink && doc.fileLink !== '#') {
+                return doc.fileLink;
+            }
+
+            const summary = [
+                `Document: ${doc.name}`,
+                `Case ID: ${doc.id}`,
+                `Type: ${doc.type}`,
+                `Uploaded By: ${doc.uploadedBy}`,
+                `Upload Date: ${doc.date}`,
+                `Size: ${doc.size || 'Unavailable'}`
+            ].join('\n');
+
+            return 'data:text/plain;charset=utf-8,' + encodeURIComponent(summary);
+        }
+
+        function handleFileSelect(input) {
+            if (!currentCase || !input.files || !input.files[0]) {
+                return;
+            }
+
+            const selectedFile = input.files[0];
+            const fileName = selectedFile.name;
+            const documentType = currentUploadType === 'Decision' ? 'Award Document' : 'Order Document';
+
+            const finalizeUpload = (fileLink) => {
+                ArbitratorData.caseDocuments.unshift({
+                    name: fileName,
+                    id: currentCase.id,
+                    type: documentType,
+                    uploadedBy: ArbitratorData.profile.name,
+                    date: createArbitratorDisplayDate(new Date()),
+                    size: createArbitratorFileSizeLabel(selectedFile.size),
+                    typeClass: getDocumentBadgeClass(documentType),
+                    fileLink: fileLink || '#'
+                });
+
+                if (currentUploadType === 'Decision') {
+                    const decisionIndex = ArbitratorData.decisionsList.findIndex((item) => item.id === currentCase.id);
+                    if (decisionIndex !== -1) {
+                        ArbitratorData.decisionsList[decisionIndex].status = 'Award Issued';
+                        ArbitratorData.decisionsList[decisionIndex].statusClass = 'arb-badge-green';
+                    } else {
+                        ArbitratorData.decisionsList.unshift({
+                            id: currentCase.id,
+                            parties: `${currentCase.claimant} vs ${currentCase.respondent}`,
+                            type: currentCase.type,
+                            deadline: createArbitratorDisplayDate(new Date()),
+                            status: 'Award Issued',
+                            statusClass: 'arb-badge-green',
+                            priority: '—',
+                            amount: currentCase.amount
+                        });
+                    }
+
+                    currentCase.status = 'Closed';
+                    currentCase.statusColor = '#6B7280';
+                    currentCase.statusClass = 'arb-badge-gray';
+                    currentCase.next = '—';
+                }
+
+                saveData();
+                loadCaseData();
+
+                alert(`${currentUploadType} uploaded: ${fileName}`);
+                input.value = '';
+            };
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                finalizeUpload(event && event.target ? event.target.result : '#');
+            };
+            reader.onerror = function() {
+                finalizeUpload('#');
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        function loadCaseData() {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
+
+            const activeCase = getCurrentArbitratorCase('CASE-20491');
+            if (!activeCase) return;
+            currentCase = activeCase;
+
+            // Update case header
+            const header = document.getElementById('case-detail-title');
+            if (header) {
+                header.innerHTML = `Case ID: <span style="color: #1E3A8A;">${activeCase.id}</span>`;
+            }
+            const subtitle = document.getElementById('case-detail-subtitle');
+            if (subtitle) {
+                subtitle.textContent = activeCase.type;
+            }
+
+            // Update stats grid
+            const statsGrid = document.querySelector('.arb-stats-grid');
+            if (statsGrid) {
+                statsGrid.innerHTML = `
+                    <div class="arb-card"><div><small>CLAIMANT</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.claimant}</p></div></div>
+                    <div class="arb-card"><div><small>RESPONDENT</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.respondent}</p></div></div>
+                    <div class="arb-card"><div><small>AMOUNT</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.amount}</p></div></div>
+                    <div class="arb-card"><div><small>ASSIGNED</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.assigned}</p></div></div>
+                    <div class="arb-card"><div><small>STATUS</small><p style="font-size: 0.85rem; font-weight: 700; color: ${activeCase.statusColor};">${activeCase.status}</p></div></div>
+                    <div class="arb-card"><div><small>NEXT HEARING</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.next || 'TBD'}</p></div></div>
+                `;
+            }
+
+            const partiesPanel = document.getElementById('parties-panel');
+            if (partiesPanel) {
+                partiesPanel.innerHTML = `
+                    <h3 style="margin-bottom: 20px;">Parties Involved</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
+                            <small style="color: #2563EB; position: absolute; right: 20px; top: 20px; font-weight: 800;">Claimant</small>
+                            <p><small style="color: #6B7280;">Organization</small><br><b>${activeCase.claimant}</b></p>
+                            <p style="margin-top:15px;"><small style="color: #6B7280;">Case Type</small><br><b>${activeCase.type}</b></p>
+                            <p style="margin-top:15px;"><small style="color: #6B7280;">Status</small><br>${activeCase.status}</p>
+                        </div>
+                        <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
+                            <small style="color: #EA580C; position: absolute; right: 20px; top: 20px; font-weight: 800;">Respondent</small>
+                            <p><small style="color: #6B7280;">Organization</small><br><b>${activeCase.respondent}</b></p>
+                            <p style="margin-top:15px;"><small style="color: #6B7280;">Amount In Dispute</small><br><b>${activeCase.amount}</b></p>
+                            <p style="margin-top:15px;"><small style="color: #6B7280;">Assigned On</small><br>${activeCase.assigned}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Update documents table
+            const docTbody = document.getElementById('doc-list-body');
+            if (docTbody) {
+                const caseDocs = ArbitratorData.caseDocuments.filter(d => d.id === activeCase.id);
+                if (caseDocs.length === 0) {
+                    docTbody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #9CA3AF;">No documents uploaded yet.</td></tr>';
+                } else {
+                    docTbody.innerHTML = caseDocs.map(doc => `
+                        <tr style="border-bottom: 1px solid #F3F4F6;">
+                            <td style="padding: 12px;"><i class="fa-solid fa-file-pdf" style="color: #EF4444; margin-right: 8px;"></i>${doc.name}</td>
+                            <td style="padding: 12px; color: #6B7280;">${doc.uploadedBy}</td>
+                            <td><a href="${buildCaseDocumentHref(doc)}" target="_blank" rel="noopener" style="color: #2563EB; font-weight: 600; text-decoration: none;">View</a></td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Update hearing info
+            const hearingSection = document.getElementById('hearing-info-panel');
+            if (hearingSection && activeCase.hearingDate) {
+                hearingSection.innerHTML = `
+                    <h3 style="margin-bottom: 16px;">Hearing Information</h3>
+                    <div style="margin-top: 12px; background: #F9FAFB; padding: 16px; border-radius: 8px; border-left: 4px solid #1E3A8A;">
+                        <p style="margin-bottom: 10px;"><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">TYPE</small><br><b style="font-size: 0.9rem;">${activeCase.hearingType || 'To Be Scheduled'}</b></p>
+                        <p style="margin-bottom: 10px;"><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">DATE & TIME</small><br><b style="font-size: 0.9rem;">${activeCase.hearingDate || 'TBD'} ${activeCase.hearingTime || ''}</b></p>
+                        ${activeCase.hearingLocation ? `<p><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">LOCATION</small><br><b style="font-size: 0.9rem;">${activeCase.hearingLocation}</b></p>` : ''}
+                    </div>
+                `;
+            } else if (hearingSection) {
+                hearingSection.innerHTML = `
+                    <h3 style="margin-bottom: 16px;">Hearing Information</h3>
+                    <div style="margin-top: 12px; background: #F9FAFB; padding: 16px; border-radius: 8px; border-left: 4px solid #1E3A8A;">
+                        <p><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">STATUS</small><br><b style="font-size: 0.9rem;">No hearing scheduled yet</b></p>
+                    </div>
+                `;
+            }
+
+            // Update timeline
+            const timelineData = [
+                { status: "Case Filed", date: activeCase.assigned, icon: "fa-file-invoice", type: "complete" },
+                { status: "Arbitrator Assigned", date: activeCase.assigned, icon: "fa-user-check", type: "complete" },
+                ...(activeCase.hearingDate ? [{ status: "Hearing Scheduled", date: activeCase.hearingDate, icon: "fa-calendar-check", type: "complete" }] : []),
+                { status: activeCase.status, date: "Current", icon: "fa-magnifying-glass", type: "active" }
+            ];
+
+            const timelineContainer = document.getElementById('timeline-container');
+            if (timelineContainer) {
+                timelineContainer.innerHTML = timelineData.map(item => `
+                    <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
+                        <div style="width: 38px; height: 38px; border-radius: 50%; background: ${item.type === 'complete' ? '#D1FAE5' : '#DBEAFE'};
+                             color: ${item.type === 'complete' ? '#065F46' : '#1E40AF'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <i class="fa-solid ${item.icon}"></i>
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.9rem; color: #111827;">${item.status}</div>
+                            <div style="color: #6B7280; font-size: 0.8rem;">${item.date}</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCaseData();
+        });
+    </script>
+</body>
+</html>

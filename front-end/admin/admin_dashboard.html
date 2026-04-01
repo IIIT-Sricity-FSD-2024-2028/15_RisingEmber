@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Overview | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Specific dropdown style for filter */
+        .filter-wrapper { position: relative; }
+        .filter-menu { 
+            display: none; position: absolute; top: 45px; right: 0; 
+            background: white; border: 1px solid var(--admin-border); 
+            border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+            z-index: 1000; min-width: 160px; padding: 10px;
+        }
+        .filter-menu.show { display: block; }
+        .filter-menu button { 
+            width: 100%; text-align: left; padding: 8px; border: none; 
+            background: none; cursor: pointer; border-radius: 4px; font-size: 0.85rem;
+        }
+        .filter-menu button:hover { background: #f1f5f9; color: var(--admin-accent); }
+        .app-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            z-index: 1200;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .app-modal-backdrop.show { display: flex; }
+        .app-modal {
+            width: min(100%, 540px);
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 24px 48px rgba(15, 23, 42, 0.2);
+            overflow: hidden;
+        }
+        .app-modal-header,
+        .app-modal-footer {
+            padding: 18px 22px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .app-modal-footer {
+            border-bottom: none;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        .app-modal-body {
+            padding: 22px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .app-modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .app-modal-field.full { grid-column: 1 / -1; }
+        .app-modal-field label {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #64748b;
+            font-weight: 700;
+        }
+        .app-modal-field strong,
+        .app-modal-field span {
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+
+    <div id="admin-sidebar-placeholder"></div>
+
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Dashboard Overview</h1>
+                <p>Monitor arbitration platform activity and manage applications</p>
+            </div>
+
+            <div class="admin-stats-row">
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue"><i class="fa-solid fa-file-signature"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="stat-apps">24</span>
+                        <span class="label">New Applications</span>
+                    </div>
+                    <span class="trend pos">+12%</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-orange"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="stat-pending">18</span>
+                        <span class="label">Pending Reviews</span>
+                    </div>
+                    <span class="badge-mini">18 pending</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-user-check"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="stat-verified">142</span>
+                        <span class="label">Verified Arbitrators</span>
+                    </div>
+                    <span class="trend pos">+8%</span>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple"><i class="fa-solid fa-briefcase"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="stat-cases">37</span>
+                        <span class="label">Active Dispute Cases</span>
+                    </div>
+                    <span class="badge-mini-purple">37 active</span>
+                </div>
+            </div>
+
+            <div class="dashboard-mid-grid">
+                <div class="chart-container main-chart">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Monthly Arbitration Activity</h3>
+                        <small style="color: #64748b;">Applications vs Resolved Cases</small>
+                    </div>
+                    <div class="svg-chart-wrapper">
+                        <svg viewBox="0 0 500 200" class="line-chart">
+                            <line x1="0" y1="180" x2="500" y2="180" stroke="#e2e8f0" />
+                            <polyline fill="none" stroke="#2563eb" stroke-width="3" points="0,150 100,120 200,140 300,90 400,110 500,70" />
+                            <polyline fill="none" stroke="#22c55e" stroke-width="3" points="0,170 100,150 200,160 300,130 400,145 500,110" />
+                        </svg>
+                        <div class="chart-labels">
+                            <span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dec</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container distribution">
+                    <h3>Arbitrator Distribution</h3>
+                    <div id="distribution-list" class="dist-list"></div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Recent Arbitrator Applications</h3>
+                    <div class="table-actions" style="display: flex; gap: 10px;">
+                        <div class="filter-wrapper">
+                            <button class="btn-outline" onclick="toggleFilterMenu()">
+                                <i class="fa-solid fa-filter"></i> Filter
+                            </button>
+                            <div class="filter-menu" id="filterMenu">
+                                <button onclick="filterByStatus('All')">All Applications</button>
+                                <button onclick="filterByStatus('Pending Review')">Pending Review</button>
+                                <button onclick="filterByStatus('Under Review')">Under Review</button>
+                                <button onclick="filterByStatus('Approved')">Approved</button>
+                            </div>
+                        </div>
+                        <button class="btn-primary-sm" onclick="exportToCSV()">
+                            <i class="fa-solid fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant Name</th>
+                            <th>Country</th>
+                            <th>Experience</th>
+                            <th>Specialization</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="app-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <div class="app-modal-backdrop" id="applicationDetailModal" onclick="hideApplicationDetails(event)">
+        <div class="app-modal" onclick="event.stopPropagation()">
+            <div class="app-modal-header">
+                <h3 id="applicationModalName" style="margin:0;">Application</h3>
+                <p id="applicationModalSubtitle" style="margin:6px 0 0; color:#64748b; font-size:0.9rem;">Applicant detail</p>
+            </div>
+            <div class="app-modal-body">
+                <div class="app-modal-field">
+                    <label>Application ID</label>
+                    <strong id="applicationModalId">-</strong>
+                </div>
+                <div class="app-modal-field">
+                    <label>Status</label>
+                    <span id="applicationModalStatus">-</span>
+                </div>
+                <div class="app-modal-field full">
+                    <label>Email</label>
+                    <span id="applicationModalEmail">-</span>
+                </div>
+                <div class="app-modal-field">
+                    <label>Country</label>
+                    <span id="applicationModalCountry">-</span>
+                </div>
+                <div class="app-modal-field">
+                    <label>Experience</label>
+                    <span id="applicationModalExperience">-</span>
+                </div>
+                <div class="app-modal-field full">
+                    <label>Specialization</label>
+                    <span id="applicationModalSpecialization">-</span>
+                </div>
+            </div>
+            <div class="app-modal-footer">
+                <button class="btn-outline" type="button" onclick="hideApplicationDetails()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        let currentFilter = 'All';
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function hideApplicationDetails() {
+            document.getElementById('applicationDetailModal').classList.remove('show');
+        }
+
+        function showApplicationDetails(id) {
+            const app = (AdminData.applications || []).find(item => item.id === id);
+            if (!app) return;
+
+            document.getElementById('applicationModalName').textContent = app.name || 'Applicant';
+            document.getElementById('applicationModalSubtitle').textContent = `Application detail for ${app.spec || 'General'} specialization`;
+            document.getElementById('applicationModalId').textContent = `APP-${app.id}`;
+            document.getElementById('applicationModalStatus').textContent = app.status || 'Pending Review';
+            document.getElementById('applicationModalEmail').textContent = app.email || 'Not provided';
+            document.getElementById('applicationModalCountry').textContent = `${app.flag || ''} ${app.country || 'Not provided'}`.trim();
+            document.getElementById('applicationModalExperience').textContent = app.exp || 'Not provided';
+            document.getElementById('applicationModalSpecialization').textContent = app.spec || 'General';
+            document.getElementById('applicationDetailModal').classList.add('show');
+        }
+
+        function getFilteredApplications() {
+            const applications = Array.isArray(AdminData.applications) ? AdminData.applications : [];
+            return currentFilter === 'All'
+                ? applications
+                : applications.filter(app => app.status === currentFilter);
+        }
+
+        function renderDashboard() {
+            // Stats
+            const stats = AdminData.stats || {};
+            document.getElementById('stat-apps').innerText = stats.newApplications || 0;
+            document.getElementById('stat-pending').innerText = stats.pendingReviews || 0;
+            document.getElementById('stat-verified').innerText = stats.verifiedArbitrators || 0;
+            document.getElementById('stat-cases').innerText = stats.activeDisputes || 0;
+
+            // Table with Filter Logic
+            const tbody = document.getElementById('app-table-body');
+            const dataToRender = getFilteredApplications();
+
+            tbody.innerHTML = dataToRender.length > 0 ? dataToRender.map(app => `
+                <tr>
+                    <td><div class="user-cell">
+                        <img src="https://ui-avatars.com/api/?name=${app.name}&background=random" alt="user">
+                        <div><strong>${app.name}</strong><br><small>${app.email}</small></div>
+                    </div></td>
+                    <td>${app.flag} ${app.country}</td>
+                    <td>${app.exp}</td>
+                    <td>${app.spec}</td>
+                    <td><span class="status-pill ${app.statusClass}">${app.status}</span></td>
+                    <td class="actions-cell">
+                        <button class="text-blue" onclick="showApplicationDetails(${app.id})" aria-label="View application details for ${escapeHtml(app.name)}"><i class="fa-regular fa-eye"></i></button>
+                        <button class="text-green" onclick="updateAppStatus(${app.id}, 'Approved', 'stat-approved')"><i class="fa-solid fa-check"></i></button>
+                        <button class="text-red" onclick="updateAppStatus(${app.id}, 'Rejected', 'stat-rejected')"><i class="fa-solid fa-xmark"></i></button>
+                    </td>
+                </tr>
+            `).join('') : `
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:24px; color:#94a3b8;">No applications match the current filter.</td>
+                </tr>
+            `;
+
+            // Distribution bars
+            const distList = document.getElementById('distribution-list');
+            const distribution = Array.isArray(AdminData.distribution) ? AdminData.distribution : [];
+            distList.innerHTML = distribution.length > 0 ? distribution.map(item => `
+                <li>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span>${item.flag} ${item.country}</span>
+                        <strong>${item.count}</strong>
+                    </div>
+                    <div class="dist-bar-bg"><div class="dist-bar-fill" style="width: ${item.percentage}%"></div></div>
+                </li>
+            `).join('') : `<li style="color:#94a3b8; font-size:0.85rem;">No distribution data available yet.</li>`;
+        }
+
+        // INTERACTIVE: Filter Logic
+        function toggleFilterMenu() {
+            document.getElementById('filterMenu').classList.toggle('show');
+        }
+
+        function filterByStatus(status) {
+            currentFilter = status;
+            renderDashboard();
+            toggleFilterMenu();
+        }
+
+        // INTERACTIVE: Export Logic (Simulated)
+        function exportToCSV() {
+            const dataToExport = getFilteredApplications();
+            if (dataToExport.length === 0) {
+                alert("No application records are available for export.");
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Name,Email,Country,Status\n";
+            dataToExport.forEach(app => {
+                csvContent += `${app.name},${app.email},${app.country},${app.status}\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "arbitrator_applications.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updateAppStatus(id, newStatus, newClass) {
+            const app = AdminData.applications.find(a => a.id === id);
+            if(app) {
+                if (app.status === newStatus) {
+                    return;
+                }
+                app.status = newStatus;
+                app.statusClass = newClass;
+                saveAdminData();
+                logAdminActivity(`Application ${id} moved to ${newStatus}`);
+                renderDashboard();
+            }
+        }
+
+        // Close dropdown if clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.btn-outline') && !event.target.closest('.btn-outline')) {
+                document.getElementById('filterMenu').classList.remove('show');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', renderDashboard);
+    </script>
+</body>
+</html>

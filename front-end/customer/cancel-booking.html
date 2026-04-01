@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Cancel Booking</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .cancel-container {
+      max-width: 800px;
+    }
+    
+    .cancel-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    .cancel-card h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 20px;
+    }
+
+    /* Booking Summary Box */
+    .booking-summary-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+    .summary-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: var(--blue-bg);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .summary-details {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .summary-details strong {
+      font-size: 1rem;
+      color: var(--text-dark);
+    }
+    .summary-details span {
+      font-size: 0.85rem;
+      color: var(--text-mid);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .summary-details span i {
+      color: var(--text-soft);
+      width: 16px;
+      text-align: center;
+    }
+
+    /* Radio Options */
+    .radio-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .radio-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: var(--text-mid);
+    }
+    .radio-option input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+    
+    /* Comments Area */
+    .comments-area label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+    }
+    .comments-area textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: var(--text-dark);
+      outline: none;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    .comments-area textarea:focus {
+      border-color: var(--primary);
+    }
+    .comments-area textarea::placeholder {
+      color: var(--text-soft);
+    }
+
+    /* Actions */
+    .action-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-top: 32px;
+    }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Ashwin&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link active"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="cancel-container">
+        <div class="page-header" style="margin-bottom: 32px;">
+          <h1>Cancel Booking</h1>
+          <p>Please let us know why you are cancelling this service.</p>
+        </div>
+
+        <div class="cancel-card" style="padding: 24px;">
+          <h3>Booking Details</h3>
+          <div class="booking-summary-box">
+            <div class="summary-icon">
+              <i class="fa-solid fa-wrench"></i>
+            </div>
+            <div class="summary-details">
+              <strong id="cancelBookingTitle">Loading booking...</strong>
+              <span><i class="fa-regular fa-calendar"></i> <span id="cancelBookingDate">Loading date...</span></span>
+              <span><i class="fa-regular fa-clock"></i> <span id="cancelBookingTime">Loading time...</span></span>
+              <span><i class="fa-regular fa-circle-user"></i> <span id="cancelBookingProvider">Loading provider...</span></span>
+            </div>
+          </div>
+        </div>
+
+        <form id="cancelBookingForm">
+          <div class="cancel-card">
+            <h3>Reason for cancellation</h3>
+            <div id="cancelBookingMessage" class="form-feedback"></div>
+            
+            <div class="radio-list">
+              <label class="radio-option">
+                <input type="radio" name="cancel_reason" value="found_another" checked />
+                Found another service provider
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="cancel_reason" value="schedule_conflict" />
+                Schedule conflict
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="cancel_reason" value="price_too_high" />
+                Price too high
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="cancel_reason" value="no_longer_needed" />
+                Service no longer needed
+              </label>
+              <label class="radio-option">
+                <input type="radio" name="cancel_reason" value="other" />
+                Other
+              </label>
+            </div>
+
+            <div class="comments-area">
+              <label>Additional comments (optional)</label>
+              <textarea id="cancelComments" placeholder="Please provide any additional details about your cancellation..."></textarea>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <a href="booking-details.html" class="btn btn--outline" style="padding: 12px 24px;">Go Back</a>
+            <button type="submit" class="btn btn--primary" style="padding: 12px 24px;">Confirm Cancellation</button>
+          </div>
+        </form>
+
+      </div>
+    </main>
+  </div>
+  
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/cancel-booking.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Track Job Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link active"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" id="logoutBtn" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Track Job Status</h1>
+        <p>Monitor and update the progress of the service request</p>
+      </div>
+
+      <div class="tracking-card card">
+        
+        <h2 class="mb-16">Job Information</h2>
+        <div class="tracking-info-grid">
+          <div>
+            <span class="info-label">Job ID</span>
+            <span class="info-value" id="trackJobId">#SH-2024-4782</span>
+          </div>
+          <div>
+            <span class="info-label">Service Name</span>
+            <span class="info-value" id="trackServiceName">Plumbing Repair - Kitchen Sink</span>
+          </div>
+          <div>
+            <span class="info-label">Customer Name</span>
+            <span class="info-value" id="trackCustomerName">Sarah Thompson</span>
+          </div>
+          <div>
+            <span class="info-label">Location</span>
+            <span class="info-value" id="trackJobLocation">245 Oak Street, Apt 3B, San Francisco</span>
+          </div>
+          <div>
+            <span class="info-label">Date</span>
+            <span class="info-value" id="trackJobDate">March 15, 2024</span>
+          </div>
+          <div>
+            <span class="info-label">Time</span>
+            <span class="info-value" id="trackJobTime">2:00 PM - 4:00 PM</span>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="mb-24">Job Progress Timeline</h2>
+        <div class="timeline" id="trackTimeline">
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fa-solid fa-check"></i></div>
+            <div class="timeline-content">
+              <h4>Job Accepted</h4>
+              <p>You accepted this service request</p>
+              <span class="timeline-time">March 14, 2024 at 10:30 AM</span>
+            </div>
+          </div>
+          
+          <div class="timeline-item completed">
+            <div class="timeline-icon"><i class="fa-solid fa-car"></i></div>
+            <div class="timeline-content">
+              <h4>Provider On The Way</h4>
+              <p>En route to customer location</p>
+              <span class="timeline-time">March 15, 2024 at 1:45 PM</span>
+            </div>
+          </div>
+
+          <div class="timeline-item active">
+            <div class="timeline-icon"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+            <div class="timeline-content">
+              <h4>Service In Progress</h4>
+              <p class="text-primary font-medium">Currently working on this job</p>
+              <span class="timeline-time">Started at 2:05 PM</span>
+            </div>
+          </div>
+
+          <div class="timeline-item pending">
+            <div class="timeline-icon"><i class="fa-solid fa-tree"></i></div>
+            <div class="timeline-content">
+              <h4>Service Completed</h4>
+              <p>Pending completion</p>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <h2 class="mb-16">Update Status Actions</h2>
+        <div class="status-action-btns">
+          <button class="btn btn--primary" id="trackStartServiceBtn"><i class="fa-solid fa-play"></i> Start Service</button>
+          <button class="btn btn--primary" id="trackUpdateStatusBtn"><i class="fa-solid fa-spinner"></i> Update Status</button>
+          <button class="btn btn--success" id="trackCompleteJobBtn"><i class="fa-solid fa-circle-check"></i> Mark as Completed</button>
+        </div>
+
+        <div class="alert-box alert-box--info mt-24">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>
+            <strong>Important</strong>
+            <p>Make sure to update the job status in real-time to keep the customer informed. Once you mark the job as completed, the customer will be notified and asked to confirm.</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="action-cards-grid mt-24">
+        
+        <div class="action-card card">
+          <div class="action-card__header">
+            <div class="action-icon action-icon--blue"><i class="fa-solid fa-message"></i></div>
+            <div>
+              <h3>Contact Customer</h3>
+              <p>Send a message or call</p>
+            </div>
+          </div>
+          <div class="action-card__btns">
+            <button class="btn btn--light btn--full" id="trackCallCustomerBtn"><i class="fa-solid fa-phone"></i> Call</button>
+            <button class="btn btn--light btn--full" id="trackMessageCustomerBtn"><i class="fa-solid fa-comment"></i> Message</button>
+          </div>
+        </div>
+
+        <div class="action-card card">
+          <div class="action-card__header">
+            <div class="action-icon action-icon--orange"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <div>
+              <h3>Report an Issue</h3>
+              <p>Having problems with this job?</p>
+            </div>
+          </div>
+          <div class="action-card__btns">
+            <button class="btn btn--light btn--full" id="trackReportIssueBtn"><i class="fa-solid fa-flag"></i> Report Issue</button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

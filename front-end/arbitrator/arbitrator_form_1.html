@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrator Application | Stage 1</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="arbitrator_landing.html" class="logo">ServiceHub</a>
+        <button class="btn btn-blue">Contact : ABC@gmail.com</button>
+    </nav>
+
+    <div class="container">
+        <h1 style="font-size: 3.5rem; margin-top: 40px;">Arbitrator Application Form</h1>
+        <p style="margin-bottom: 40px; color: #4B5563;">Complete the steps below to apply as a verified arbitrator.</p>
+
+        <div class="hero">
+            <div class="form-section">
+                <div class="stepper">
+                    <div class="step-item">
+                        <div class="step-circle active"></div>
+                        <div class="step-label">Personal<br>Information</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-circle"></div>
+                        <div class="step-label">Professional<br>Background</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-circle"></div>
+                        <div class="step-label">Documents</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-circle"></div>
+                        <div class="step-label">Review</div>
+                        <div class="step-line"></div>
+                    </div>
+                </div>
+
+                <form id="appForm">
+                    <div class="input-group">
+                        <label for="name">Full Name*</label>
+                        <input type="text" id="name" class="input-field" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="email">Email Address*</label>
+                        <input type="email" id="email" class="input-field" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="phone">Phone Number*</label>
+                        <input type="text" id="phone" class="input-field" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="country">Country / Jurisdiction*</label>
+                        <input type="text" id="country" class="input-field" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="linkedin">LinkedIn Profile</label>
+                        <input type="text" id="linkedin" class="input-field">
+                    </div>
+                    <div class="input-group">
+                        <label for="title">Professional Title</label>
+                        <input type="text" id="title" class="input-field">
+                    </div>
+                    <div class="input-group">
+                        <label for="password">Create Password*</label>
+                        <input type="password" id="password" class="input-field" minlength="8" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="confirmPassword">Confirm Password*</label>
+                        <input type="password" id="confirmPassword" class="input-field" minlength="8" required>
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <button type="button" onclick="handleNextStep1()" class="btn btn-blue">Next →</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="side-content">
+                <div style="border: 2px solid #000; border-radius: 20px; overflow: hidden; height: auto;">
+                    <img src="form1_pic1.png" alt="Arbitrator Illustration" style="width: 100%; height: auto; display: block;">
+                </div>
+            </div>
+        </div>
+
+        <footer class="footer">
+            © 2026 Service Quality, Rating & Dispute Management System
+        </footer>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        // On Load: Pre-fill form if data exists in localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!ensureApplicationStep(1)) return;
+            document.getElementById('appForm').addEventListener('submit', (event) => {
+                event.preventDefault();
+                handleNextStep1();
+            });
+            const savedForm = ArbitratorData.registration.formData;
+            if(savedForm.name) document.getElementById('name').value = savedForm.name;
+            if(savedForm.email) document.getElementById('email').value = savedForm.email;
+            if(savedForm.phone) document.getElementById('phone').value = savedForm.phone;
+            if(savedForm.country) document.getElementById('country').value = savedForm.country;
+            if(savedForm.linkedin) document.getElementById('linkedin').value = savedForm.linkedin;
+            if(savedForm.title) document.getElementById('title').value = savedForm.title;
+        });
+
+        function showError(inputId, message) {
+            const input = document.getElementById(inputId);
+            alert(message); // Retaining simple UI without changing HTML structure extensively
+            if (input) {
+                input.style.borderColor = '#EF4444';
+                setTimeout(() => input.style.borderColor = '', 3000);
+            }
+        }
+
+        function handleNextStep1() {
+            // Retrieve & Trim 
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            const country = document.getElementById('country').value.trim();
+            const linkedin = document.getElementById('linkedin').value.trim();
+            const title = document.getElementById('title').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const savedPassword = ArbitratorData.registration.formData.password || '';
+            const effectivePassword = password || savedPassword;
+
+            // Strict Validation
+            if (!name || name.length < 2) { 
+                return showError('name', 'Full Name must be at least 2 characters.'); 
+            }
+            
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email || !emailRegex.test(email)) { 
+                return showError('email', 'Please enter a valid email address.'); 
+            }
+
+            const phoneRegex = /^\d{10}$/; // Basic 10 digit check
+            const rawPhone = phone.replace(/[\s\-\(\)\+]/g, '');
+            if (!phone || !phoneRegex.test(rawPhone)) { 
+                return showError('phone', 'Please enter a valid 10-digit phone number.'); 
+            }
+
+            if (!country) {
+                return showError('country', 'Country / Jurisdiction is required.');
+            }
+
+            if (!effectivePassword || effectivePassword.length < 8) {
+                return showError('password', 'Password must be at least 8 characters long.');
+            }
+
+            if (password && password !== confirmPassword) {
+                return showError('confirmPassword', 'Passwords do not match.');
+            }
+
+            // Save to LocalStorage safely using the Engine function
+            try {
+                updateRegistrationStep(1, {
+                    name,
+                    email: email.toLowerCase(),
+                    phone: rawPhone,
+                    country,
+                    linkedin,
+                    title,
+                    password: effectivePassword
+                });
+                
+                // Navigate
+                window.location.href = 'arbitrator_form_2.html';
+            } catch (error) {
+                console.error('Failed to save registration step:', error);
+                alert('An error occurred automatically saving your progress. Check browser local storage permissions.');
+            }
+        }
+    </script>
+</body>
+</html>

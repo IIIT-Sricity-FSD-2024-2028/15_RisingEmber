@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Dispute Submitted</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .status-container { max-width: 680px; margin: 40px auto; text-align: center; }
+    .status-icon { width: 64px; height: 64px; border-radius: 50%; background: var(--green-bg); color: var(--green); display: flex; align-items: center; justify-content: center; font-size: 32px; margin: 0 auto 24px; }
+    .status-title { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
+    .status-subtitle { font-size: 0.95rem; color: var(--text-mid); margin-bottom: 32px; line-height: 1.5; }
+
+    .details-card { background: #F9FAFB; border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: left; margin-bottom: 32px; }
+    .details-card h3 { font-size: 1.05rem; color: var(--text-dark); margin-bottom: 24px; }
+    
+    .detail-list { display: flex; flex-direction: column; gap: 20px; }
+    .detail-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+    .detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+    
+    .detail-info { display: flex; flex-direction: column; gap: 4px; }
+    .detail-label { font-size: 0.75rem; color: var(--text-soft); font-weight: 600; text-transform: uppercase; }
+    .detail-value { font-size: 0.95rem; color: var(--text-dark); font-weight: 600; }
+    
+    .copy-btn { color: var(--primary); cursor: pointer; border: none; background: transparent; font-size: 16px; }
+
+    .action-buttons { display: flex; justify-content: center; gap: 16px; margin-bottom: 40px; }
+    
+    .next-steps { background: var(--blue-info-bg); border-radius: var(--radius-sm); padding: 24px; text-align: left; border: 1px solid #BFDBFE; }
+    .next-steps h4 { font-size: 0.95rem; color: var(--text-dark); margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .next-steps h4 i { color: var(--primary); }
+    .next-steps ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .next-steps li { display: flex; align-items: flex-start; gap: 12px; font-size: 0.85rem; color: var(--text-mid); }
+    .next-steps li i { margin-top: 3px; color: var(--primary); font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link active"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="status-container">
+        <div class="status-icon"><i class="fa-solid fa-check"></i></div>
+        <h2 class="status-title">Dispute Submitted</h2>
+        <p class="status-subtitle">Your dispute has been successfully submitted. Our support team<br>will review the issue within 24-48 hours.</p>
+
+        <div class="details-card">
+          <h3>Dispute Information</h3>
+          
+          <div class="detail-list">
+            <div class="detail-item">
+              <div class="detail-info">
+                <span class="detail-label">Dispute ID</span>
+                <span class="detail-value" id="submittedDisputeId">Loading...</span>
+              </div>
+              <button class="copy-btn" type="button" data-copy-target="submittedDisputeId"><i class="fa-regular fa-copy"></i></button>
+            </div>
+            <div class="detail-item">
+              <div class="detail-info">
+                <span class="detail-label">Service Name</span>
+                <span class="detail-value" id="submittedServiceName">Loading...</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-info">
+                <span class="detail-label">Booking Reference Number</span>
+                <span class="detail-value" id="submittedBookingId">Loading...</span>
+              </div>
+              <button class="copy-btn" type="button" data-copy-target="submittedBookingId"><i class="fa-regular fa-copy"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <a href="dispute-status.html" class="btn btn--primary" id="viewDisputeStatusLink" style="padding: 12px 24px; min-width: 180px;"><i class="fa-regular fa-eye"></i> View Dispute Status</a>
+          <a href="customer_dashboard.html" class="btn btn--outline" style="padding: 12px 24px; min-width: 180px;"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        </div>
+
+        <div class="next-steps">
+          <h4><i class="fa-solid fa-circle-info"></i> What happens next?</h4>
+          <ul>
+            <li><i class="fa-solid fa-check"></i> Our support team will review your dispute and supporting evidence</li>
+            <li><i class="fa-solid fa-check"></i> You'll receive email updates on the dispute status</li>
+            <li><i class="fa-solid fa-check"></i> The service provider will be notified and given a chance to respond</li>
+            <li><i class="fa-solid fa-check"></i> A resolution will be provided within 5-7 business days</li>
+          </ul>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/disputes.js"></script>
+  <script src="assets/js/dispute-status.js"></script>
+</body>
+</html>

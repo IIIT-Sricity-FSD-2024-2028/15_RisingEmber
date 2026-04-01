@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Press & Media – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand"><div class="logo-icon"><i class="fa-solid fa-wrench"></i></div><span class="logo-text">ServiceHub</span></a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full mt-16">Login</a></li><li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions"><a href="role-selection.html?action=login" class="btn btn-text">Login</a><a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a></div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Press & Media</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">News, announcements, and media assets for ServiceHub.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container" style="max-width: 800px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+        <h2>Recent Announcements</h2>
+        <button class="btn btn-outline"><i class="fa-solid fa-download"></i> Download Media Kit</button>
+      </div>
+      
+      <div style="border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 24px;">
+        <span style="color: var(--text-soft); font-size: 0.85rem;">March 15, 2024</span>
+        <h3 style="font-size: 1.4rem; margin: 8px 0;">ServiceHub Raises $12M Series A to Expand Arbitration Model</h3>
+        <p>ServiceHub has secured new funding to bring its trust-first home services marketplace to 15 new US cities...</p>
+        <a href="blog.html" style="color: var(--primary); font-weight: 600; display: inline-block; margin-top: 12px;">Read Release &rarr;</a>
+      </div>
+
+      <div style="border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 24px;">
+        <span style="color: var(--text-soft); font-size: 0.85rem;">January 10, 2024</span>
+        <h3 style="font-size: 1.4rem; margin: 8px 0;">ServiceHub Reaches 50,000 Verified Providers</h3>
+        <p>A major milestone for the platform as thousands of independent contractors adopt the secure escrow payment system...</p>
+        <a href="blog.html" style="color: var(--primary); font-weight: 600; display: inline-block; margin-top: 12px;">Read Release &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container footer-bottom" style="border-top: none; justify-content: center;"><p>&copy; 2024 ServiceHub. All rights reserved.</p></div></footer>
+  <script>document.getElementById('mobileMenuBtn').addEventListener('click', () => { document.getElementById('navLinks').classList.toggle('active'); });</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create New User | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .form-card { background: white; border: 1px solid var(--admin-border); border-radius: 12px; padding: 30px; margin-top: 20px; }
+        .form-section-title { display: flex; align-items: center; gap: 10px; font-size: 1.1rem; font-weight: 700; margin-bottom: 25px; color: #1e293b; }
+        .form-section-title i { color: var(--admin-accent); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 40px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; position: relative; }
+        .input-group label { font-size: 0.85rem; font-weight: 600; color: #4b5563; }
+        .input-group label span { color: #ef4444; }
+        .form-control { padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 0.9rem; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--admin-accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .gen-pass { position: absolute; right: 12px; bottom: 12px; font-size: 0.75rem; color: var(--admin-accent); cursor: pointer; font-weight: 600; z-index: 5; }
+        .radio-group { display: flex; gap: 20px; align-items: center; margin-top: 5px; }
+        .radio-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; cursor: pointer; }
+        .radio-item input { cursor: pointer; width: 16px; height: 16px; }
+        .footer-actions { display: flex; justify-content: flex-end; gap: 15px; border-top: 1px solid #f1f5f9; padding-top: 25px; }
+        .btn-cancel { padding: 12px 30px; border: 1px solid #d1d5db; background: white; border-radius: 8px; cursor: pointer; font-weight: 600; color: #4b5563; }
+        .btn-submit { padding: 12px 30px; background: var(--admin-accent); border: none; color: white; border-radius: 8px; cursor: pointer; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Create New User</h1>
+                <p>Add a new user to the arbitration platform.</p>
+            </div>
+            <div class="form-card">
+                <form id="createUserForm">
+                    <div class="form-section-title"><i class="fa-solid fa-user"></i> User Information</div>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>Full Name <span>*</span></label>
+                            <input type="text" id="fullName" class="form-control" placeholder="Enter full name" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address <span>*</span></label>
+                            <input type="email" id="emailAddr" class="form-control" placeholder="user@example.com" required>
+                        </div>
+                        <div class="input-group">
+                            <label>Phone Number</label>
+                            <input type="text" id="phoneNum" class="form-control" placeholder="+1 (555) 000-0000">
+                        </div>
+                        <div class="input-group">
+                            <label>Password <span>*</span></label>
+                            <input type="password" id="userPass" class="form-control" placeholder="Enter password" required>
+                            <span class="gen-pass" onclick="generatePassword()">Generate</span>
+                        </div>
+                    </div>
+                    <div class="form-section-title"><i class="fa-solid fa-user-tag"></i> Role Assignment</div>
+                    <div class="form-grid">
+                        <div class="input-group">
+                            <label>User Role <span>*</span></label>
+                            <select id="userRole" class="form-control" required>
+                                <option value="" disabled selected>Select a role</option>
+                                <option value="Customer">Customer</option>
+                                <option value="Service Provider">Service Provider</option>
+                                <option value="Arbitrator">Arbitrator</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label>Account Status <span>*</span></label>
+                            <div class="radio-group">
+                                <label class="radio-item"><input type="radio" name="status" value="Active" checked> Active</label>
+                                <label class="radio-item"><input type="radio" name="status" value="Pending"> Pending Approval</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="footer-actions">
+                        <button type="button" class="btn-cancel" onclick="window.location.href='admin_users.html'">Cancel</button>
+                        <button type="submit" class="btn-submit">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        function generatePassword() {
+            const charset = "abcdefghijklmnopqrstuvwxyz0123456789";
+            let retVal = "";
+            for (let i = 0; i < 8; ++i) {
+                retVal += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            document.getElementById("userPass").value = retVal;
+            document.getElementById("userPass").type = "text"; 
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            try {
+                // Verification of Database
+                if (!window.AdminData || !window.AdminData.users || !window.AdminData.userStats) {
+                    throw new Error("Local Database (AdminData) is not initialized correctly.");
+                }
+
+                const name = document.getElementById('fullName').value;
+                const email = document.getElementById('emailAddr').value;
+                const role = document.getElementById('userRole').value;
+                const statusRadio = document.querySelector('input[name="status"]:checked');
+                const status = statusRadio ? statusRadio.value : "Active";
+
+                const newUser = {
+                    id: "USR-" + Math.floor(1000 + Math.random() * 9000),
+                    name: name,
+                    email: email,
+                    role: role,
+                    status: status,
+                    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
+                };
+
+                // Add to array
+                AdminData.users.unshift(newUser);
+                
+                // Update stats
+                AdminData.userStats.totalUsers++;
+                if(status === 'Active') AdminData.userStats.activeUsers++;
+                if(status === 'Pending') AdminData.userStats.pendingApprovals++;
+
+                // Save
+                saveAdminData();
+
+                alert("Success: User " + name + " created.");
+                window.location.href = 'admin_users.html';
+            } catch (err) {
+                console.error("Submission Error Details:", err);
+                alert("Critical Error: " + err.message + "\nCheck browser console for details.");
+            }
+        });
+    </script>
+</body>
+</html>

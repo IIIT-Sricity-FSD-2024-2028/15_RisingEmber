@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile & Credentials | Arbitration Portal</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .arb-dashboard-wrapper { display: flex; min-height: 100vh; }
+        .arb-main { flex: 1; background: #F9FAFB; }
+        .arb-content { padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+        /* Profile Header Card */
+        .profile-card {
+            background: white; border: 1px solid #E5E7EB; border-radius: 12px;
+            padding: 30px; display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .profile-info { display: flex; align-items: center; gap: 25px; }
+        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #F3F4F6; }
+        .profile-details h2 { font-size: 1.5rem; color: #111827; margin-bottom: 4px; }
+        .profile-details .title { color: #1E40AF; font-weight: 600; font-size: 0.95rem; margin-bottom: 12px; }
+        .contact-meta { display: flex; gap: 20px; color: #6B7280; font-size: 0.85rem; }
+        .contact-meta span { display: flex; align-items: center; gap: 6px; }
+
+        /* Section Cards */
+        .section-card {
+            background: white; border: 1px solid #E5E7EB; border-radius: 12px;
+            padding: 30px; margin-bottom: 25px;
+        }
+        .section-card h3 { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 20px; }
+
+        /* Credential Items */
+        .cred-item {
+            display: flex; align-items: center; gap: 15px; padding: 15px;
+            background: #F9FAFB; border-radius: 8px; margin-bottom: 12px;
+        }
+        .cred-icon { 
+            width: 40px; height: 40px; border-radius: 50%; display: flex; 
+            align-items: center; justify-content: center; color: white; font-size: 1rem;
+        }
+        .cred-info h4 { font-size: 0.9rem; color: #111827; }
+        .cred-info p { font-size: 0.8rem; color: #6B7280; }
+
+        /* Expertise Tags */
+        .expertise-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .tag { 
+            background: #EFF6FF; color: #1E40AF; padding: 6px 14px; 
+            border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid #DBEAFE;
+        }
+
+        /* Document List */
+        .doc-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px; border: 1px solid #F3F4F6; border-radius: 8px; margin-bottom: 10px;
+        }
+        .doc-meta { display: flex; align-items: center; gap: 12px; }
+        .doc-icon { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+        .doc-actions { display: flex; gap: 15px; color: #9CA3AF; cursor: pointer; }
+        .doc-actions i:hover { color: #1E40AF; }
+
+        /* Functional Buttons */
+        .btn-edit { background: #1E3A8A; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-upload { background: #D97706; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content">
+                <header style="margin-bottom: 30px;">
+                    <h1 style="font-size: 1.8rem; font-weight: 800; color: #111827;">Arbitrator Profile</h1>
+                    <p style="color: #6B7280;">Manage your professional information and arbitration credentials.</p>
+                </header>
+
+                <div class="profile-card" id="profileCard"></div>
+
+                <div class="section-card">
+                    <h3>Professional Credentials</h3>
+                    <div id="credentialsList"></div>
+                </div>
+
+                <div class="section-card">
+                    <h3>Areas of Expertise</h3>
+                    <div class="expertise-container" id="expertiseList"></div>
+                </div>
+
+                <div class="section-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3>Uploaded Documents</h3>
+                        <button class="btn-upload" onclick="triggerUpload()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Document</button>
+                    </div>
+
+                    <div id="documentList"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <input type="file" id="profileFileUpload" style="display: none;" onchange="handleFileUpload(this)">
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    <script>
+        function editProfile() {
+            window.location.href = 'arbitrator_settings.html';
+        }
+
+        function triggerUpload() {
+            document.getElementById('profileFileUpload').click();
+        }
+
+        function handleFileUpload(input) {
+            if (input.files && input.files[0]) {
+                const selectedFile = input.files[0];
+
+                ArbitratorData.profileDocuments.unshift({
+                    id: `profile-doc-${Date.now()}`,
+                    name: selectedFile.name,
+                    size: createArbitratorFileSizeLabel(selectedFile.size),
+                    uploadedAt: createArbitratorDisplayDate(new Date()),
+                    type: 'Profile Document'
+                });
+
+                saveData();
+                loadProfile();
+                alert("Document '" + selectedFile.name + "' uploaded successfully!");
+                input.value = '';
+            }
+        }
+
+        function loadProfile() {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
+            const profile = ArbitratorData.profile;
+
+            // Profile card
+            const profileCard = document.getElementById('profileCard');
+            if (profileCard) {
+                profileCard.innerHTML = `
+                    <div class="profile-info">
+                        <img src="${profile.avatar}" alt="${profile.name}" class="profile-img">
+                        <div class="profile-details">
+                            <h2 id="userName">${profile.name}</h2>
+                            <p class="title">${profile.title}</p>
+                            <div class="contact-meta">
+                                <span><i class="fa-solid fa-envelope"></i> ${profile.email}</span>
+                                <span><i class="fa-solid fa-phone"></i> ${profile.phone}</span>
+                                <span><i class="fa-solid fa-location-dot"></i> ${profile.location}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-edit" onclick="editProfile()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
+                `;
+            }
+
+            // Credentials - static credentials based on profile
+            const credentialsList = document.getElementById('credentialsList');
+            if (credentialsList) {
+                const credentials = Array.isArray(profile.credentials) ? profile.credentials : [];
+                if (!credentials.length) {
+                    credentialsList.innerHTML = '<div style="color: #6B7280; font-size: 0.9rem;">No credentials added yet.</div>';
+                } else {
+                    credentialsList.innerHTML = credentials.map(cred => `
+                    <div class="cred-item">
+                        <div class="cred-icon" style="background: #1E3A8A;"><i class="fa-solid fa-certificate"></i></div>
+                        <div class="cred-info">
+                            <h4>${cred.title}</h4>
+                            <p>${cred.institution}</p>
+                        </div>
+                    </div>
+                    `).join('');
+                }
+            }
+
+            // Expertise tags
+            const expertiseList = document.getElementById('expertiseList');
+            if (expertiseList) {
+                const expertise = Array.isArray(profile.expertise) ? profile.expertise : [];
+                if (!expertise.length) {
+                    expertiseList.innerHTML = '<div style="color: #6B7280; font-size: 0.9rem;">No expertise added yet.</div>';
+                } else {
+                    expertiseList.innerHTML = expertise.map(tag =>
+                        `<span class="tag">${tag}</span>`
+                    ).join('');
+                }
+            }
+
+            // Document list - static sample
+            const documentList = document.getElementById('documentList');
+            if (documentList) {
+                const profileDocuments = Array.isArray(ArbitratorData.profileDocuments) ? ArbitratorData.profileDocuments : [];
+                if (!profileDocuments.length) {
+                    documentList.innerHTML = '<div style="padding: 20px; color: #9CA3AF; text-align: center;">No profile documents uploaded yet.</div>';
+                    return;
+                }
+
+                documentList.innerHTML = profileDocuments.map((doc) => `
+                    <div class="doc-item">
+                        <div class="doc-meta">
+                            <div class="doc-icon" style="background: #FEE2E2; color: #EF4444;"><i class="fa-solid fa-file-pdf"></i></div>
+                            <div>
+                                <p style="font-size: 0.9rem; font-weight: 600;">${doc.name}</p>
+                                <p style="font-size: 0.75rem; color: #9CA3AF;">${doc.size} • ${doc.uploadedAt}</p>
+                            </div>
+                        </div>
+                        <div class="doc-actions">
+                            <i class="fa-solid fa-eye" title="View"></i>
+                            <i class="fa-solid fa-download" title="Download"></i>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadProfile();
+        });
+    </script>
+</body>
+</html>

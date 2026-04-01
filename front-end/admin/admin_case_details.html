@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Details | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .case-header-grid { display: grid; grid-template-columns: repeat(4, 1fr) 2fr; gap: 20px; background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 25px; }
+        .case-meta-item label { display: block; font-size: 0.75rem; color: #64748b; font-weight: 600; margin-bottom: 4px; }
+        .case-meta-item span, .case-meta-item strong { font-size: 0.95rem; color: #1e293b; }
+        .status-tag { background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; display: inline-block; }
+
+        .details-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .content-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 25px; }
+        .card-title { font-size: 1rem; font-weight: 700; color: #1e293b; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        
+        .edit-input { width: 100%; padding: 8px; border: 1px solid #3b82f6; border-radius: 6px; font-size: 0.9rem; margin-top: 5px; outline: none; box-sizing: border-box; }
+        .hidden { display: none !important; }
+
+        .timeline { list-style: none; padding: 0; position: relative; }
+        .timeline-item { display: flex; gap: 20px; padding-bottom: 25px; position: relative; }
+        .timeline-item::before { content: ""; position: absolute; left: 11px; top: 22px; height: 100%; width: 2px; background: #e2e8f0; }
+        .timeline-item:last-child::before { display: none; }
+        .t-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; z-index: 2; background: #e2e8f0; color: white; }
+        .t-icon.completed { background: #22c55e; }
+        .t-info strong { display: block; font-size: 0.9rem; }
+
+        .btn-full { width: 100%; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; border: none; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn-red { background: #ef4444; color: white; }
+        .msg-box { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div><h1>Case Details</h1><p>Monitor and manage arbitration case progress.</p></div>
+                <button class="btn-primary-sm" id="btn-edit-toggle" onclick="toggleEditMode()"><i class="fa-solid fa-pen-to-square"></i> Edit Case Details</button>
+            </div>
+
+            <div class="case-header-grid">
+                <div class="case-meta-item"><label>Case ID</label><strong id="case-id-display">---</strong></div>
+                <div class="case-meta-item">
+                    <label>Case Title</label>
+                    <strong id="display-title">---</strong>
+                    <input type="text" id="edit-title" class="edit-input hidden">
+                </div>
+                <div class="case-meta-item">
+                    <label>Case Type</label>
+                    <span id="display-type">---</span>
+                    <input type="text" id="edit-type" class="edit-input hidden">
+                </div>
+                <div class="case-meta-item">
+                    <label>Status</label>
+                    <div id="display-status" class="status-tag">---</div>
+                    <select id="edit-status" class="edit-input hidden">
+                        <option value="Open">Open</option>
+                        <option value="Under Review">Under Review</option>
+                        <option value="Hearing Scheduled">Hearing Scheduled</option>
+                        <option value="Awarded">Awarded</option>
+                        <option value="Closed">Closed</option>
+                    </select>
+                </div>
+                <div class="case-meta-item" style="text-align: right;">
+                    <button class="btn-action btn-blue hidden" id="btn-save-top" onclick="saveCaseChanges()">Save Changes</button>
+                </div>
+            </div>
+
+            <div class="details-layout">
+                <div class="main-col">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
+                        <div class="content-card">
+                            <div class="card-title">Customer</div>
+                            <label style="font-size:0.7rem; color:#64748b">Full Name</label>
+                            <div id="display-cust-name" style="font-weight:700">---</div>
+                            <input type="text" id="edit-cust-name" class="edit-input hidden">
+                        </div>
+                        <div class="content-card">
+                            <div class="card-title">Service Provider</div>
+                            <label style="font-size:0.7rem; color:#64748b">Company Name</label>
+                            <div id="display-prov-comp" style="font-weight:700">---</div>
+                            <input type="text" id="edit-prov-comp" class="edit-input hidden">
+                        </div>
+                        <div class="content-card">
+                            <div class="card-title">Arbitrator</div>
+                            <div id="arb-name-display" style="font-weight:700">---</div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Case Timeline</div>
+                        <div class="timeline" id="timeline-container"></div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title">Admin Notes</div>
+                        <textarea id="case-notes" style="width: 100%; height: 100px; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; box-sizing: border-box;" placeholder="Add internal notes..."></textarea>
+                        <button class="btn-action btn-blue" style="margin-top:10px" onclick="saveCaseChanges()">Save Notes</button>
+                    </div>
+                </div>
+
+                <div class="side-col">
+                    <div class="content-card">
+                        <div class="card-title">Recent Messages</div>
+                        <div id="chat-container"></div>
+                    </div>
+                    <button class="btn-full btn-blue" onclick="toggleEditMode()">Update Details</button>
+                    <button class="btn-full btn-red" onclick="closeCase()">Close Case</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const rawId = urlParams.get('id');
+        const caseId = decodeURIComponent(rawId || "");
+        let currentCase = null;
+
+        function refreshCurrentCase() {
+            currentCase = (AdminData.cases || []).find(c => c.id === caseId) || null;
+            return currentCase;
+        }
+
+        function ensureCaseShape(caseItem) {
+            if (!caseItem.customer || typeof caseItem.customer !== 'object') {
+                caseItem.customer = { name: typeof caseItem.customer === 'string' ? caseItem.customer : "Unknown Customer", email: "", phone: "" };
+            }
+            if (!caseItem.provider || typeof caseItem.provider !== 'object') {
+                caseItem.provider = { company: typeof caseItem.provider === 'string' ? caseItem.provider : "Pending Assignment", name: "", email: "", phone: "" };
+            }
+            if (!caseItem.arbitrator || typeof caseItem.arbitrator !== 'object') {
+                caseItem.arbitrator = { name: typeof caseItem.arbitrator === 'string' ? caseItem.arbitrator : "Unassigned" };
+            }
+            if (!Array.isArray(caseItem.timeline)) caseItem.timeline = [];
+            if (!Array.isArray(caseItem.messages)) caseItem.messages = [];
+            if (typeof caseItem.notes !== 'string') caseItem.notes = "";
+        }
+
+        function loadCaseData() {
+            refreshCurrentCase();
+            if(!currentCase) {
+                alert("Case not found!");
+                window.location.href='admin_cases.html';
+                return;
+            }
+
+            ensureCaseShape(currentCase);
+
+            document.getElementById('case-id-display').innerText = currentCase.id;
+            document.getElementById('display-title').innerText = currentCase.title || "No Title";
+            document.getElementById('display-type').innerText = currentCase.type || "N/A";
+            document.getElementById('display-status').innerText = currentCase.status;
+            document.getElementById('display-cust-name').innerText = currentCase.customer.name || "Unknown Customer";
+            document.getElementById('display-prov-comp').innerText = currentCase.provider.company || currentCase.provider.name || "Pending Assignment";
+            document.getElementById('arb-name-display').innerText = currentCase.arbitrator.name || "Unassigned";
+            document.getElementById('case-notes').value = currentCase.notes || "";
+
+            // Inputs
+            document.getElementById('edit-title').value = currentCase.title || "";
+            document.getElementById('edit-type').value = currentCase.type || "";
+            document.getElementById('edit-status').value = currentCase.status;
+            document.getElementById('edit-cust-name').value = currentCase.customer.name || "";
+            document.getElementById('edit-prov-comp').value = currentCase.provider.company || currentCase.provider.name || "";
+
+            // Timeline & Chat
+            document.getElementById('timeline-container').innerHTML = (currentCase.timeline || []).length > 0
+                ? (currentCase.timeline || []).map(t => `
+                <div class="timeline-item">
+                    <div class="t-icon ${t.completed ? 'completed' : ''}"><i class="fa-solid fa-check"></i></div>
+                    <div class="t-info"><strong>${t.event}</strong><span>${t.date}</span></div>
+                </div>
+            `).join('')
+                : `<div style="color:#94a3b8; font-size:0.9rem;">No timeline entries available yet.</div>`;
+            
+            document.getElementById('chat-container').innerHTML = (currentCase.messages || []).length > 0
+                ? (currentCase.messages || []).map(m => `
+                <div class="msg-box"><strong>${m.user}</strong><p style="font-size:0.8rem; margin:5px 0;">${m.text}</p></div>
+            `).join('')
+                : `<div style="color:#94a3b8; font-size:0.9rem;">No messages attached to this case.</div>`;
+        }
+
+        function toggleEditMode() {
+            const elements = [
+                'display-title', 'edit-title', 'display-type', 'edit-type', 
+                'display-status', 'edit-status', 'display-cust-name', 'edit-cust-name', 
+                'display-prov-comp', 'edit-prov-comp', 'btn-save-top'
+            ];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if(el) el.classList.toggle('hidden');
+            });
+            
+            const isEditing = !document.getElementById('edit-title').classList.contains('hidden');
+            document.getElementById('btn-edit-toggle').innerHTML = isEditing ? 
+                '<i class="fa-solid fa-xmark"></i> Cancel' : '<i class="fa-solid fa-pen-to-square"></i> Edit Case Details';
+        }
+
+        function saveCaseChanges() {
+            refreshCurrentCase();
+            if (!currentCase) return;
+
+            ensureCaseShape(currentCase);
+
+            const title = document.getElementById('edit-title').value.trim();
+            const type = document.getElementById('edit-type').value.trim();
+            const customerName = document.getElementById('edit-cust-name').value.trim();
+            const providerCompany = document.getElementById('edit-prov-comp').value.trim();
+
+            if (!title || !type || !customerName || !providerCompany) {
+                alert("Title, type, customer name, and provider name are all required.");
+                return;
+            }
+
+            currentCase.title = title;
+            currentCase.type = type;
+            currentCase.status = document.getElementById('edit-status').value;
+            currentCase.customer.name = customerName;
+            currentCase.provider.company = providerCompany;
+            currentCase.notes = document.getElementById('case-notes').value;
+
+            saveAdminData();
+            logAdminActivity(`Updated case ${currentCase.id}`);
+            alert("Changes Saved Successfully!");
+
+            if (!document.getElementById('edit-title').classList.contains('hidden')) {
+                toggleEditMode();
+            }
+            loadCaseData();
+        }
+
+        function closeCase() {
+            refreshCurrentCase();
+            if(confirm("Confirm closure of this case?")) {
+                currentCase.status = "Closed";
+                if (Array.isArray(currentCase.timeline)) {
+                    currentCase.timeline.push({
+                        event: "Case closed",
+                        date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+                        completed: true
+                    });
+                }
+                saveAdminData();
+                logAdminActivity(`Closed case ${currentCase.id}`);
+                window.location.href = 'admin_cases.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCaseData);
+    </script>
+</body>
+</html>

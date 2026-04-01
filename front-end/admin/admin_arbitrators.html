@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arbitrator Management | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Force container constraints to eliminate horizontal scrolling */
+        body, html { overflow-x: hidden; width: 100%; margin: 0; padding: 0; background-color: #f8fafc; }
+        
+        .admin-main-content { 
+            width: calc(100% - 260px); 
+            margin-left: 260px;
+            box-sizing: border-box; 
+            min-height: 100vh;
+        }
+
+        .arb-layout { 
+            display: grid; 
+            grid-template-columns: 1fr 280px; /* Reduced width for sidebar to fit screen */
+            gap: 20px; 
+            width: 100%; 
+        }
+        
+        .filter-section { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 20px; }
+        .filter-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        
+        .status-pill { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; display: inline-block; white-space: nowrap; }
+        .status-active { background: #dcfce7; color: #15803d; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-suspended { background: #fee2e2; color: #991b1b; }
+        
+        .summary-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; }
+        .sum-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .sum-val { display: block; font-size: 1.5rem; font-weight: 800; color: #1e293b; line-height: 1; }
+        .sum-label { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+
+        /* Actions Column - Single Line UI */
+        .actions-cell { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .action-link { cursor: pointer; font-weight: 600; font-size: 0.8rem; text-decoration: none; display: inline-flex; align-items: center; }
+        .link-blue { color: #2563eb; }
+        .link-gray { color: #64748b; }
+        .link-red { color: #dc2626; }
+        .link-delete { color: #b91c1c; margin-left: 2px; border-left: 1px solid #e5e7eb; padding-left: 8px; }
+        
+        .admin-table th, .admin-table td { padding: 12px 8px; font-size: 0.82rem; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Arbitrator Management</h1>
+                <p>Manage and monitor platform arbitrators.</p>
+            </div>
+
+            <div class="arb-layout">
+                <div class="list-col">
+                    <div class="filter-section">
+                        <div class="filter-grid">
+                            <div class="search-bar" style="width: 100%;">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="arbSearch" placeholder="Search name, email, or ID..." oninput="applyArbFilters()">
+                            </div>
+                            <select id="statusFilter" class="custom-select" style="height: 42px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 8px;" onchange="applyArbFilters()">
+                                <option value="All">All Status</option>
+                                <option value="Active">Active</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Suspended">Suspended</option>
+                            </select>
+                            <select id="specFilter" class="custom-select" style="height: 42px; border: 1px solid #d1d5db; border-radius: 8px; padding: 0 8px;" onchange="applyArbFilters()">
+                                <option value="All">All Specializations</option>
+                                <option value="Commercial">Commercial</option>
+                                <option value="Consumer">Consumer</option>
+                                <option value="Technology">Technology</option>
+                                <option value="Contract">Contract</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-primary-sm" onclick="addNewArbitrator()"><i class="fa-solid fa-plus"></i> Add Arbitrator</button>
+                            <button class="btn-outline" onclick="exportArbsToCSV()"><i class="fa-solid fa-file-export"></i> Export List</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Arbitrator Name</th>
+                                    <th>Email</th>
+                                    <th>Specialization</th>
+                                    <th>Exp.</th>
+                                    <th>Status</th>
+                                    <th style="width: 180px;">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="arb-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="stats-col">
+                    <div class="summary-card">
+                        <div class="sum-icon" style="background: #eff6ff; color: #3b82f6;"><i class="fa-solid fa-user-tie"></i></div>
+                        <div><span class="sum-val" id="count-total">0</span><span class="sum-label">Total Arbitrators</span></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="sum-icon" style="background: #ecfdf5; color: #10b981;"><i class="fa-solid fa-circle-check"></i></div>
+                        <div><span class="sum-val" id="count-active">0</span><span class="sum-label">Active</span></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="sum-icon" style="background: #fff7ed; color: #f97316;"><i class="fa-solid fa-hourglass-half"></i></div>
+                        <div><span class="sum-val" id="count-pending">0</span><span class="sum-label">Pending</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        let currentFilteredList = [];
+
+        function initPage() {
+            updateStatsSummary();
+            applyArbFilters();
+        }
+
+        function updateStatsSummary() {
+            const data = AdminData.arbitrators || [];
+            document.getElementById('count-total').innerText = data.length;
+            document.getElementById('count-active').innerText = data.filter(a => a.status === 'Active').length;
+            document.getElementById('count-pending').innerText = data.filter(a => a.status === 'Pending').length;
+        }
+
+        function applyArbFilters() {
+            const query = document.getElementById('arbSearch').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+            const spec = document.getElementById('specFilter').value;
+
+            currentFilteredList = (AdminData.arbitrators || []).filter(a => {
+                const matchSearch = a.name.toLowerCase().includes(query) || a.id.toLowerCase().includes(query) || a.email.toLowerCase().includes(query);
+                const matchStatus = (status === 'All' || a.status === status);
+                const matchSpec = (spec === 'All' || a.specialization === spec);
+                return matchSearch && matchStatus && matchSpec;
+            });
+
+            renderArbTable();
+        }
+
+        function renderArbTable() {
+            const tbody = document.getElementById('arb-table-body');
+            tbody.innerHTML = currentFilteredList.map(a => `
+                <tr>
+                    <td style="font-weight: 700;">${a.id}</td>
+                    <td><strong>${a.name}</strong></td>
+                    <td style="color: #64748b;">${a.email}</td>
+                    <td>${a.specialization}</td>
+                    <td>${a.experience}</td>
+                    <td><span class="status-pill status-${a.status.toLowerCase()}">${a.status}</span></td>
+                    <td>
+                        <div class="actions-cell">
+                            <a class="action-link link-blue" onclick="viewArbitrator('${a.id}')">View</a>
+                            <a class="action-link link-gray" onclick="editArbitrator('${a.id}')">Edit</a>
+                            <a class="action-link link-red" onclick="toggleArbStatus('${a.id}')">
+                                ${a.status === 'Suspended' ? 'Enable' : 'Disable'}
+                            </a>
+                            <a class="action-link link-delete" onclick="deleteArbitrator('${a.id}')">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function addNewArbitrator() {
+            const id = "#ARB" + Math.floor(1000 + Math.random() * 8999);
+            const newArb = {
+                id: id,
+                name: "New Arbitrator",
+                email: "pending@verification.com",
+                specialization: "General",
+                experience: "0 years",
+                status: "Pending",
+                location: "Not Specified",
+                phone: "N/A",
+                organization: "N/A",
+                certification: "N/A",
+                expertise: "General",
+                avatar: `https://i.pravatar.cc/150?u=${id}`,
+                metrics: { activeCases: 0, closedCases: 0, avgResolution: "0 days", upcomingHearings: 0, rating: 0, totalReviews: 0, successRate: "0%" },
+                pastCases: [],
+                documents: [],
+                adminNotes: ""
+            };
+            AdminData.arbitrators.unshift(newArb);
+            saveAdminData();
+            initPage();
+        }
+
+        function viewArbitrator(id) {
+            window.location.href = `admin_arbitrator_profile.html?id=${encodeURIComponent(id)}`;
+        }
+
+        function editArbitrator(id) {
+            // Re-using profile page for editing as it contains editable inputs
+            window.location.href = `admin_arbitrator_profile.html?id=${encodeURIComponent(id)}`;
+        }
+
+        function toggleArbStatus(id) {
+            const arb = AdminData.arbitrators.find(a => a.id === id);
+            if(arb) {
+                arb.status = (arb.status === 'Suspended' ? 'Active' : 'Suspended');
+                saveAdminData();
+                initPage();
+            }
+        }
+
+        function deleteArbitrator(id) {
+            if(confirm(`Remove arbitrator ${id}?`)) {
+                AdminData.arbitrators = AdminData.arbitrators.filter(a => a.id !== id);
+                saveAdminData();
+                initPage();
+            }
+        }
+
+        function exportArbsToCSV() {
+            if (currentFilteredList.length === 0) return;
+            const headers = ["ID", "Name", "Email", "Specialization", "Experience", "Status"];
+            const rows = currentFilteredList.map(a => [a.id, `"${a.name}"`, a.email, a.specialization, a.experience, a.status].join(","));
+            const csvData = [headers.join(","), ...rows].join("\n");
+            const blob = new Blob([csvData], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `Arb_Export_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+            a.click();
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terms of Service – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand">
+        <div class="logo-icon"><i class="fa-solid fa-wrench"></i></div>
+        <span class="logo-text">ServiceHub</span>
+      </a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="locations.html">Locations</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full text-center mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full text-center mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="role-selection.html?action=login" class="btn btn-text">Login</a>
+        <a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Terms of Service</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Please read these terms carefully before using the ServiceHub platform.</p>
+    </div>
+  </header>
+
+  <section class="section-padding" style="padding-top: 40px;">
+    <div class="legal-container">
+      <div class="legal-content">
+        <p class="legal-updated">Last Updated: March 2024</p>
+        
+        <p>Welcome to ServiceHub. By accessing our website, creating an account, or using our services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our platform.</p>
+
+        <h2>1. User Accounts and Verification</h2>
+        <p>To access certain features of the platform, you must register for an account. Users are categorized as Customers, Service Providers, or Arbitrators.</p>
+        <ul>
+          <li>You must be at least 18 years old to create an account.</li>
+          <li>Service Providers must undergo a background and identity verification process before their profiles become public.</li>
+          <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
+        </ul>
+
+        <h2>2. Service Provider Obligations</h2>
+        <p>As a Service Provider on ServiceHub, you agree to perform all accepted jobs with a high degree of professionalism and in accordance with local laws and regulations. You must accurately describe your skills, pricing, and availability. Misrepresentation may result in immediate account suspension.</p>
+
+        <h2>3. Payments and Escrow</h2>
+        <p>ServiceHub utilizes an escrow system to protect both parties. When a Customer books a service, funds are securely held in escrow.</p>
+        <ul>
+          <li>Funds are released to the Service Provider only upon mutual confirmation of job completion.</li>
+          <li>ServiceHub charges a standard platform fee on all completed transactions, which is deducted before the payout is sent to the Provider.</li>
+        </ul>
+
+        <h2>4. Dispute Resolution and Arbitration</h2>
+        <p>If a disagreement arises regarding the quality, scope, or completion of a job, either party may open a Dispute. In such cases:</p>
+        <p>The funds remain locked in escrow. A neutral, third-party Arbitrator assigned by ServiceHub will review evidence (photos, messages, job descriptions) from both parties. <strong>The decision of the Arbitrator is final and binding on both the Customer and the Service Provider.</strong></p>
+
+        <h2>5. Limitation of Liability</h2>
+        <p>ServiceHub acts solely as a marketplace connecting Customers with independent Service Providers. We do not directly employ the Service Providers and are not liable for any damages, injuries, or losses incurred during the execution of a service.</p>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-bottom" style="border-top: none; justify-content: center;">
+      <p>&copy; 2024 ServiceHub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Dispute Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link active"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+      
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Dispute Center</h1>
+        <p>Manage disputes and resolution status</p>
+      </div>
+
+      <div class="dispute-stats-grid">
+        <div class="dispute-stat-card">
+          <div class="dispute-stat-card__content">
+            <span class="dispute-label">Total Disputes</span>
+            <span class="stat-card__value" id="disputeTotal" data-dynamic="true">0</span>
+          </div>
+          <div class="dispute-icon dispute-icon--blue"><i class="fa-solid fa-gavel"></i></div>
+        </div>
+
+        <div class="dispute-stat-card">
+          <div class="dispute-stat-card__content">
+            <span class="dispute-label">Under Review</span>
+            <span class="stat-card__value text-orange" id="disputeReview" data-dynamic="true">0</span>
+          </div>
+          <div class="dispute-icon dispute-icon--orange"><i class="fa-regular fa-clock"></i></div>
+        </div>
+
+        <div class="dispute-stat-card">
+          <div class="dispute-stat-card__content">
+            <span class="dispute-label">Resolved</span>
+            <span class="stat-card__value text-green" id="disputeResolved" data-dynamic="true">0</span>
+          </div>
+          <div class="dispute-icon dispute-icon--green"><i class="fa-solid fa-check"></i></div>
+        </div>
+      </div>
+
+      <div class="card mt-24">
+        <div class="table-header-actions">
+          <div>
+            <h2>All Disputes</h2>
+          </div>
+          <div class="action-buttons">
+            <button class="btn btn--outline"><i class="fa-solid fa-filter"></i> Filter</button>
+            <button class="btn btn--outline" id="exportDisputesBtn"><i class="fa-solid fa-download"></i> Export</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Job ID</th>
+                <th>Customer</th>
+                <th>Issue</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="providerDisputesBody"></tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span class="table-showing-text" id="disputesShowingText">Showing 0 of 0 disputes</span>
+          <div class="pagination" id="disputesPagination" style="margin-top: 0;">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn">2</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn--dashed btn--full mt-24" onclick="window.location.href='raise-dispute.html'">
+        <i class="fa-solid fa-plus"></i> Raise New Dispute
+      </button>
+
+      <div class="guidelines-box mt-24">
+        <div class="guidelines-box__icon"><i class="fa-solid fa-circle-info"></i></div>
+        <div class="guidelines-box__content">
+          <h3>Dispute Resolution Guidelines</h3>
+          <ul>
+            <li><i class="fa-solid fa-check"></i> All disputes are reviewed within 24-48 hours by our resolution team</li>
+            <li><i class="fa-solid fa-check"></i> Provide detailed information and evidence to support your case</li>
+            <li><i class="fa-solid fa-check"></i> Communication with the customer remains open during the review process</li>
+            <li><i class="fa-solid fa-check"></i> Final decisions are binding and will be communicated via email</li>
+          </ul>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

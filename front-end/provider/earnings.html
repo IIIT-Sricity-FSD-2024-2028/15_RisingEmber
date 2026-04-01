@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Earnings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=John+Provider&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link active"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+      
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Earnings</h1>
+        <p>Track your income and payment history</p>
+      </div>
+
+      <div class="earnings-stats-grid">
+        
+        <div class="earning-stat-card">
+          <div class="earning-stat-card__header">
+            <span class="earning-label">Total Earnings</span>
+            <div class="earning-icon earning-icon--blue"><i class="fa-solid fa-dollar-sign"></i></div>
+          </div>
+          <div class="earning-stat-card__value-row">
+            <span class="stat-card__value" id="earningTotal" data-dynamic="true">$0</span>
+            <span class="earning-change positive">+15.3%</span>
+          </div>
+          <p class="earning-subtitle">All time earnings</p>
+        </div>
+
+        <div class="earning-stat-card">
+          <div class="earning-stat-card__header">
+            <span class="earning-label">This Month</span>
+            <div class="earning-icon earning-icon--green"><i class="fa-regular fa-calendar"></i></div>
+          </div>
+          <div class="earning-stat-card__value-row">
+            <span class="stat-card__value" id="earningMonth" data-dynamic="true">$0</span>
+            <span class="earning-change positive">+8.2%</span>
+          </div>
+          <p class="earning-subtitle" id="earningMonthLabel">This month</p>
+        </div>
+
+        <div class="earning-stat-card">
+          <div class="earning-stat-card__header">
+            <span class="earning-label">Completed Jobs</span>
+            <div class="earning-icon earning-icon--purple"><i class="fa-solid fa-check"></i></div>
+          </div>
+          <div class="earning-stat-card__value-row">
+            <span class="stat-card__value" id="earningJobCount" data-dynamic="true">0</span>
+            <span class="earning-change positive">+12</span>
+          </div>
+          <p class="earning-subtitle">Total completed jobs</p>
+        </div>
+
+      </div>
+
+      <div class="card mt-24">
+        
+        <div class="table-header-actions">
+          <div>
+            <h2>Payment History</h2>
+            <p style="font-size: 0.85rem; color: var(--text-soft); margin-top: 4px;">View all your completed transactions</p>
+          </div>
+          <div class="action-buttons">
+            <button class="btn btn--outline"><i class="fa-solid fa-filter"></i> Filter</button>
+            <button class="btn btn--primary" id="exportBtn"><i class="fa-solid fa-download"></i> Export</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Job ID</th>
+                <th>Service</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th class="text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2847</a></td>
+                <td>Plumbing Repair</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=Michael+Chen&background=D1FAE5&color=065F46" alt="Michael Chen"/>
+                    <span>Michael Chen</span>
+                  </div>
+                </td>
+                <td>Jan 15, 2024</td>
+                <td class="amount-cell">$250.00</td>
+              </tr>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2846</a></td>
+                <td>Electrical Installation</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=Sarah+Williams&background=FEF3C7&color=92400E" alt="Sarah Williams"/>
+                    <span>Sarah Williams</span>
+                  </div>
+                </td>
+                <td>Jan 14, 2024</td>
+                <td class="amount-cell">$380.00</td>
+              </tr>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2845</a></td>
+                <td>HVAC Maintenance</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=David+Johnson&background=E0E7FF&color=3730A3" alt="David Johnson"/>
+                    <span>David Johnson</span>
+                  </div>
+                </td>
+                <td>Jan 12, 2024</td>
+                <td class="amount-cell">$450.00</td>
+              </tr>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2844</a></td>
+                <td>Carpentry Work</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=Emily+Davis&background=E5E7EB&color=374151" alt="Emily Davis"/>
+                    <span>Emily Davis</span>
+                  </div>
+                </td>
+                <td>Jan 10, 2024</td>
+                <td class="amount-cell">$320.00</td>
+              </tr>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2843</a></td>
+                <td>Painting Service</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=Robert+Martinez&background=FCE7F3&color=9D174D" alt="Robert Martinez"/>
+                    <span>Robert Martinez</span>
+                  </div>
+                </td>
+                <td>Jan 08, 2024</td>
+                <td class="amount-cell">$540.00</td>
+              </tr>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2842</a></td>
+                <td>Roofing Repair</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=Jessica+Taylor&background=DBEAFE&color=1E40AF" alt="Jessica Taylor"/>
+                    <span>Jessica Taylor</span>
+                  </div>
+                </td>
+                <td>Jan 05, 2024</td>
+                <td class="amount-cell">$680.00</td>
+              </tr>
+              <tr>
+                <td class="job-id-cell"><a href="job-details.html">#JOB-2841</a></td>
+                <td>Landscaping Design</td>
+                <td>
+                  <div class="table-customer">
+                    <img src="https://ui-avatars.com/api/?name=Christopher+Lee&background=D1FAE5&color=065F46" alt="Christopher Lee"/>
+                    <span>Christopher Lee</span>
+                  </div>
+                </td>
+                <td>Jan 03, 2024</td>
+                <td class="amount-cell">$220.00</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="table-footer">
+          <span class="table-showing-text" id="earningsShowingText">Showing 0 of 0 transactions</span>
+          <div class="pagination" id="earningsPagination" style="margin-top: 0;">
+            <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

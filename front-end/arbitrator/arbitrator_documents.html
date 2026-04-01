@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Case Documents | ServiceHub</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .filter-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--arb-border); }
+        .filter-group { display: flex; flex-direction: column; gap: 8px; }
+        .filter-group label { font-size: 0.85rem; font-weight: 700; color: var(--arb-text-gray); }
+        .filter-group select, .filter-group input { padding: 10px; border: 1px solid var(--arb-border); border-radius: 6px; background: #F9FAFB; }
+        .upload-btn { background: #1E3A8A; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-body { display: flex; flex-direction: column; gap: 15px; }
+        .modal-footer { margin-top: 25px; display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-secondary { background: #E5E7EB; color: #374151; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        .form-input { padding: 10px; border: 1px solid #D1D5DB; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 style="font-size: 1.25rem; font-weight: 700;">Upload Document</h2>
+                <i class="fa-solid fa-xmark" style="cursor:pointer;" onclick="closeModal()"></i>
+            </div>
+            <div class="modal-body">
+                <div class="filter-group">
+                    <label>Select Case</label>
+                    <select class="form-input" id="modalCase">
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Document Type</label>
+                    <select class="form-input" id="modalType">
+                        <option value="Claim Document">Claim Document</option>
+                        <option value="Evidence">Evidence</option>
+                        <option value="Response Document">Response Document</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Choose File</label>
+                    <input type="file" id="modalFile" class="form-input">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="upload-btn" onclick="handleUpload()">Confirm Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                    <div>
+                        <h1 style="font-size: 1.8rem; font-weight: 800;">Case Documents</h1>
+                        <p style="color: #6B7280;">Access and manage all documents submitted for arbitration cases.</p>
+                    </div>
+                    <button class="upload-btn" onclick="openModal()"><i class="fa-solid fa-upload"></i> Upload Document</button>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label>Case ID</label>
+                        <select id="caseFilter" onchange="filterDocuments()">
+                            <option value="All">All Cases</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Document Type</label>
+                        <select id="typeFilter" onchange="filterDocuments()">
+                            <option value="All">All Types</option>
+                            <option value="Claim Document">Claim Document</option>
+                            <option value="Evidence">Evidence</option>
+                            <option value="Response Document">Response Document</option>
+                            <option value="Witness Statement">Witness Statement</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Uploaded By</label>
+                        <select id="uploaderFilter" onchange="filterDocuments()"><option value="All">All Users</option></select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Date Uploaded</label>
+                        <input type="date" id="dateFilter" onchange="filterDocuments()">
+                    </div>
+                </div>
+
+                <div class="arb-panel" style="padding: 0;">
+                    <table class="arb-table" id="docs-table">
+                        <thead>
+                            <tr>
+                                <th>Document Name</th><th>Case ID</th><th>Document Type</th><th>Uploaded By</th><th>Upload Date</th><th>File Size</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="docs-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    <script>
+        function populateDocumentTypeFilters() {
+            const typeFilter = document.getElementById('typeFilter');
+            const modalType = document.getElementById('modalType');
+
+            if (!typeFilter || !modalType || typeof ArbitratorData === 'undefined') return;
+
+            const types = [...new Set(ArbitratorData.caseDocuments.map((item) => item.type))];
+            const optionsMarkup = types.map((type) => `<option value="${type}">${type}</option>`).join('');
+
+            typeFilter.innerHTML = `<option value="All">All Types</option>${optionsMarkup}`;
+            modalType.innerHTML = [
+                '<option value="Claim Document">Claim Document</option>',
+                ...types
+                    .filter((type) => type !== 'Claim Document')
+                    .map((type) => `<option value="${type}">${type}</option>`)
+            ].join('');
+        }
+
+        function openModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+            // Populate case dropdown dynamically
+            const caseSelect = document.getElementById('modalCase');
+            if (caseSelect && typeof ArbitratorData !== 'undefined') {
+                const activeCases = ArbitratorData.allCases.filter(c => c.status !== 'Closed');
+                caseSelect.innerHTML = activeCases.map(c =>
+                    `<option value="${c.id}">${c.id} - ${c.type.substring(0, 30)}</option>`
+                ).join('');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        function buildDocumentHref(doc) {
+            if (doc.fileLink && doc.fileLink !== '#') {
+                return doc.fileLink;
+            }
+
+            const summary = [
+                `Document: ${doc.name}`,
+                `Case ID: ${doc.id}`,
+                `Type: ${doc.type}`,
+                `Uploaded By: ${doc.uploadedBy}`,
+                `Upload Date: ${doc.date}`,
+                `Size: ${doc.size}`
+            ].join('\n');
+
+            return 'data:text/plain;charset=utf-8,' + encodeURIComponent(summary);
+        }
+
+        function normalizeDocumentDateForFilter(value) {
+            const parsed = new Date(value);
+            if (!Number.isNaN(parsed.getTime())) {
+                return parsed.toISOString().slice(0, 10);
+            }
+
+            const altParsed = new Date(String(value || '').replace(/(\d{1,2}) (\w{3}) (\d{4})/, '$1 $2 $3'));
+            return Number.isNaN(altParsed.getTime()) ? '' : altParsed.toISOString().slice(0, 10);
+        }
+
+        function handleUpload() {
+            const fileInput = document.getElementById('modalFile');
+            const caseId = document.getElementById('modalCase').value;
+            const docType = document.getElementById('modalType').value;
+
+            if (fileInput.files.length === 0) {
+                alert("Please select a file first");
+                return;
+            }
+
+            const fileName = fileInput.files[0].name;
+            const fileSize = (fileInput.files[0].size / 1024 / 1024).toFixed(1) + " MB";
+            const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            let badgeClass = "arb-badge-blue";
+            if (docType === "Evidence") badgeClass = "arb-badge-yellow";
+            if (docType === "Response Document") badgeClass = "arb-badge-green";
+
+            const persistUpload = (fileLink) => {
+                if (typeof ArbitratorData !== 'undefined') {
+                    ArbitratorData.caseDocuments.unshift({
+                        name: fileName,
+                        id: caseId,
+                        type: docType,
+                        uploadedBy: ArbitratorData.profile.name,
+                        date: today,
+                        size: fileSize,
+                        typeClass: badgeClass,
+                        fileLink: fileLink || "#"
+                    });
+
+                    ArbitratorData.stats.docsToReview = ArbitratorData.caseDocuments.length;
+                    saveData();
+                }
+
+                alert("Document uploaded successfully!");
+                closeModal();
+                fileInput.value = '';
+                filterDocuments();
+            };
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                persistUpload(event && event.target ? event.target.result : '#');
+            };
+            reader.onerror = function() {
+                persistUpload('#');
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function filterDocuments() {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
+            const caseId = document.getElementById('caseFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const uploader = document.getElementById('uploaderFilter').value;
+            const date = document.getElementById('dateFilter').value;
+            const tbody = document.getElementById('docs-tbody');
+
+            const filtered = ArbitratorData.caseDocuments.filter(doc => {
+                const matchCase = (caseId === "All" || doc.id === caseId);
+                const matchType = (type === "All" || doc.type === type);
+                const matchUploader = (uploader === "All" || doc.uploadedBy === uploader);
+                const matchDate = (!date || normalizeDocumentDateForFilter(doc.date) === date);
+                return matchCase && matchType && matchUploader && matchDate;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="padding: 40px; text-align: center; color: #9CA3AF;">No documents found matching your filters.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = filtered.map(doc => `
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <td style="padding: 16px 12px; font-weight: 600;"><i class="fa-solid fa-file-pdf" style="color: #EF4444; margin-right: 10px;"></i>${doc.name}</td>
+                    <td style="padding: 16px 12px; color: #1E3A8A; font-weight: 700; font-size: 0.85rem;"><a href="${buildCaseDetailsUrl(doc.id)}" style="color: #1E3A8A; text-decoration: none;">${doc.id}</a></td>
+                    <td style="padding: 16px 12px;"><span class="arb-badge ${doc.typeClass}">${doc.type}</span></td>
+                    <td style="padding: 16px 12px; color: #6B7280; font-size: 0.85rem;">${doc.uploadedBy}</td>
+                    <td style="padding: 16px 12px; color: #6B7280; font-size: 0.85rem;">${doc.date}</td>
+                    <td style="padding: 16px 12px; color: #6B7280; font-size: 0.85rem;">${doc.size}</td>
+                    <td style="padding: 16px 12px;">
+                        <a href="${buildDocumentHref(doc)}" target="_blank" rel="noopener" style="color: #1E3A8A; font-weight: 700; text-decoration: none; margin-right: 14px;">View</a>
+                        <a href="${buildDocumentHref(doc)}" download="${doc.name}" style="color: #1E3A8A; font-weight: 700; text-decoration: none;">Download</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
+            // Populate case filter dropdown
+            const caseFilter = document.getElementById('caseFilter');
+            const uploaderFilter = document.getElementById('uploaderFilter');
+            if (caseFilter) {
+                const uniqueCases = [...new Set(ArbitratorData.caseDocuments.map(d => d.id))];
+                const caseOptions = uniqueCases.map(id => `<option value="${id}">${id}</option>`).join('');
+                caseFilter.innerHTML = `<option value="All">All Cases</option>${caseOptions}`;
+
+                const requestedCaseId = getArbitratorCaseIdFromUrl();
+                if (requestedCaseId && uniqueCases.includes(requestedCaseId)) {
+                    caseFilter.value = requestedCaseId;
+                }
+            }
+
+            if (uploaderFilter) {
+                const uniqueUploaders = [...new Set(ArbitratorData.caseDocuments.map((doc) => doc.uploadedBy).filter(Boolean))];
+                uploaderFilter.innerHTML = `<option value="All">All Users</option>${uniqueUploaders.map((name) => `<option value="${name}">${name}</option>`).join('')}`;
+            }
+
+            populateDocumentTypeFilters();
+            filterDocuments();
+        });
+    </script>
+</body>
+</html>

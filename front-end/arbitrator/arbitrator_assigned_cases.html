@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Assigned Cases | ServiceHub</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .filter-container { position: relative; }
+        .filter-btn { background: #111827; color: white; padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        
+        /* Filter Dropdown Styling */
+        .filter-dropdown { 
+            display: none; position: absolute; right: 0; top: 45px; background: white; 
+            border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); 
+            z-index: 100; min-width: 200px; padding: 10px;
+        }
+        .filter-dropdown.show { display: block; }
+        .filter-dropdown label { display: block; font-size: 0.75rem; font-weight: 700; color: #6B7280; margin-bottom: 8px; text-transform: uppercase; }
+        .filter-dropdown select { width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #D1D5DB; margin-bottom: 10px; outline: none; }
+        .apply-btn { width: 100%; background: #1E3A8A; color: white; border: none; padding: 8px; border-radius: 4px; font-weight: 600; cursor: pointer; }
+
+        .pagination { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; color: #6B7280; font-size: 0.9rem; }
+        .page-btns { display: flex; gap: 5px; }
+        .page-btn { padding: 5px 12px; border: 1px solid #E5E7EB; background: white; border-radius: 4px; cursor: pointer; }
+        .page-btn.active { background: #111827; color: white; border-color: #111827; }
+        .arb-table th { background: #F9FAFB; padding: 15px 10px; }
+        .arb-table td { padding: 20px 10px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;">
+                    <div>
+                        <h1 style="font-size: 2rem; font-weight: 800;">Assigned Arbitration Cases</h1>
+                        <p style="color: #6B7280; margin-top: 5px;">Manage and review all dispute cases currently assigned to you.</p>
+                    </div>
+                    
+                    <div class="filter-container">
+                        <button class="filter-btn" onclick="toggleFilter()"><i class="fa-solid fa-filter"></i> Filter Cases</button>
+                        <div class="filter-dropdown" id="filterMenu">
+                            <label>Status</label>
+                            <select id="statusSelect">
+                                <option value="All">All Status</option>
+                                <option value="Under Review">Under Review</option>
+                                <option value="Awaiting Hearing">Awaiting Hearing</option>
+                                <option value="Pending Decision">Pending Decision</option>
+                            </select>
+                            <button class="apply-btn" onclick="applyFilter()">Apply Filters</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arb-table-container" style="padding: 0; border: none;">
+                    <table class="arb-table" id="assigned-cases-table">
+                        <thead>
+                            <tr>
+                                <th>Case ID</th><th>Dispute Type</th><th>Claimant</th><th>Respondent</th><th>Amount</th><th>Assigned</th><th>Next Hearing</th><th>Status</th><th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                    <div class="pagination">
+                        <div>Showing <span id="count">0</span> cases</div>
+                        <div class="page-btns">
+                            <button class="page-btn">Previous</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">Next</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    <script>
+        // Toggle the filter dropdown menu
+        function toggleFilter() {
+            document.getElementById('filterMenu').classList.toggle('show');
+        }
+
+        // Close dropdown if clicking outside
+        document.addEventListener('click', (event) => {
+            if (!event.target.matches('.filter-btn') && !event.target.closest('.filter-dropdown')) {
+                document.getElementById('filterMenu').classList.remove('show');
+            }
+        });
+
+        function populateStatusOptions() {
+            const statusSelect = document.getElementById('statusSelect');
+            if (!statusSelect || typeof ArbitratorData === 'undefined') return;
+
+            const uniqueStatuses = [...new Set(ArbitratorData.allCases.map((item) => item.status))];
+            statusSelect.innerHTML = [
+                '<option value="All">All Status</option>',
+                ...uniqueStatuses.map((status) => `<option value="${status}">${status}</option>`)
+            ].join('');
+        }
+
+        function renderCases(cases) {
+            const tbody = document.getElementById('tableBody');
+            const countSpan = document.getElementById('count');
+
+            if (!tbody) return;
+
+            if (!cases.length) {
+                tbody.innerHTML = '<tr><td colspan="9" style="padding: 32px; text-align: center; color: #9CA3AF;">No cases match the selected filter.</td></tr>';
+                countSpan.innerText = '0';
+                return;
+            }
+
+            tbody.innerHTML = cases.map(c => `
+                <tr style="border-bottom: 1px solid #F3F4F6;">
+                    <td style="padding: 18px 12px; font-weight: 800; color: #1E3A8A;">${c.id}</td>
+                    <td style="padding: 18px 12px; font-size: 0.85rem; color: #374151; line-height: 1.4;">${c.type}</td>
+                    <td style="padding: 18px 12px; font-size: 0.9rem;">${c.claimant}</td>
+                    <td style="padding: 18px 12px; font-size: 0.9rem;">${c.respondent}</td>
+                    <td style="padding: 18px 12px; font-weight: 700; font-size: 0.9rem;">${c.amount}</td>
+                    <td style="padding: 18px 12px; color: #6B7280; font-size: 0.85rem;">${c.assigned}</td>
+                    <td style="padding: 18px 12px; color: #6B7280; font-size: 0.85rem;">${c.next}</td>
+                    <td style="padding: 18px 12px;"><span class="arb-badge ${c.statusClass}" style="font-size: 0.75rem;">${c.status}</span></td>
+                    <td style="padding: 18px 12px;"><a href="${buildCaseDetailsUrl(c.id)}" style="color: #111827; font-weight: 700; text-decoration: none; font-size: 0.85rem;">View →</a></td>
+                </tr>
+            `).join('');
+            countSpan.innerText = cases.length;
+        }
+
+        function applyFilter() {
+            const statusValue = document.getElementById('statusSelect').value;
+            const data = ArbitratorData.allCases;
+
+            let filteredData = data;
+            if (statusValue !== "All") {
+                filteredData = data.filter(c => c.status === statusValue);
+            }
+
+            renderCases(filteredData);
+            toggleFilter();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
+            populateStatusOptions();
+            renderCases(ArbitratorData.allCases);
+        });
+    </script>
+</body>
+</html>

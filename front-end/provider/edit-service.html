@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Edit Service</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link active"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" id="logoutBtn" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <div class="page-header" style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <h1>Edit Service</h1>
+            <p>Update the details of your existing service offering</p>
+          </div>
+          <div class="toggle-wrapper" style="background: var(--surface); padding: 8px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <span style="font-size: 0.8rem; color: var(--text-mid); margin-right: 8px;">Service Status:</span>
+            <label class="switch">
+              <input type="checkbox" checked id="editStatusToggle">
+              <span class="slider round"></span>
+            </label>
+            <span class="toggle-label status-text-active" id="editStatusLabel">Active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-card">
+        <div class="form-container-single">
+
+          <div class="form-group">
+            <label>Service Name</label>
+            <input type="text" id="editServiceName" value="General Pipe Leak Repair" />
+          </div>
+
+          <div class="form-group">
+            <label>Category</label>
+            <select id="editServiceCategory">
+              <option disabled>Select a category</option>
+              <option selected>Plumbing</option>
+              <option>Electrical</option>
+              <option>HVAC Maintenance</option>
+              <option>Cleaning</option>
+              <option>Carpentry</option>
+              <option>Painting</option>
+              <option>Landscaping</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Price</label>
+            <div class="input-group">
+              <span class="input-group__prefix">$</span>
+              <input type="number" id="editServicePrice" value="65.00" step="0.01" min="0" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Estimated Duration</label>
+            <select id="editServiceDuration">
+              <option disabled>Select duration</option>
+              <option selected>Per Hour</option>
+              <option>Fixed (1-2 Hours)</option>
+              <option>Fixed (Half Day)</option>
+              <option>Fixed (Full Day)</option>
+              <option>Custom Quote</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Service Description</label>
+            <textarea id="editServiceDesc" style="min-height: 120px;">Professional repair for leaking pipes, faucets, and under-sink plumbing issues. Includes standard diagnostic and minor part replacements.</textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Service Image</label>
+            
+            <div class="current-image-preview">
+              <img src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=200&h=120" alt="Current Service Image" id="currentServiceImage" />
+              <div class="current-image-info">
+                <strong id="currentImageName">plumbing-leak-repair.jpg</strong>
+                <span id="currentImageMeta">Uploaded on Jan 12, 2024</span>
+              </div>
+              <button class="btn btn--outline btn--sm" id="replaceImageBtn">Replace</button>
+            </div>
+
+            <div class="file-upload-zone" id="editDropZone" style="display: none; margin-top: 12px;">
+              <div class="file-upload-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div class="file-upload-text">
+                <strong id="editUploadText">Click to upload or drag and drop new image</strong>
+                <span id="editUploadHint">PNG, JPG or GIF (max. 10MB)</span>
+              </div>
+              <input type="file" id="editImageInput" accept="image/png, image/jpeg, image/gif" style="display: none;" />
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-actions--right" style="justify-content: space-between;">
+          <button class="btn btn--ghost" id="deleteServiceBtn" style="color: var(--red); border-color: transparent;"><i class="fa-regular fa-trash-can"></i> Delete Service</button>
+          <div style="display: flex; gap: 12px;">
+            <button class="btn btn--ghost" onclick="window.location.href='services.html'">Cancel</button>
+            <button class="btn btn--primary" id="saveEditBtn">Save Changes</button>
+          </div>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

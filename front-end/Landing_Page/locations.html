@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Locations – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand">
+        <div class="logo-icon"><i class="fa-solid fa-wrench"></i></div>
+        <span class="logo-text">ServiceHub</span>
+      </a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="locations.html" style="color: var(--primary); font-weight: 700;">Locations</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full text-center mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full text-center mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="role-selection.html?action=login" class="btn btn-text">Login</a>
+        <a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Where We Operate</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">ServiceHub is currently available in major metropolitan areas across the country, with new cities being added every month.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container">
+      <div class="services-grid">
+        
+        <div class="service-card location-card">
+          <img src="https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&q=80&w=400" alt="San Francisco" class="service-img"/>
+          <div class="service-body text-center">
+            <h3>San Francisco Bay Area</h3>
+            <p>1,200+ Active Providers</p>
+          </div>
+        </div>
+
+        <div class="service-card location-card">
+          <img src="https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=400" alt="New York City" class="service-img"/>
+          <div class="service-body text-center">
+            <h3>New York City</h3>
+            <p>3,500+ Active Providers</p>
+          </div>
+        </div>
+        
+        <div class="service-card location-card">
+          <img src="https://images.pexels.com/photos/273204/pexels-photo-273204.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Austin, Texas" class="service-img"/>
+          <div class="service-body text-center">
+            <h3>Austin, Texas</h3>
+            <p>850+ Active Providers</p>
+          </div>
+        </div>
+
+        <div class="service-card location-card">
+          <img src="https://images.unsplash.com/photo-1494522855154-9297ac14b55f?auto=format&fit=crop&q=80&w=400" alt="Chicago" class="service-img"/>
+          <div class="service-body text-center">
+            <h3>Chicago, Illinois</h3>
+            <p>2,100+ Active Providers</p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="text-center mt-32" style="padding: 40px; background: var(--bg-light); border-radius: 16px; margin-top: 60px;">
+        <h3>Don't see your city?</h3>
+        <p style="margin: 12px 0 24px;">Join our waitlist and we'll notify you when we launch in your area.</p>
+        <form id="locationsWaitlistForm" style="display: flex; gap: 12px; justify-content: center; max-width: 400px; margin: 0 auto; flex-wrap: wrap;" novalidate>
+          <input type="email" class="landing-input" id="waitlistEmail" name="waitlistEmail" placeholder="Enter your email address" style="flex: 1;" autocomplete="email" required />
+          <button class="btn btn-primary" type="submit">Notify Me</button>
+          <div id="waitlistStatus" class="landing-form-status" style="width: 100%;"></div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-bottom" style="border-top: none; justify-content: center;">
+      <p>&copy; 2024 ServiceHub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/landing.js"></script>
+</body>
+</html> 

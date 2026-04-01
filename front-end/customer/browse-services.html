@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Browse Services</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    /* Specific overrides for Figma accuracy */
+    .filter-group { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+    .filter-group label { font-size: 0.75rem; font-weight: 600; color: var(--text-dark); }
+    .filter-group input, .filter-group select {
+      height: 42px; padding: 0 16px; border: 1px solid var(--border); border-radius: var(--radius-sm);
+      background-color: var(--surface); color: var(--text-dark); font-family: var(--font); font-size: 0.875rem;
+      width: 100%; outline: none; transition: border-color 0.2s;
+    }
+    .filter-group input:focus, .filter-group select:focus { border-color: var(--primary); }
+    
+    .service-card__body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+    .service-title { font-size: 1.05rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+    .service-desc { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; margin-bottom: 16px; flex: 1; }
+    .service-rating { font-size: 0.8rem; color: var(--text-mid); display: flex; align-items: center; gap: 6px; margin-bottom: 20px; font-weight: 500; }
+    .service-rating i { color: var(--orange); }
+    
+    .service-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+    .service-price { color: var(--primary); font-weight: 700; font-size: 1rem; }
+    .service-price span { font-size: 0.75rem; font-weight: 500; color: var(--text-soft); }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link active"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" id="logoutBtn"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Browse Services</h1>
+      </div>
+
+      <div class="card" style="display: flex; flex-direction: column; gap: 24px; padding: 24px; margin-bottom: 32px;">
+        
+        <div class="toolbar-search" style="width: 100%; border-radius: var(--radius-sm); padding: 0 20px; height: 48px; background: #F9FAFB; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border);">
+          <i class="fa-solid fa-magnifying-glass" style="color: var(--text-soft); font-size: 16px;"></i>
+          <input type="text" id="browse-search" placeholder="Search by name, category, or keyword..." style="width: 100%; border: none; outline: none; font-family: var(--font); background: transparent; font-size: 0.95rem;" />
+        </div>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+          <div class="filter-group">
+            <label>Category</label>
+            <select id="browse-category">
+              <option value="all">All Categories</option>
+              <option value="plumbing">Plumbing</option>
+              <option value="electrical">Electrical</option>
+              <option value="cleaning">Cleaning</option>
+              <option value="appliance">Appliance Repair</option>
+              <option value="carpentry">Carpentry</option>
+              <option value="painting">Painting</option>
+              <option value="hvac">HVAC</option>
+              <option value="landscaping">Landscaping</option>
+              <option value="handyman">Handyman</option>
+              <option value="flooring">Flooring</option>
+              <option value="pest-control">Pest Control</option>
+              <option value="locksmith">Locksmith</option>
+            </select>
+          </div>
+          
+          <div class="filter-group">
+            <label>Sort By</label>
+            <select id="browse-sort">
+              <option value="recommended">Recommended</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="services-grid" id="browse-services-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+        </div>
+
+      <div style="text-align: center; margin-top: 40px; display: none;" id="load-more-container">
+        <button class="btn btn--primary" style="padding: 12px 32px; font-size: 0.95rem;">Load More Services</button>
+      </div>
+
+    </main>
+  </div>
+  
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/browse-services.js"></script>
+</body>
+</html>

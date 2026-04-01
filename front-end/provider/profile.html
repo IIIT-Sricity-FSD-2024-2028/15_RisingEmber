@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Provider Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge">3</span>
+      </button>
+      <img
+        src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80"
+        alt="Provider Avatar" class="navbar__avatar"
+      />
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link active"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <div class="page-header">
+        <h1>Provider Profile Setup</h1>
+        <p>Complete your professional profile to start offering services</p>
+      </div>
+
+      <div class="form-card">
+
+        <div class="profile-pic-section">
+          <label class="section-label">Profile Picture</label>
+          <div class="profile-pic-row">
+            <div class="avatar-preview" id="avatarPreview">
+              <i class="fa-regular fa-user"></i>
+              <img id="avatarImg" src="" alt="Preview" />
+            </div>
+            <div class="upload-info">
+              <label class="btn-upload" for="photoInput">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload Photo
+              </label>
+              <input type="file" id="photoInput" accept="image/*" style="display:none" />
+              <span class="upload-hint">JPG, PNG or GIF. Max size 5MB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label>Full Name <span class="required">*</span></label>
+            <input type="text" placeholder="Enter your full name" id="fullName" />
+          </div>
+
+          <div class="form-group">
+            <label>Phone Number <span class="required">*</span></label>
+            <input type="tel" placeholder="+1 (555) 000-0000" id="phone" />
+          </div>
+
+          <div class="form-group">
+            <label>Email Address <span class="required">*</span></label>
+            <input type="email" placeholder="your.email@example.com" id="email" />
+          </div>
+
+          <div class="form-group">
+            <label>Service Category <span class="required">*</span></label>
+            <select id="category">
+              <option value="" disabled selected>Select a category</option>
+              <option>Plumbing</option>
+              <option>Electrical</option>
+              <option>HVAC Maintenance</option>
+              <option>Carpentry</option>
+              <option>Painting</option>
+              <option>Cleaning</option>
+              <option>Landscaping</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Years of Experience <span class="required">*</span></label>
+            <select id="experience">
+              <option value="" disabled selected>Select experience</option>
+              <option>Less than 1 year</option>
+              <option>1 – 2 years</option>
+              <option>3 – 5 years</option>
+              <option>6 – 10 years</option>
+              <option>More than 10 years</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Location / Service Area <span class="required">*</span></label>
+            <input type="text" placeholder="City, State" id="location" />
+          </div>
+
+          <div class="form-group full">
+            <label>Short Professional Bio <span class="required">*</span></label>
+            <textarea
+              id="bio"
+              placeholder="Tell customers about your experience, skills, and what makes you stand out…"
+              maxlength="500"
+            ></textarea>
+            <span class="char-hint" id="charCount">Maximum 500 characters</span>
+          </div>
+
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn--primary" id="saveBtn">
+            <i class="fa-solid fa-check"></i> Save Profile
+          </button>
+          <button class="btn btn--ghost" id="cancelBtn">Cancel</button>
+        </div>
+
+      </div>
+
+      <div class="info-banner">
+        <i class="fa-solid fa-circle-info"></i>
+        <div class="info-banner__text">
+          <span class="info-banner__title">Profile Visibility</span>
+          <span class="info-banner__desc">
+            Your profile will be visible to customers once you complete all required fields and verify your account.
+          </span>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span>Profile saved successfully!</span>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

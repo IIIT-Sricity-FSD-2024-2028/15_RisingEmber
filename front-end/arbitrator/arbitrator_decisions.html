@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Decisions & Awards | ServiceHub</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .filter-section { display: flex; align-items: flex-end; gap: 20px; background: white; padding: 20px; border-radius: 12px; border: 1px solid var(--arb-border); margin-bottom: 30px; }
+        .filter-input-group { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+        .filter-input-group label { font-size: 0.85rem; font-weight: 700; color: var(--arb-text-gray); }
+        .filter-input-group select, .filter-input-group input { padding: 10px; border: 1px solid var(--arb-border); border-radius: 8px; background: #F9FAFB; }
+        .btn-filter { background: #1E3A8A; color: white; border: none; padding: 10px 25px; border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; height: 42px; }
+        
+        .action-link { font-weight: 700; text-decoration: none; margin-right: 15px; cursor: pointer; }
+        .link-blue { color: #1E40AF; }
+        .link-gray { color: #9CA3AF; }
+        .action-link:hover { text-decoration: underline; opacity: 0.8; }
+        
+        .pagination { display: flex; justify-content: flex-end; align-items: center; margin-top: 25px; gap: 10px; color: #6B7280; font-size: 0.9rem; }
+        .page-num { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 6px; border: 1px solid #E5E7EB; cursor: pointer; }
+        .page-num.active { background: #1E3A8A; color: white; border-color: #1E3A8A; }
+
+        .arb-dashboard-wrapper { display: flex; min-height: 100vh; }
+        .arb-main { flex: 1; background: #F9FAFB; }
+        .arb-content { padding: 40px; }
+
+        .arb-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .status-awaiting { background: #FEF3C7; color: #92400E; }
+        .status-issued { background: #D1FAE5; color: #065F46; }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content">
+                <h1 style="font-size: 1.8rem; font-weight: 800; color: #111827;">Decisions & Arbitration Rulings</h1>
+                <p style="color: #6B7280; margin-bottom: 30px;">Review cases awaiting a decision and manage issued awards.</p>
+
+                <div class="filter-section">
+                    <div class="filter-input-group">
+                        <label>Case Status</label>
+                        <select id="statusFilter">
+                            <option value="All">All Status</option>
+                            <option value="Awaiting Decision">Awaiting Decision</option>
+                            <option value="Award Issued">Award Issued</option>
+                        </select>
+                    </div>
+                    <div class="filter-input-group">
+                        <label>Date Range</label>
+                        <input type="date">
+                    </div>
+                    <button class="btn-filter" onclick="filterDecisions()"><i class="fa-solid fa-filter"></i> Filter</button>
+                </div>
+
+                <div class="arb-panel" style="padding: 0; background: white; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden;">
+                    <table class="arb-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB;">
+                            <tr>
+                                <th style="padding: 15px; font-size: 0.75rem; color: #6B7280; text-transform: uppercase;">Case ID</th>
+                                <th style="padding: 15px; font-size: 0.75rem; color: #6B7280; text-transform: uppercase;">Parties</th>
+                                <th style="padding: 15px; font-size: 0.75rem; color: #6B7280; text-transform: uppercase;">Dispute Type</th>
+                                <th style="padding: 15px; font-size: 0.75rem; color: #6B7280; text-transform: uppercase;">Decision Deadline</th>
+                                <th style="padding: 15px; font-size: 0.75rem; color: #6B7280; text-transform: uppercase;">Status</th>
+                                <th style="padding: 15px; font-size: 0.75rem; color: #6B7280; text-transform: uppercase;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="decisions-tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    <span style="cursor: pointer;">Previous</span>
+                    <div class="page-num active">1</div>
+                    <div class="page-num">2</div>
+                    <div class="page-num">3</div>
+                    <span style="cursor: pointer;">Next</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <input type="file" id="hiddenAwardUpload" accept=".pdf" style="display: none;" onchange="handleFileSelected(this)">
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    
+    <script>
+        let focusedCaseId = "";
+
+        function triggerDesktopUpload(caseId) {
+            const fileInput = document.getElementById('hiddenAwardUpload');
+            fileInput.setAttribute('data-current-case', caseId);
+            fileInput.click();
+        }
+
+        function handleFileSelected(input) {
+            const caseId = input.getAttribute('data-current-case');
+
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name;
+
+                const caseIndex = ArbitratorData.decisionsList.findIndex(item => item.id === caseId);
+
+                if (caseIndex !== -1) {
+                    ArbitratorData.decisionsList[caseIndex].status = 'Award Issued';
+                    ArbitratorData.decisionsList[caseIndex].statusClass = 'arb-badge-green';
+
+                    const caseDetails = ArbitratorData.allCases.find((item) => item.id === caseId);
+                    if (caseDetails) {
+                        caseDetails.status = 'Closed';
+                        caseDetails.statusColor = '#6B7280';
+                        caseDetails.statusClass = 'arb-badge-gray';
+                        caseDetails.next = '—';
+                    }
+
+                    ArbitratorData.caseDocuments.unshift({
+                        name: fileName,
+                        id: caseId,
+                        type: 'Award Document',
+                        uploadedBy: ArbitratorData.profile.name,
+                        date: createArbitratorDisplayDate(new Date()),
+                        size: createArbitratorFileSizeLabel(input.files[0].size),
+                        typeClass: 'arb-badge-green',
+                        fileLink: '#'
+                    });
+
+                    saveData();
+                    renderTable(getFilteredDecisions());
+
+                    alert(`Award uploaded!\nFile: ${fileName}\nCase ${caseId} marked as 'Award Issued'.`);
+                }
+                input.value = '';
+            }
+        }
+
+        function renderTable(dataList) {
+            const tbody = document.getElementById('decisions-tbody');
+            if (!tbody) return;
+
+            if (!dataList.length) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 32px; text-align: center; color: #9CA3AF;">No decisions match the current filters.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = dataList.map(item => {
+                let actionHtml = '';
+
+                if (item.status === 'Awaiting Decision') {
+                    actionHtml = `<a href="javascript:void(0)" onclick="triggerDesktopUpload('${item.id}')" style="color: #1E40AF; font-weight: 700; text-decoration: none; margin-right: 12px;">Upload Award</a>`;
+                } else {
+                    actionHtml = `<a href="${buildCaseDetailsUrl(item.id)}" style="color: #1E40AF; font-weight: 700; text-decoration: none; margin-right: 12px;">View Award</a>`;
+                }
+
+                return `
+                    <tr style="border-bottom: 1px solid #F3F4F6;">
+                        <td style="padding: 16px 12px;"><a href="${buildCaseDetailsUrl(item.id)}" style="color: #1E40AF; font-weight: 800; text-decoration: none;">${item.id}</a></td>
+                        <td style="padding: 16px 12px; color: #374151; font-size: 0.9rem;">${item.parties}</td>
+                        <td style="padding: 16px 12px; color: #6B7280; font-size: 0.85rem;">${item.type}</td>
+                        <td style="padding: 16px 12px; font-weight: 600; color: ${item.status === 'Awaiting Decision' ? '#92400E' : '#111827'};">${item.deadline}</td>
+                        <td style="padding: 16px 12px;"><span class="arb-badge ${item.statusClass}">${item.status}</span></td>
+                        <td style="padding: 16px 12px;">
+                            ${actionHtml}
+                            <a href="${buildCaseDetailsUrl(item.id)}" style="color: #9CA3AF; font-weight: 600; text-decoration: none;">Open Case</a>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getFilteredDecisions() {
+            const status = document.getElementById('statusFilter').value;
+            let filtered = status === "All"
+                ? ArbitratorData.decisionsList
+                : ArbitratorData.decisionsList.filter(d => d.status === status);
+
+            if (focusedCaseId) {
+                filtered = filtered.filter((item) => item.id === focusedCaseId);
+            }
+
+            return filtered;
+        }
+
+        function filterDecisions() {
+            renderTable(getFilteredDecisions());
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined' || !ArbitratorData.decisionsList) return;
+            focusedCaseId = getArbitratorCaseIdFromUrl();
+            renderTable(getFilteredDecisions());
+        });
+    </script>
+</body>
+</html>

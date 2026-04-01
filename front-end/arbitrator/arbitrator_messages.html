@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Messages | Arbitration Portal</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Layout Specifics */
+        .arb-dashboard-wrapper { display: flex; min-height: 100vh; }
+        .arb-main { flex: 1; background: #F9FAFB; display: flex; flex-direction: column; }
+        
+        .messages-container { 
+            display: flex; 
+            flex: 1; 
+            background: white; 
+            margin: 20px; 
+            border-radius: 12px; 
+            border: 1px solid #E5E7EB; 
+            overflow: hidden;
+            height: calc(100vh - 120px);
+        }
+
+        /* Left Sidebar: Conversation List */
+        .conv-list { 
+            width: 350px; 
+            border-right: 1px solid #E5E7EB; 
+            display: flex; 
+            flex-direction: column; 
+            background: white;
+        }
+        .conv-search { padding: 15px; border-bottom: 1px solid #F3F4F6; }
+        .conv-search input { 
+            width: 100%; padding: 10px 12px; border-radius: 6px; 
+            border: 1px solid #E5E7EB; background: #F9FAFB; font-size: 0.9rem;
+        }
+        .conv-items { overflow-y: auto; flex: 1; }
+        .conv-item { 
+            padding: 20px; border-bottom: 1px solid #F3F4F6; cursor: pointer; transition: 0.2s; 
+            position: relative;
+        }
+        .conv-item:hover { background: #F8FAFF; }
+        .conv-item.active { background: #EFF6FF; border-left: 4px solid #1E3A8A; }
+        .conv-item h4 { font-size: 0.8rem; color: #1E3A8A; margin-bottom: 4px; }
+        .conv-item p.parties { font-size: 0.85rem; font-weight: 700; color: #111827; margin-bottom: 8px; }
+        .conv-item p.preview { font-size: 0.8rem; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .unread-badge { 
+            position: absolute; right: 20px; bottom: 25px; background: #F59E0B; 
+            color: white; font-size: 10px; padding: 2px 6px; border-radius: 10px; font-weight: 800; 
+        }
+
+        /* Right Side: Chat Window */
+        .chat-window { flex: 1; display: flex; flex-direction: column; background: white; }
+        .chat-header { padding: 20px 30px; border-bottom: 1px solid #E5E7EB; }
+        .chat-header h3 { font-size: 1.1rem; color: #111827; }
+        .chat-header p { font-size: 0.85rem; color: #6B7280; margin-top: 4px; }
+
+        .chat-messages { flex: 1; padding: 30px; overflow-y: auto; background: #fdfdfd; }
+        .msg-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .msg-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #E5E7EB; }
+        .msg-content { max-width: 70%; }
+        .msg-info { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .msg-info .name { font-size: 0.9rem; font-weight: 700; color: #111827; }
+        .msg-info .role { font-size: 0.75rem; color: #9CA3AF; }
+        .msg-info .time { font-size: 0.75rem; color: #9CA3AF; }
+        .msg-text { background: #F3F4F6; padding: 12px 18px; border-radius: 0 12px 12px 12px; font-size: 0.9rem; color: #374151; line-height: 1.5; }
+
+        /* Input Area */
+        .chat-input-area { padding: 20px 30px; border-top: 1px solid #E5E7EB; }
+        .input-wrapper { 
+            display: flex; align-items: flex-end; gap: 15px; border: 1px solid #E5E7EB; 
+            border-radius: 8px; padding: 10px; background: white;
+        }
+        .input-wrapper textarea { 
+            flex: 1; border: none; outline: none; padding: 10px; resize: none; 
+            font-family: inherit; font-size: 0.9rem; min-height: 40px; max-height: 120px;
+        }
+        .chat-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-attach { background: #F3F4F6; color: #6B7280; border: none; width: 36px; height: 36px; border-radius: 6px; cursor: pointer; }
+        .btn-send { background: #1E3A8A; color: white; border: none; width: 36px; height: 36px; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .btn-send:hover { background: #162d6b; transform: scale(1.05); }
+    </style>
+</head>
+<body>
+    <div class="arb-dashboard-wrapper">
+        <div id="arbitrator-sidebar-placeholder"></div>
+
+        <main class="arb-main">
+            <div id="arbitrator-navbar-placeholder"></div>
+
+            <div class="arb-content" style="padding-bottom: 0;">
+                <h1 style="font-size: 1.8rem; font-weight: 800; color: #111827;">Case Communications</h1>
+                <p style="color: #6B7280; margin-bottom: 10px;">Securely communicate with parties and legal representatives.</p>
+
+                <div class="messages-container">
+                    <div class="conv-list">
+                        <div class="conv-search">
+                            <input type="text" placeholder="Search conversations...">
+                        </div>
+                        <div class="conv-items" id="conversationList">
+                            </div>
+                    </div>
+
+                    <div class="chat-window">
+                        <div class="chat-header" id="chatHeader">
+                            <h3>Select a Case</h3>
+                            <p>Choose a conversation from the left to start messaging.</p>
+                        </div>
+
+                        <div class="chat-messages" id="chatMessages">
+                            </div>
+
+                        <div class="chat-input-area">
+                            <div class="input-wrapper">
+                                <textarea id="msgInput" placeholder="Type your message..." rows="1"></textarea>
+                                <div class="chat-actions">
+                                    <button class="btn-attach" title="Attach Document"><i class="fa-solid fa-paperclip"></i></button>
+                                    <button class="btn-send" id="sendBtn" title="Send Message"><i class="fa-solid fa-paper-plane"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        guardArbitratorPage();
+    </script>
+    <script src="arbitrator_sidebar.js"></script>
+    <script src="arbitrator_navbar.js"></script>
+    <script>
+        let activeCaseId = null;
+        const caseIds = [];
+        let conversationSearchTerm = "";
+
+        function renderConversations() {
+            const list = document.getElementById('conversationList');
+            if (!list || typeof ArbitratorData === 'undefined') return;
+
+            caseIds.length = 0;
+            Object.keys(ArbitratorData.chatData).forEach(id => caseIds.push(id));
+
+            if (caseIds.length > 0 && (!activeCaseId || !ArbitratorData.chatData[activeCaseId])) {
+                activeCaseId = getArbitratorCaseIdFromUrl() || caseIds[0];
+            }
+
+            const visibleIds = caseIds.filter((id) => {
+                if (!conversationSearchTerm) return true;
+                const chat = ArbitratorData.chatData[id];
+                const searchableText = `${id} ${chat.parties || ""}`.toLowerCase();
+                return searchableText.includes(conversationSearchTerm);
+            });
+
+            if (!visibleIds.length) {
+                list.innerHTML = '<div style="padding: 24px; color: #9CA3AF; font-size: 0.85rem;">No conversations match your search.</div>';
+                return;
+            }
+
+            list.innerHTML = visibleIds.map(id => {
+                const chat = ArbitratorData.chatData[id];
+                const caseInfo = ArbitratorData.allCases.find(c => c.id === id) || { parties: "Unknown Case" };
+                const lastMsg = chat.messages && chat.messages.length > 0
+                    ? chat.messages[chat.messages.length - 1]
+                    : { text: "No messages yet" };
+
+                return `
+                    <div class="conv-item ${id === activeCaseId ? 'active' : ''}" onclick="switchChat('${id}')">
+                        <h4 style="font-size: 0.75rem; color: #1E3A8A; font-weight: 700; margin-bottom: 4px;">${id}</h4>
+                        <p class="parties" style="font-size: 0.9rem; font-weight: 700; color: #111827; margin-bottom: 6px;">${chat.parties || caseInfo.parties || (caseInfo.claimant + ' vs ' + caseInfo.respondent)}</p>
+                        <p class="preview" style="font-size: 0.8rem; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${lastMsg.text}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMessages() {
+            const container = document.getElementById('chatMessages');
+            const header = document.getElementById('chatHeader');
+            if (!container || !activeCaseId) return;
+
+            const chat = ArbitratorData.chatData[activeCaseId];
+            const caseInfo = ArbitratorData.allCases.find(c => c.id === activeCaseId) || { parties: "Case Discussion" };
+            const parties = chat.parties || caseInfo.parties || (caseInfo.claimant + ' vs ' + caseInfo.respondent);
+
+            header.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="display: flex; align-items: center;">
+                        ${(chat.participants || []).map((p, i) => `<img src="${p.avatar}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 2px solid white; margin-left: ${i === 0 ? '0' : '-10px'};">`).join('')}
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.1rem; color: #111827; font-weight: 700;">${activeCaseId}</h3>
+                        <p style="font-size: 0.85rem; color: #6B7280; margin-top: 2px;">${parties}</p>
+                    </div>
+                </div>
+            `;
+
+            if (!chat || !chat.messages || chat.messages.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #9CA3AF; padding: 40px;">No messages yet. Send the first message below.</p>';
+                return;
+            }
+
+            container.innerHTML = chat.messages.map(m => `
+                <div class="msg-row">
+                    <img src="${m.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(m.name)}" class="msg-avatar">
+                    <div class="msg-content">
+                        <div class="msg-info">
+                            <span class="name" style="font-size: 0.9rem; font-weight: 700; color: #111827;">${m.name}</span>
+                            <span class="role" style="font-size: 0.75rem; color: #9CA3AF;">${m.role}</span>
+                            <span class="time" style="font-size: 0.75rem; color: #9CA3AF;">${m.time}</span>
+                        </div>
+                        <div class="msg-text" style="background: #F3F4F6; padding: 12px 18px; border-radius: 0 12px 12px 12px; font-size: 0.9rem; color: #374151; line-height: 1.5;">${m.text}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function switchChat(id) {
+            activeCaseId = id;
+            renderConversations();
+            renderMessages();
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text || !activeCaseId || !ArbitratorData.chatData[activeCaseId]) return;
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const newMsg = {
+                name: ArbitratorData.profile.name,
+                role: "Arbitrator",
+                time: timeStr,
+                text: text,
+                avatar: ArbitratorData.profile.avatar
+            };
+
+            ArbitratorData.chatData[activeCaseId].messages.push(newMsg);
+            saveData();
+
+            input.value = "";
+            renderMessages();
+            renderConversations();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!guardArbitratorPage()) return;
+            const requestedCaseId = getArbitratorCaseIdFromUrl();
+            const requestedCase = getArbitratorCaseById(requestedCaseId);
+
+            if (requestedCaseId && requestedCase && !ArbitratorData.chatData[requestedCaseId]) {
+                ArbitratorData.chatData[requestedCaseId] = {
+                    parties: `${requestedCase.claimant} vs ${requestedCase.respondent}`,
+                    participants: [],
+                    messages: []
+                };
+                saveData();
+            }
+
+            renderConversations();
+            renderMessages();
+
+            const sendBtn = document.getElementById('sendBtn');
+            const msgInput = document.getElementById('msgInput');
+            const searchInput = document.querySelector('.conv-search input');
+
+            if (sendBtn) sendBtn.onclick = sendMessage;
+            if (msgInput) {
+                msgInput.onkeypress = (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                };
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('input', (event) => {
+                    conversationSearchTerm = event.target.value.trim().toLowerCase();
+                    renderConversations();
+                });
+            }
+        });
+    </script>
+</body>
+</html>
