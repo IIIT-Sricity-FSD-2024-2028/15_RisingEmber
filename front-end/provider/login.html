@@ -137,7 +137,7 @@
 
       const forgotPasswordLink = document.getElementById('forgotPasswordLink');
       if (forgotPasswordLink) {
-        forgotPasswordLink.addEventListener('click', (e) => {
+        forgotPasswordLink.addEventListener('click', async (e) => {
           e.preventDefault();
           const identifier = document.getElementById('loginEmail').value.trim();
 
@@ -146,8 +146,11 @@
             return;
           }
 
-          const nextPassword = window.prompt('Enter a new password for this provider account.');
-          if (nextPassword === null) return;
+          const nextPassword = await window.showAppPrompt('Reset Password', `Enter a new password for provider account: ${identifier}`, {
+            inputType: 'password',
+            placeholder: 'New password (8+ chars)'
+          });
+          if (nextPassword === null || nextPassword === false) return;
 
           try {
             resetProviderPassword(identifier, nextPassword);

@@ -152,9 +152,238 @@ if (typeof window !== 'undefined') {
   if (!window.__serviceHubNativeAlert) {
     window.__serviceHubNativeAlert = window.alert.bind(window);
     window.alert = function patchedAlert(message) {
-      showAppToast(message, 'info');
+      if (typeof showAppModal === 'function') {
+        showAppModal('Alert', message);
+      } else {
+        showAppToast(message, 'info');
+      }
     };
   }
+
+  if (!window.__serviceHubNativeConfirm) {
+    window.__serviceHubNativeConfirm = window.confirm.bind(window);
+    window.confirm = function patchedConfirm(message) {
+      // Note: Native confirm is synchronous. Custom modals are asynchronous.
+      // This patch is mainly for safety; explicit showAppModal is preferred.
+      console.warn('Native confirm() called. Use showAppModal() for a better experience.');
+      return window.__serviceHubNativeConfirm(message);
+    };
+  }
+}
+
+const APP_MODAL_STYLE_ID = 'sh-app-modal-styles';
+
+function ensureAppModalStyles() {
+  if (typeof document === 'undefined' || document.getElementById(APP_MODAL_STYLE_ID)) return;
+
+  const style = document.createElement('style');
+  style.id = APP_MODAL_STYLE_ID;
+  style.textContent = `
+    .sh-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .sh-modal-overlay.is-visible {
+      opacity: 1;
+    }
+    .sh-modal-container {
+      background: #FFFFFF;
+      width: 100%;
+      max-width: 420px;
+      margin: 20px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      transform: scale(0.95);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+    .sh-modal-overlay.is-visible .sh-modal-container {
+      transform: scale(1);
+    }
+    .sh-modal-header {
+      padding: 24px 24px 12px;
+      text-align: center;
+    }
+    .sh-modal-header h3 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #111827;
+    }
+    .sh-modal-body {
+      padding: 0 24px 24px;
+      text-align: center;
+    }
+    .sh-modal-body p {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: #4B5563;
+    }
+    .sh-modal-input-wrapper {
+      margin-top: 16px;
+      text-align: left;
+    }
+    .sh-modal-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .sh-modal-input:focus {
+      outline: none;
+      border-color: #3B82F6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+    .sh-modal-footer {
+      padding: 0 24px 24px;
+      display: flex;
+      gap: 12px;
+    }
+    .sh-modal-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .sh-modal-btn--cancel {
+      background: #F3F4F6;
+      color: #4B5563;
+    }
+    .sh-modal-btn--cancel:hover {
+      background: #E5E7EB;
+    }
+    .sh-modal-btn--primary {
+      background: #3B82F6;
+      color: #FFFFFF;
+    }
+    .sh-modal-btn--primary:hover {
+      background: #2563EB;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    }
+    .sh-modal-btn--danger {
+      background: #EF4444;
+      color: #FFFFFF;
+    }
+    .sh-modal-btn--danger:hover {
+      background: #DC2626;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+/**
+ * showAppModal
+ * Returns a Promise that resolves when the user clicks a button.
+ * options = { confirm: boolean, type: 'primary'|'danger', okText: string, cancelText: string }
+ */
+function showAppModal(title, message, options = {}) {
+  return new Promise((resolve) => {
+    if (typeof document === 'undefined') {
+      resolve(false);
+      return;
+    }
+
+    ensureAppModalStyles();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'sh-modal-overlay';
+    
+    const isConfirm = options.confirm === true;
+    const btnType = options.type || 'primary';
+    const okText = options.okText || (isConfirm ? 'Confirm' : 'OK');
+    const cancelText = options.cancelText || 'Cancel';
+
+    overlay.innerHTML = `
+      <div class="sh-modal-container">
+        <div class="sh-modal-header">
+          <h3>${title}</h3>
+        </div>
+        <div class="sh-modal-body">
+          <p>${message}</p>
+          ${options.prompt ? `
+            <div class="sh-modal-input-wrapper">
+              <input type="${options.inputType || 'text'}" class="sh-modal-input" placeholder="${options.placeholder || ''}" id="shModalInput">
+            </div>
+          ` : ''}
+        </div>
+        <div class="sh-modal-footer">
+          ${isConfirm || options.prompt ? `<button type="button" class="sh-modal-btn sh-modal-btn--cancel" id="shCancelBtn">${cancelText}</button>` : ''}
+          <button type="button" class="sh-modal-btn sh-modal-btn--${btnType}" id="shOkBtn">${okText}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    const input = overlay.querySelector('#shModalInput');
+    const okBtn = overlay.querySelector('#shOkBtn');
+    const cancelBtn = overlay.querySelector('#shCancelBtn');
+
+    if (input) {
+      window.setTimeout(() => input.focus(), 100);
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') okBtn.click();
+        if (e.key === 'Escape') cancelBtn ? cancelBtn.click() : close(false);
+      });
+    }
+
+    function close(result) {
+      overlay.classList.remove('is-visible');
+      window.setTimeout(() => {
+        overlay.remove();
+        resolve(result);
+      }, 300);
+    }
+
+    okBtn.addEventListener('click', () => {
+      if (options.prompt) {
+        resolve(input.value);
+        close(null); // result already resolved
+      } else {
+        close(true);
+      }
+    });
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => close(false));
+    }
+
+    requestAnimationFrame(() => overlay.classList.add('is-visible'));
+  });
+}
+
+/**
+ * showAppPrompt
+ * Returns a Promise that resolves with the input value or null if cancelled.
+ */
+function showAppPrompt(title, message, options = {}) {
+  return showAppModal(title, message, { ...options, prompt: true });
+}
+
+if (typeof window !== 'undefined') {
+  window.showAppModal = showAppModal;
+  window.showAppPrompt = showAppPrompt;
 }
 
 function readStorageJSON(key, fallback = null) {
@@ -869,7 +1098,14 @@ function isLoggedIn() {
   return session && session.isLoggedIn !== false;
 }
 
-function logout() {
+async function logout() {
+  const confirmed = await showAppModal("Confirm Sign Out", "Are you sure you want to log out from ServiceHub?", {
+    confirm: true,
+    type: "danger",
+    okText: "Sign Out"
+  });
+  if (!confirmed) return;
+
   const session = getActiveSession();
   if (session) {
     if (session.role === 'provider') providerLogout();
@@ -878,12 +1114,26 @@ function logout() {
   window.location.href = '../Landing_Page/index.html';
 }
 
-function logoutArbitrator() {
+async function logoutArbitrator() {
+  const confirmed = await showAppModal("Confirm Logout", "Are you sure you want to end your arbitrator session?", {
+    confirm: true,
+    type: "danger",
+    okText: "Logout"
+  });
+  if (!confirmed) return;
+
   arbitratorLogout();
   window.location.href = 'arbitrator_landing.html';
 }
 
-function logoutProvider() {
+async function logoutProvider() {
+  const confirmed = await showAppModal("Confirm Logout", "Are you sure you want to end your provider session?", {
+    confirm: true,
+    type: "danger",
+    okText: "Logout"
+  });
+  if (!confirmed) return;
+
   providerLogout();
   window.location.href = 'login.html';
 }

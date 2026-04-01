@@ -262,8 +262,13 @@
             renderHearingsTable();
         }
 
-        function deleteHearing(caseId) {
-            if (confirm("Remove this hearing from the schedule?")) {
+        async function deleteHearing(caseId) {
+            const confirmed = await window.showAppModal("Remove Hearing", "Are you sure you want to remove this hearing from the schedule?", {
+                confirm: true,
+                type: "danger",
+                okText: "Remove"
+            });
+            if (confirmed) {
                 const deletedHearing = ArbitratorData.hearingsList.find((item) => item.id === caseId);
                 ArbitratorData.hearingsList = ArbitratorData.hearingsList.filter((item) => item.id !== caseId);
 

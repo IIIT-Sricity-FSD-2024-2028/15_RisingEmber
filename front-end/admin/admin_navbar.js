@@ -207,10 +207,13 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
-function handleLogout() {
-    if (!confirm("Confirm sign out? Your session will be terminated.")) {
-        return;
-    }
+async function handleLogout() {
+    const confirmed = await window.showAppModal("Confirm Sign Out", "Your session will be terminated. Are you sure?", {
+        confirm: true,
+        type: "danger",
+        okText: "Sign Out"
+    });
+    if (!confirmed) return;
 
     if (window.AdminData && window.AdminData.session) {
         window.AdminData.session.isLoggedIn = false;

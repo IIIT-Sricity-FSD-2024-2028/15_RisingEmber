@@ -224,6 +224,7 @@
     </div>
 
     <script src="admin_mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
     <script src="admin_sidebar.js"></script>
     <script src="admin_navbar.js"></script>
     <script>
@@ -327,7 +328,7 @@
         function exportToCSV() {
             const dataToExport = getFilteredApplications();
             if (dataToExport.length === 0) {
-                alert("No application records are available for export.");
+                window.showAppModal("Export Failed", "No application records are available for export.");
                 return;
             }
             let csvContent = "data:text/csv;charset=utf-8,Name,Email,Country,Status\n";
