@@ -2,7 +2,9 @@
 
 document.addEventListener("DOMContentLoaded", () => {
   const app = window.CustomerApp;
-  const bookings = JSON.parse(localStorage.getItem("serviceHub_bookings")) || [];
+  const bookings = app && typeof app.getCustomerBookings === "function"
+    ? app.getCustomerBookings()
+    : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
   const selectedBookingId = localStorage.getItem("selectedBookingId") || localStorage.getItem("latestBookingId");
   const booking = Array.isArray(bookings)
     ? bookings.find((item) => item.bookingId === selectedBookingId) || bookings.find((item) => item.status === "Confirmed")
@@ -72,7 +74,11 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       });
 
-      localStorage.setItem("serviceHub_bookings", JSON.stringify(nextBookings));
+      if (app && typeof app.saveCustomerBookings === "function") {
+        app.saveCustomerBookings(nextBookings);
+      } else {
+        localStorage.setItem("serviceHub_bookings", JSON.stringify(nextBookings));
+      }
       localStorage.setItem("latestCancellationBookingId", booking.bookingId);
       localStorage.setItem("selectedBookingId", booking.bookingId);
 

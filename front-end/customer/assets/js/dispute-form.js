@@ -5,8 +5,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("disputeForm");
   if (!form) return;
 
-  const bookings = JSON.parse(localStorage.getItem("serviceHub_bookings")) || [];
-  const storedContext = JSON.parse(localStorage.getItem("pendingDisputeContext") || "null");
+  const bookings = app && typeof app.getCustomerBookings === "function"
+    ? app.getCustomerBookings()
+    : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
+  const storedContext = app && typeof app.readJSON === "function"
+    ? app.readJSON("pendingDisputeContext", null)
+    : JSON.parse(localStorage.getItem("pendingDisputeContext") || "null");
   const selectedBookingId = localStorage.getItem("selectedBookingId");
   const contextBooking =
     storedContext ||
@@ -164,7 +168,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const disputes = JSON.parse(localStorage.getItem("serviceHub_disputes")) || [];
+    const disputes = app && typeof app.getCustomerDisputes === "function"
+      ? app.getCustomerDisputes()
+      : (JSON.parse(localStorage.getItem("serviceHub_disputes")) || []);
     const disputeId = `DSP-${String(Date.now()).slice(-8)}`;
     const now = new Date();
 
@@ -205,8 +211,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ]
     };
 
-    disputes.unshift(dispute);
-    localStorage.setItem("serviceHub_disputes", JSON.stringify(disputes));
+    const nextDisputes = [dispute].concat(Array.isArray(disputes) ? disputes : []);
+    if (app && typeof app.saveCustomerDisputes === "function") {
+      app.saveCustomerDisputes(nextDisputes);
+    } else {
+      localStorage.setItem("serviceHub_disputes", JSON.stringify(nextDisputes));
+    }
     localStorage.setItem("latestDisputeId", disputeId);
     localStorage.setItem("selectedDisputeId", disputeId);
     localStorage.removeItem("pendingDisputeContext");

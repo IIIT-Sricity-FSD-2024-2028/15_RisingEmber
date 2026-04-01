@@ -208,11 +208,13 @@ function escapeHtml(value) {
 }
 
 async function handleLogout() {
-    const confirmed = await window.showAppModal("Confirm Sign Out", "Your session will be terminated. Are you sure?", {
-        confirm: true,
-        type: "danger",
-        okText: "Sign Out"
-    });
+    const confirmed = typeof window.showAppModal === 'function'
+        ? await window.showAppModal("Confirm Sign Out", "Your session will be terminated. Are you sure?", {
+            confirm: true,
+            type: "danger",
+            okText: "Sign Out"
+        })
+        : window.confirm("Your session will be terminated. Are you sure?");
     if (!confirmed) return;
 
     if (window.AdminData && window.AdminData.session) {
