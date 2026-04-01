@@ -378,8 +378,7 @@
     const user = readJSON(KEYS.USER, null);
     if (user && user.email) return toPublicCustomer(user);
 
-    const account = getCustomerAccounts()[0];
-    return account ? toPublicCustomer(account) : null;
+    return null;
   }
 
   function getCustomerSession() {
@@ -546,7 +545,7 @@
     }
 
     if (!window.localStorage.getItem(KEYS.BOOTSTRAP)) {
-      saveCurrentCustomer(firstAccount, true);
+      // Bootstrapping storage once, but NOT logging in anymore
       window.localStorage.setItem(KEYS.BOOTSTRAP, "true");
     } else if (!readJSON(KEYS.USER, null) && getSessionAccount()) {
       saveCurrentCustomer(getSessionAccount(), true);
@@ -1019,9 +1018,13 @@
       if (link.dataset.logoutBound) return;
 
       link.dataset.logoutBound = "true";
-      link.addEventListener("click", (event) => {
+      link.addEventListener("click", async (event) => {
         event.preventDefault();
-        const confirmed = window.confirm("Are you sure you want to log out?");
+        const confirmed = await window.showAppModal("Confirm Logout", "Are you sure you want to log out?", {
+          confirm: true,
+          type: "danger",
+          okText: "Logout"
+        });
         if (!confirmed) return;
 
         logoutCustomer();
@@ -1085,7 +1088,7 @@
     const forgotPasswordLink = document.querySelector(".forgot-password");
     if (forgotPasswordLink && !forgotPasswordLink.dataset.bound) {
       forgotPasswordLink.dataset.bound = "true";
-      forgotPasswordLink.addEventListener("click", (event) => {
+      forgotPasswordLink.addEventListener("click", async (event) => {
         event.preventDefault();
         const identifierInput = document.getElementById("loginIdentifier");
         const identifier = identifierInput ? identifierInput.value.trim() : "";
@@ -1095,16 +1098,17 @@
           return;
         }
 
-        const nextPassword = window.prompt("Enter a new password for this customer account.");
-        if (nextPassword === null) return;
+        const nextPassword = await window.showAppPrompt("Reset Password", `Enter a new password for account: ${identifier}`, {
+          inputType: "password",
+          placeholder: "New password (8+ chars)"
+        });
+        if (nextPassword === null || nextPassword === false) return;
 
         try {
           resetCustomerPassword(identifier, nextPassword);
-          const passwordInput = document.getElementById("loginPassword");
-          if (passwordInput) passwordInput.value = nextPassword;
-          showToast("Password reset complete. You can log in with the new password now.", "success");
+          showToast("Success! Your password has been updated. You can now log in.", "success");
         } catch (error) {
-          showToast(error.message, "error");
+          window.showAppModal("Reset Failed", error.message, { type: "danger" });
         }
       });
     }

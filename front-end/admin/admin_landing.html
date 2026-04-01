@@ -107,6 +107,7 @@
     </div>
 
     <script src="admin_mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
     <script>
         function toggleView(viewId) {
             document.getElementById('loginView').style.display = viewId === 'loginView' ? 'block' : 'none';
@@ -158,13 +159,13 @@
             }
         }
 
-        function handleResetRequest() {
+        async function handleResetRequest() {
             const email = document.getElementById('resetEmail').value;
             if(validateEmail(email)) {
-                alert("Success: Reset link sent to " + email);
+                await window.showAppModal("Reset Sent", "Success: Reset link sent to " + email);
                 toggleView('loginView');
             } else {
-                alert("Please enter a valid email address.");
+                window.showAppModal("Invalid Email", "Please enter a valid email address.", { type: "danger" });
             }
         }
     </script>

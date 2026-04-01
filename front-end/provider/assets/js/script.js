@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     e.stopImmediatePropagation();
 
-    if (confirm('Are you sure you want to log out?') && typeof logoutProvider === 'function') {
+    if (typeof logoutProvider === 'function') {
       logoutProvider();
     }
   }, true);
