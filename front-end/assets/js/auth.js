@@ -153,7 +153,7 @@ if (typeof window !== 'undefined') {
     window.__serviceHubNativeAlert = window.alert.bind(window);
     window.alert = function patchedAlert(message) {
       if (typeof showAppModal === 'function') {
-        showAppModal('Alert', message);
+        showAppModal('Notice', message, { okText: 'Got it' });
       } else {
         showAppToast(message, 'info');
       }
@@ -231,6 +231,7 @@ function ensureAppModalStyles() {
       font-size: 0.95rem;
       line-height: 1.6;
       color: #4B5563;
+      white-space: pre-line;
     }
     .sh-modal-input-wrapper {
       margin-top: 16px;
@@ -308,37 +309,68 @@ function showAppModal(title, message, options = {}) {
 
     const overlay = document.createElement('div');
     overlay.className = 'sh-modal-overlay';
-    
+
     const isConfirm = options.confirm === true;
     const btnType = options.type || 'primary';
     const okText = options.okText || (isConfirm ? 'Confirm' : 'OK');
     const cancelText = options.cancelText || 'Cancel';
 
-    overlay.innerHTML = `
-      <div class="sh-modal-container">
-        <div class="sh-modal-header">
-          <h3>${title}</h3>
-        </div>
-        <div class="sh-modal-body">
-          <p>${message}</p>
-          ${options.prompt ? `
-            <div class="sh-modal-input-wrapper">
-              <input type="${options.inputType || 'text'}" class="sh-modal-input" placeholder="${options.placeholder || ''}" id="shModalInput">
-            </div>
-          ` : ''}
-        </div>
-        <div class="sh-modal-footer">
-          ${isConfirm || options.prompt ? `<button type="button" class="sh-modal-btn sh-modal-btn--cancel" id="shCancelBtn">${cancelText}</button>` : ''}
-          <button type="button" class="sh-modal-btn sh-modal-btn--${btnType}" id="shOkBtn">${okText}</button>
-        </div>
-      </div>
-    `;
+    const container = document.createElement('div');
+    container.className = 'sh-modal-container';
 
+    const header = document.createElement('div');
+    header.className = 'sh-modal-header';
+
+    const titleEl = document.createElement('h3');
+    titleEl.textContent = String(title || 'Notice');
+    header.appendChild(titleEl);
+
+    const body = document.createElement('div');
+    body.className = 'sh-modal-body';
+
+    const messageEl = document.createElement('p');
+    messageEl.textContent = String(message || '');
+    body.appendChild(messageEl);
+
+    let input = null;
+    if (options.prompt) {
+      const inputWrapper = document.createElement('div');
+      inputWrapper.className = 'sh-modal-input-wrapper';
+
+      input = document.createElement('input');
+      input.type = options.inputType || 'text';
+      input.className = 'sh-modal-input';
+      input.placeholder = options.placeholder || '';
+      input.value = options.defaultValue || '';
+      input.autocomplete = 'off';
+
+      inputWrapper.appendChild(input);
+      body.appendChild(inputWrapper);
+    }
+
+    const footer = document.createElement('div');
+    footer.className = 'sh-modal-footer';
+
+    let cancelBtn = null;
+    if (isConfirm || options.prompt) {
+      cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'sh-modal-btn sh-modal-btn--cancel';
+      cancelBtn.textContent = cancelText;
+      footer.appendChild(cancelBtn);
+    }
+
+    const okBtn = document.createElement('button');
+    okBtn.type = 'button';
+    okBtn.className = `sh-modal-btn sh-modal-btn--${btnType}`;
+    okBtn.textContent = okText;
+    footer.appendChild(okBtn);
+
+    container.appendChild(header);
+    container.appendChild(body);
+    container.appendChild(footer);
+    overlay.appendChild(container);
     document.body.appendChild(overlay);
-
-    const input = overlay.querySelector('#shModalInput');
-    const okBtn = overlay.querySelector('#shOkBtn');
-    const cancelBtn = overlay.querySelector('#shCancelBtn');
 
     if (input) {
       window.setTimeout(() => input.focus(), 100);
@@ -358,8 +390,7 @@ function showAppModal(title, message, options = {}) {
 
     okBtn.addEventListener('click', () => {
       if (options.prompt) {
-        resolve(input.value);
-        close(null); // result already resolved
+        close(input.value);
       } else {
         close(true);
       }
@@ -523,6 +554,11 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function isValidHumanName(name) {
+  const normalizedName = String(name || '').trim().replace(/\s+/g, ' ');
+  return normalizedName.length >= 2 && /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(normalizedName);
+}
+
 function isValidPhone(phone) {
   // Accepts formats: 1234567890, 123-456-7890, (123) 456-7890, +1 123 456 7890
   return /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(phone.replace(/\s/g, ''));
@@ -530,6 +566,10 @@ function isValidPhone(phone) {
 
 function isStrongPassword(password) {
   return password.length >= 8;
+}
+
+if (typeof window !== 'undefined') {
+  window.isValidHumanName = isValidHumanName;
 }
 
 /* ============================================
@@ -614,9 +654,9 @@ function providerSignup(name, email, phone, password) {
         return;
       }
 
-      // --- Name validation (min 2 chars) ---
-      if (trimmedName.length < 2) {
-        reject(new Error('Name must be at least 2 characters long'));
+      // --- Name validation ---
+      if (!isValidHumanName(trimmedName)) {
+        reject(new Error('Please enter a valid full name using letters only.'));
         return;
       }
 
@@ -881,8 +921,8 @@ function arbitratorSignup(name, email, password, metadata = {}) {
         return;
       }
 
-      if (trimmedName.length < 2) {
-        reject(new Error('Name must be at least 2 characters long'));
+      if (!isValidHumanName(trimmedName)) {
+        reject(new Error('Please enter a valid full name using letters only.'));
         return;
       }
 

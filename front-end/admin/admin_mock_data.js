@@ -5,6 +5,324 @@
 (function initAdminDataStore() {
     const ADMIN_DB_KEY = 'admin_db';
     const ADMIN_PUBLIC_PAGES = new Set(['admin_landing.html']);
+    const ADMIN_FEEDBACK_STYLE_ID = 'admin-app-feedback-styles';
+
+    function ensureAdminFeedbackStyles() {
+        if (typeof document === 'undefined' || document.getElementById(ADMIN_FEEDBACK_STYLE_ID)) return;
+
+        const style = document.createElement('style');
+        style.id = ADMIN_FEEDBACK_STYLE_ID;
+        style.textContent = `
+            .admin-app-toast-stack {
+                position: fixed;
+                right: 20px;
+                bottom: 20px;
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                z-index: 100000;
+                max-width: min(360px, calc(100vw - 32px));
+                pointer-events: none;
+            }
+            .admin-app-toast {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                padding: 14px 16px;
+                border-radius: 14px;
+                background: #0f172a;
+                color: #ffffff;
+                border-left: 4px solid #2563eb;
+                box-shadow: 0 18px 36px rgba(15, 23, 42, 0.24);
+                opacity: 0;
+                transform: translateY(12px);
+                transition: opacity 0.18s ease, transform 0.18s ease;
+                font-family: 'Inter', 'Segoe UI', sans-serif;
+            }
+            .admin-app-toast.is-visible {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .admin-app-toast--success { border-left-color: #16a34a; }
+            .admin-app-toast--error { border-left-color: #dc2626; }
+            .admin-app-toast--warning { border-left-color: #d97706; }
+            .admin-app-toast__body {
+                font-size: 0.92rem;
+                line-height: 1.45;
+                white-space: pre-line;
+            }
+            .admin-app-modal-overlay {
+                position: fixed;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                background: rgba(15, 23, 42, 0.45);
+                backdrop-filter: blur(4px);
+                z-index: 100001;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+            .admin-app-modal-overlay.is-visible {
+                opacity: 1;
+            }
+            .admin-app-modal {
+                width: min(460px, 100%);
+                background: #ffffff;
+                border-radius: 20px;
+                box-shadow: 0 30px 80px rgba(15, 23, 42, 0.28);
+                overflow: hidden;
+                transform: translateY(12px) scale(0.98);
+                transition: transform 0.2s ease;
+                font-family: 'Inter', 'Segoe UI', sans-serif;
+            }
+            .admin-app-modal-overlay.is-visible .admin-app-modal {
+                transform: translateY(0) scale(1);
+            }
+            .admin-app-modal__header {
+                padding: 24px 24px 10px;
+            }
+            .admin-app-modal__header h3 {
+                margin: 0;
+                font-size: 1.16rem;
+                font-weight: 800;
+                color: #0f172a;
+            }
+            .admin-app-modal__body {
+                padding: 0 24px 24px;
+            }
+            .admin-app-modal__body p {
+                margin: 0;
+                color: #475569;
+                font-size: 0.95rem;
+                line-height: 1.6;
+                white-space: pre-line;
+            }
+            .admin-app-modal__input-wrap {
+                margin-top: 16px;
+            }
+            .admin-app-modal__input {
+                width: 100%;
+                padding: 12px 14px;
+                border: 1px solid #cbd5e1;
+                border-radius: 12px;
+                font: inherit;
+                color: #0f172a;
+            }
+            .admin-app-modal__input:focus {
+                outline: none;
+                border-color: #2563eb;
+                box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+            }
+            .admin-app-modal__footer {
+                display: flex;
+                gap: 12px;
+                padding: 0 24px 24px;
+            }
+            .admin-app-modal__btn {
+                flex: 1;
+                border: none;
+                border-radius: 12px;
+                padding: 12px 16px;
+                font: inherit;
+                font-weight: 700;
+                cursor: pointer;
+                transition: transform 0.15s ease, box-shadow 0.15s ease;
+            }
+            .admin-app-modal__btn:hover {
+                transform: translateY(-1px);
+            }
+            .admin-app-modal__btn--cancel {
+                background: #f1f5f9;
+                color: #475569;
+            }
+            .admin-app-modal__btn--primary {
+                background: #2563eb;
+                color: #ffffff;
+                box-shadow: 0 12px 24px rgba(37, 99, 235, 0.2);
+            }
+            .admin-app-modal__btn--danger {
+                background: #dc2626;
+                color: #ffffff;
+                box-shadow: 0 12px 24px rgba(220, 38, 38, 0.18);
+            }
+            @media (max-width: 640px) {
+                .admin-app-toast-stack {
+                    left: 16px;
+                    right: 16px;
+                    bottom: 16px;
+                    max-width: none;
+                }
+                .admin-app-modal__footer {
+                    flex-direction: column-reverse;
+                }
+            }
+        `;
+
+        document.head.appendChild(style);
+    }
+
+    function showAppToast(message, type = 'info', options = {}) {
+        const text = String(message || '').trim();
+        if (!text || typeof document === 'undefined') return;
+
+        ensureAdminFeedbackStyles();
+
+        const renderToast = () => {
+            let stack = document.querySelector('.admin-app-toast-stack');
+            if (!stack) {
+                stack = document.createElement('div');
+                stack.className = 'admin-app-toast-stack';
+                document.body.appendChild(stack);
+            }
+
+            const tone = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
+            const iconMap = {
+                success: 'fa-circle-check',
+                error: 'fa-circle-exclamation',
+                warning: 'fa-triangle-exclamation',
+                info: 'fa-circle-info'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `admin-app-toast admin-app-toast--${tone}`;
+            toast.innerHTML = `
+                <i class="fa-solid ${iconMap[tone]}" aria-hidden="true"></i>
+                <div class="admin-app-toast__body"></div>
+            `;
+            toast.querySelector('.admin-app-toast__body').textContent = text;
+            stack.appendChild(toast);
+
+            requestAnimationFrame(() => toast.classList.add('is-visible'));
+
+            window.setTimeout(() => {
+                toast.classList.remove('is-visible');
+                window.setTimeout(() => toast.remove(), 200);
+            }, Math.max(1800, Number(options.duration) || 3200));
+        };
+
+        if (document.body) {
+            renderToast();
+        } else {
+            document.addEventListener('DOMContentLoaded', renderToast, { once: true });
+        }
+    }
+
+    function showAppModal(title, message, options = {}) {
+        return new Promise((resolve) => {
+            if (typeof document === 'undefined') {
+                resolve(false);
+                return;
+            }
+
+            ensureAdminFeedbackStyles();
+
+            const config = options && typeof options === 'object' ? options : {};
+            const isConfirm = config.confirm === true || config.prompt === true;
+            const tone = config.type === 'danger' ? 'danger' : 'primary';
+
+            const overlay = document.createElement('div');
+            overlay.className = 'admin-app-modal-overlay';
+
+            const dialog = document.createElement('div');
+            dialog.className = 'admin-app-modal';
+
+            const header = document.createElement('div');
+            header.className = 'admin-app-modal__header';
+
+            const heading = document.createElement('h3');
+            heading.textContent = String(title || 'Notice');
+            header.appendChild(heading);
+
+            const body = document.createElement('div');
+            body.className = 'admin-app-modal__body';
+
+            const copy = document.createElement('p');
+            copy.textContent = String(message || '');
+            body.appendChild(copy);
+
+            let input = null;
+            if (config.prompt) {
+                const inputWrap = document.createElement('div');
+                inputWrap.className = 'admin-app-modal__input-wrap';
+
+                input = document.createElement('input');
+                input.className = 'admin-app-modal__input';
+                input.type = config.inputType || 'text';
+                input.placeholder = config.placeholder || '';
+                input.value = config.defaultValue || '';
+                input.autocomplete = 'off';
+                inputWrap.appendChild(input);
+                body.appendChild(inputWrap);
+            }
+
+            const footer = document.createElement('div');
+            footer.className = 'admin-app-modal__footer';
+
+            let cancelBtn = null;
+            if (isConfirm) {
+                cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'admin-app-modal__btn admin-app-modal__btn--cancel';
+                cancelBtn.textContent = config.cancelText || 'Cancel';
+                footer.appendChild(cancelBtn);
+            }
+
+            const confirmBtn = document.createElement('button');
+            confirmBtn.type = 'button';
+            confirmBtn.className = `admin-app-modal__btn admin-app-modal__btn--${tone}`;
+            confirmBtn.textContent = config.okText || (config.prompt ? 'Continue' : isConfirm ? 'Confirm' : 'Got it');
+            footer.appendChild(confirmBtn);
+
+            dialog.appendChild(header);
+            dialog.appendChild(body);
+            dialog.appendChild(footer);
+            overlay.appendChild(dialog);
+            document.body.appendChild(overlay);
+
+            function close(result) {
+                overlay.classList.remove('is-visible');
+                window.setTimeout(() => {
+                    overlay.remove();
+                    resolve(result);
+                }, 180);
+            }
+
+            confirmBtn.addEventListener('click', () => {
+                if (config.prompt) {
+                    close(input ? input.value : '');
+                    return;
+                }
+                close(true);
+            });
+
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', () => close(false));
+            }
+
+            if (input) {
+                window.setTimeout(() => input.focus(), 40);
+                input.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter') {
+                        event.preventDefault();
+                        confirmBtn.click();
+                    }
+                    if (event.key === 'Escape') {
+                        close(false);
+                    }
+                });
+            } else {
+                window.setTimeout(() => confirmBtn.focus(), 40);
+            }
+
+            requestAnimationFrame(() => overlay.classList.add('is-visible'));
+        });
+    }
+
+    function showAppPrompt(title, message, options = {}) {
+        return showAppModal(title, message, { ...options, prompt: true });
+    }
 
     const initialAdminData = {
         session: {
@@ -364,6 +682,11 @@
     function buildAvatarUrl(name, seed) {
         const safeName = encodeURIComponent(name || seed || 'Admin User');
         return `https://ui-avatars.com/api/?name=${safeName}&background=random`;
+    }
+
+    function isValidHumanName(name) {
+        const normalizedName = String(name || '').trim().replace(/\s+/g, ' ');
+        return normalizedName.length >= 2 && /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(normalizedName);
     }
 
     function toIsoDate(value, fallbackValue) {
@@ -892,6 +1215,17 @@
     window.enforceAdminSession = enforceAdminSession;
     window.getAdminNotifications = getAdminNotifications;
     window.createAdminCaseRecord = createAdminCaseRecord;
+    window.showAppToast = window.showAppToast || showAppToast;
+    window.showAppModal = window.showAppModal || showAppModal;
+    window.showAppPrompt = window.showAppPrompt || showAppPrompt;
+    window.isValidHumanName = window.isValidHumanName || isValidHumanName;
+
+    if (!window.__serviceHubNativeAlert && typeof window.alert === 'function') {
+        window.__serviceHubNativeAlert = window.alert.bind(window);
+        window.alert = function patchedAdminAlert(message) {
+            showAppModal('Notice', String(message || ''), { okText: 'Got it' });
+        };
+    }
 
     enforceAdminSession();
 })();

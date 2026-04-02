@@ -96,7 +96,7 @@
             }
         }
 
-        function saveAward() {
+        async function saveAward() {
             const oldId = currentAwd.id;
             const nextId = document.getElementById('in-id').value.trim();
             const nextDate = document.getElementById('in-date').value;
@@ -118,7 +118,7 @@
 
             logAdminActivity(`Modified Award Record: ${oldId}`);
             saveAdminData();
-            alert("Record synchronized successfully.");
+            await showAppModal("Award Updated", "Record synchronized successfully.", { okText: "Back to Awards" });
             window.location.href = 'admin_awards.html';
         }
 

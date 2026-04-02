@@ -141,9 +141,12 @@
         const hId = decodeURIComponent(urlParams.get('id') || "H-2024-001");
         let currentH = AdminData.hearings.find(h => h.id === hId);
 
-        function init() {
+        async function init() {
             if(!currentH) {
-                alert("Hearing not found!");
+                await showAppModal("Hearing Not Found", "We couldn't find that hearing in the current admin database.", {
+                    type: "danger",
+                    okText: "Back to Hearings"
+                });
                 window.location.href='admin_hearings.html';
                 return;
             }
@@ -215,7 +218,7 @@
                 '<i class="fa-solid fa-xmark"></i> Cancel' : '<i class="fa-solid fa-pen-to-square"></i> Edit Details';
         }
 
-        function saveChanges() {
+        async function saveChanges() {
             const oldId = currentH.id;
             const caseId = document.getElementById('e-case').value.trim();
             const arbitrator = document.getElementById('e-arb').value.trim();
@@ -241,11 +244,11 @@
             }
             
             saveAdminData();
-            alert("Changes Saved Successfully!");
+            await showAppModal("Hearing Updated", "Changes saved successfully.", { okText: "Reload Hearing" });
             location.reload();
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', () => { init(); });
     </script>
 </body>
 </html>

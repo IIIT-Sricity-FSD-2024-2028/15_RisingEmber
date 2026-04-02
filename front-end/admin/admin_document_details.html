@@ -93,7 +93,7 @@
             document.getElementById('in-status').value = currentDoc.status;
         }
 
-        function saveChanges() {
+        async function saveChanges() {
             const oldId = currentDoc.id;
             const nextId = document.getElementById('in-id').value.trim();
             const nextName = document.getElementById('in-name').value.trim();
@@ -115,7 +115,7 @@
 
             logAdminActivity(`Updated Doc Metadata: ${oldId} -> ${currentDoc.id}`);
             saveAdminData();
-            alert("Changes saved to persistent database.");
+            await showAppModal("Document Updated", "Changes saved to persistent database.", { okText: "Back to Documents" });
             window.location.href = 'admin_documents.html';
         }
 

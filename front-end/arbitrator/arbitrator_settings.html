@@ -176,7 +176,7 @@
          * Update Profile Logic (CRUD Operation)
          * Saves the updated values back to the local database
          */
-        function updateProfileCRUD() {
+        async function updateProfileCRUD() {
             const newName = document.getElementById('set-name').value.trim();
             const newEmail = document.getElementById('set-email').value.trim();
             const newPhone = document.getElementById('set-phone').value.trim();
@@ -186,6 +186,10 @@
 
             if (!newName || !newEmail) {
                 alert("Name and Email cannot be empty.");
+                return;
+            }
+            if (!(typeof isValidHumanName === 'function' ? isValidHumanName(newName) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(newName))) {
+                alert("Please enter a valid full name using letters only.");
                 return;
             }
 
@@ -239,11 +243,11 @@
             saveData();
             syncArbitratorSessionWithProfile();
 
-            alert("Profile updated successfully.");
+            await window.showAppModal("Profile Updated", "Profile updated successfully.", { okText: "Refresh Profile" });
             window.location.reload();
         }
 
-        function updatePasswordSettings(event) {
+        async function updatePasswordSettings(event) {
             event.preventDefault();
 
             const currentPassword = document.getElementById('current-password').value;
@@ -271,7 +275,7 @@
 
             document.getElementById('securitySettingsForm').reset();
             document.getElementById('two-factor-toggle').checked = ArbitratorData.settings.twoFactorEnabled !== false;
-            alert("Password updated successfully.");
+            await window.showAppModal("Password Updated", "Password updated successfully.", { okText: "Done" });
         }
 
         function handleResetData() {

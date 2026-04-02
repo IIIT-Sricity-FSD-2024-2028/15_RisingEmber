@@ -151,12 +151,110 @@
         color: #6B7280;
         margin-top: 6px;
       }
+      .customer-modal-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(4px);
+        z-index: 100000;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+      .customer-modal-overlay.is-visible {
+        opacity: 1;
+      }
+      .customer-modal {
+        width: min(460px, 100%);
+        background: #FFFFFF;
+        border-radius: 20px;
+        box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22);
+        overflow: hidden;
+        transform: translateY(14px) scale(0.98);
+        transition: transform 0.2s ease;
+      }
+      .customer-modal-overlay.is-visible .customer-modal {
+        transform: translateY(0) scale(1);
+      }
+      .customer-modal__header {
+        padding: 24px 24px 10px;
+      }
+      .customer-modal__header h3 {
+        margin: 0;
+        font-size: 1.18rem;
+        font-weight: 800;
+        color: #111827;
+      }
+      .customer-modal__body {
+        padding: 0 24px 24px;
+      }
+      .customer-modal__body p {
+        margin: 0;
+        color: #4B5563;
+        line-height: 1.6;
+        font-size: 0.95rem;
+        white-space: pre-line;
+      }
+      .customer-modal__input-wrap {
+        margin-top: 16px;
+      }
+      .customer-modal__input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #D1D5DB;
+        border-radius: 12px;
+        font: inherit;
+        color: #111827;
+      }
+      .customer-modal__input:focus {
+        outline: none;
+        border-color: #2F54EB;
+        box-shadow: 0 0 0 3px rgba(47, 84, 235, 0.12);
+      }
+      .customer-modal__footer {
+        display: flex;
+        gap: 12px;
+        padding: 0 24px 24px;
+      }
+      .customer-modal__btn {
+        flex: 1;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 16px;
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      }
+      .customer-modal__btn:hover {
+        transform: translateY(-1px);
+      }
+      .customer-modal__btn--cancel {
+        background: #F3F4F6;
+        color: #4B5563;
+      }
+      .customer-modal__btn--primary {
+        background: #2F54EB;
+        color: #FFFFFF;
+        box-shadow: 0 12px 24px rgba(47, 84, 235, 0.2);
+      }
+      .customer-modal__btn--danger {
+        background: #DC2626;
+        color: #FFFFFF;
+        box-shadow: 0 12px 24px rgba(220, 38, 38, 0.18);
+      }
       @media (max-width: 640px) {
         .customer-toast-stack {
           left: 16px;
           right: 16px;
           bottom: 16px;
           max-width: none;
+        }
+        .customer-modal__footer {
+          flex-direction: column-reverse;
         }
       }
     `;
@@ -226,6 +324,11 @@
   function isValidPhone(value) {
     const digits = normalizePhone(value);
     return digits.length >= 10 && digits.length <= 15;
+  }
+
+  function isValidHumanName(value) {
+    const normalizedName = String(value || "").trim().replace(/\s+/g, " ");
+    return normalizedName.length >= 2 && /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(normalizedName);
   }
 
   function isStrongPassword(value) {
@@ -414,6 +517,133 @@
     if (!session || !session.email) return null;
 
     return getCustomerAccounts().find((account) => account.email === normalizeEmail(session.email)) || null;
+  }
+
+  function showAppModal(title, message, options) {
+    return new Promise((resolve) => {
+      injectRuntimeStyles();
+
+      if (!document.body) {
+        resolve(false);
+        return;
+      }
+
+      const config = options && typeof options === "object" ? options : {};
+      const isConfirm = config.confirm === true || config.prompt === true;
+      const tone = config.type === "danger" ? "danger" : "primary";
+
+      const overlay = document.createElement("div");
+      overlay.className = "customer-modal-overlay";
+
+      const dialog = document.createElement("div");
+      dialog.className = "customer-modal";
+
+      const header = document.createElement("div");
+      header.className = "customer-modal__header";
+
+      const heading = document.createElement("h3");
+      heading.textContent = String(title || "Notice");
+      header.appendChild(heading);
+
+      const body = document.createElement("div");
+      body.className = "customer-modal__body";
+
+      const copy = document.createElement("p");
+      copy.textContent = String(message || "");
+      body.appendChild(copy);
+
+      let input = null;
+      if (config.prompt) {
+        const inputWrap = document.createElement("div");
+        inputWrap.className = "customer-modal__input-wrap";
+
+        input = document.createElement("input");
+        input.className = "customer-modal__input";
+        input.type = config.inputType || "text";
+        input.placeholder = config.placeholder || "";
+        input.value = config.defaultValue || "";
+        input.autocomplete = "off";
+        inputWrap.appendChild(input);
+        body.appendChild(inputWrap);
+      }
+
+      const footer = document.createElement("div");
+      footer.className = "customer-modal__footer";
+
+      let cancelButton = null;
+      if (isConfirm) {
+        cancelButton = document.createElement("button");
+        cancelButton.type = "button";
+        cancelButton.className = "customer-modal__btn customer-modal__btn--cancel";
+        cancelButton.textContent = config.cancelText || "Cancel";
+        footer.appendChild(cancelButton);
+      }
+
+      const confirmButton = document.createElement("button");
+      confirmButton.type = "button";
+      confirmButton.className = `customer-modal__btn customer-modal__btn--${tone}`;
+      confirmButton.textContent = config.okText || (config.prompt ? "Continue" : isConfirm ? "Confirm" : "Got it");
+      footer.appendChild(confirmButton);
+
+      dialog.appendChild(header);
+      dialog.appendChild(body);
+      dialog.appendChild(footer);
+      overlay.appendChild(dialog);
+      document.body.appendChild(overlay);
+
+      function close(result) {
+        overlay.classList.remove("is-visible");
+        window.setTimeout(() => {
+          overlay.remove();
+          resolve(result);
+        }, 180);
+      }
+
+      confirmButton.addEventListener("click", () => {
+        if (config.prompt) {
+          close(input ? input.value : "");
+          return;
+        }
+        close(true);
+      });
+
+      if (cancelButton) {
+        cancelButton.addEventListener("click", () => close(false));
+      }
+
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay && isConfirm) {
+          close(false);
+        }
+      });
+
+      overlay.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          close(isConfirm ? false : true);
+        }
+      });
+
+      if (input) {
+        window.setTimeout(() => input.focus(), 40);
+        input.addEventListener("keydown", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            confirmButton.click();
+          }
+          if (event.key === "Escape") {
+            close(false);
+          }
+        });
+      } else {
+        window.setTimeout(() => confirmButton.focus(), 40);
+      }
+
+      requestAnimationFrame(() => overlay.classList.add("is-visible"));
+    });
+  }
+
+  function showAppPrompt(title, message, options) {
+    return showAppModal(title, message, { ...(options || {}), prompt: true });
   }
 
   async function requestConfirmation(title, message, options) {
@@ -782,7 +1012,7 @@
     const password = String(data.password || "");
     const location = String(data.location || "Location not set").trim();
 
-    if (name.length < 2) throw new Error("Please enter your full name.");
+    if (!isValidHumanName(name)) throw new Error("Please enter a valid full name using letters only.");
     if (!isValidEmail(email)) throw new Error("Please enter a valid email address.");
     if (!isValidPhone(phone)) throw new Error("Please enter a valid phone number.");
     if (!isStrongPassword(password)) {
@@ -830,7 +1060,7 @@
     const nextPhone = String(updates.phone || "").trim();
     const nextLocation = String(updates.location || "").trim();
 
-    if (nextName.length < 2) throw new Error("Please enter your full name.");
+    if (!isValidHumanName(nextName)) throw new Error("Please enter a valid full name using letters only.");
     if (!isValidEmail(nextEmail)) throw new Error("Please enter a valid email address.");
     if (!isValidPhone(nextPhone)) throw new Error("Please enter a valid phone number.");
     if (nextLocation.length < 2) throw new Error("Please enter your city or service location.");
@@ -1367,6 +1597,21 @@
     initAuthForms();
   }
 
+  if (typeof window.showAppModal !== "function") {
+    window.showAppModal = showAppModal;
+  }
+
+  if (typeof window.showAppPrompt !== "function") {
+    window.showAppPrompt = showAppPrompt;
+  }
+
+  if (!window.__serviceHubNativeAlert && typeof window.alert === "function") {
+    window.__serviceHubNativeAlert = window.alert.bind(window);
+    window.alert = function patchedCustomerAlert(message) {
+      showAppModal("Notice", String(message || ""), { okText: "Got it" });
+    };
+  }
+
   window.CustomerApp = {
     keys: KEYS,
     readJSON,
@@ -1387,12 +1632,15 @@
     updateCustomerPassword,
     logoutCustomer,
     showToast,
+    showAppModal,
+    showAppPrompt,
     setFormFeedback,
     addNotification,
     getNotifications,
     markAllNotificationsRead,
     refreshShell,
     isValidEmail,
+    isValidHumanName,
     isValidPhone,
     isStrongPassword,
     normalizePhone,

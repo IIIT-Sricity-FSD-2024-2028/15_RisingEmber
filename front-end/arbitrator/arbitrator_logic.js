@@ -16,8 +16,8 @@ function next() {
     const phone = document.getElementById('phone').value.trim();
     const country = document.getElementById('country').value.trim();
 
-    if (!name || name.length < 3) {
-        alert("Please enter a valid name (at least 3 characters).");
+    if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
+        alert("Please enter a valid full name using letters only.");
         return;
     }
 
