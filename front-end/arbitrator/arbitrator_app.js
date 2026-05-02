@@ -291,3 +291,180 @@ function createArbitratorDisplayDate(dateInput = new Date()) {
         year: "numeric"
     });
 }
+
+function getArbitratorRequestHeaders(extraHeaders = {}) {
+    const actorId = typeof getArbitratorBackendActorId === "function"
+        ? getArbitratorBackendActorId()
+        : "";
+
+    if (!actorId) {
+        throw new Error("The arbitrator session is missing. Please sign in again.");
+    }
+
+    return {
+        "x-role": "arbitrator",
+        "x-actor-id": actorId,
+        ...extraHeaders
+    };
+}
+
+function mapArbitratorHearingTypeToBackend(value = "") {
+    const normalizedValue = String(value || "").trim().toLowerCase();
+
+    if (normalizedValue.includes("phone")) return "phone";
+    if (normalizedValue.includes("physical") || normalizedValue.includes("in person")) return "in_person";
+    return "video";
+}
+
+function mapArbitratorDocumentTypeToBackend(value = "") {
+    const normalizedValue = String(value || "").trim().toLowerCase();
+
+    if (normalizedValue.includes("award")) return "award_attachment";
+    if (normalizedValue.includes("identity")) return "identity";
+    if (normalizedValue.includes("invoice")) return "invoice";
+    if (normalizedValue.includes("evidence") || normalizedValue.includes("witness")) return "evidence";
+    if (normalizedValue.includes("claim") || normalizedValue.includes("contract")) return "contract";
+    return "other";
+}
+
+function createArbitratorScheduledAt(dateValue, timeValue) {
+    if (!dateValue || !timeValue) return "";
+
+    const scheduledAt = new Date(`${dateValue}T${timeValue}`);
+    return Number.isNaN(scheduledAt.getTime()) ? "" : scheduledAt.toISOString();
+}
+
+function readArbitratorFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        if (!file) {
+            reject(new Error("No file was provided."));
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function onLoad(event) {
+            resolve(event && event.target ? event.target.result : "");
+        };
+        reader.onerror = function onError() {
+            reject(new Error("The selected file could not be read."));
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+async function uploadArbitratorCaseDocument({
+    caseId,
+    file,
+    title,
+    description = "",
+    typeLabel = "Evidence",
+    typeOverride = ""
+}) {
+    if (!caseId) {
+        throw new Error("A case must be selected before uploading a document.");
+    }
+
+    if (!file) {
+        throw new Error("Please choose a file to upload.");
+    }
+
+    const headers = getArbitratorRequestHeaders();
+    const content = await readArbitratorFileAsDataUrl(file);
+
+    return requestArbitratorApi("/documents", {
+        method: "POST",
+        headers,
+        body: {
+            caseId,
+            title: title || file.name,
+            description,
+            type: typeOverride || mapArbitratorDocumentTypeToBackend(typeLabel),
+            fileName: file.name,
+            content
+        }
+    });
+}
+
+async function upsertArbitratorAward({
+    caseId,
+    title,
+    summary,
+    status = "issued"
+}) {
+    const headers = getArbitratorRequestHeaders();
+    const existingAwards = await requestArbitratorApi(`/awards?caseId=${encodeURIComponent(caseId)}`, { headers });
+    const existingAward = Array.isArray(existingAwards) && existingAwards.length ? existingAwards[0] : null;
+    const payload = { title, summary, status };
+
+    if (existingAward && existingAward.id) {
+        return requestArbitratorApi(`/awards/${existingAward.id}`, {
+            method: "PATCH",
+            headers,
+            body: payload
+        });
+    }
+
+    return requestArbitratorApi("/awards", {
+        method: "POST",
+        headers,
+        body: {
+            caseId,
+            ...payload
+        }
+    });
+}
+
+async function issueArbitratorAwardWithAttachment({
+    caseId,
+    file,
+    title,
+    summary
+}) {
+    const headers = getArbitratorRequestHeaders();
+    const award = await upsertArbitratorAward({
+        caseId,
+        title,
+        summary,
+        status: "issued"
+    });
+
+    if (file) {
+        await uploadArbitratorCaseDocument({
+            caseId,
+            file,
+            title: `${title} Attachment`,
+            description: summary,
+            typeLabel: "Award Document",
+            typeOverride: "award_attachment"
+        });
+    }
+
+    await requestArbitratorApi(`/cases/${encodeURIComponent(caseId)}`, {
+        method: "PATCH",
+        headers,
+        body: {
+            status: "closed",
+            resolutionSummary: summary
+        }
+    });
+
+    return award;
+}
+
+async function appendArbitratorCaseMessage(caseId, message) {
+    if (!caseId) {
+        throw new Error("A case must be selected before sending a message.");
+    }
+
+    if (!String(message || "").trim()) {
+        throw new Error("Please enter a message before sending.");
+    }
+
+    return requestArbitratorApi(`/cases/${encodeURIComponent(caseId)}`, {
+        method: "PATCH",
+        headers: getArbitratorRequestHeaders(),
+        body: {
+            message: String(message).trim()
+        }
+    });
+}

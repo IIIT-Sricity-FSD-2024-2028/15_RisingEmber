@@ -114,6 +114,24 @@
     <script>
         let activeThreadId = null;
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getThread(id) {
+            return (AdminData.conversations || []).find(c => c.id === id);
+        }
+
+        function getActionableMessages(chat) {
+            return (chat && Array.isArray(chat.messages) ? chat.messages : [])
+                .filter((message) => message.id && (message.caseId || chat.caseId));
+        }
+
         function renderThreads() {
             const query = document.getElementById('tSearch').value.toLowerCase();
             const container = document.getElementById('thread-container');
@@ -122,22 +140,27 @@
                 c.participants.toLowerCase().includes(query) || c.id.toLowerCase().includes(query)
             );
 
+            if (!filtered.length) {
+                container.innerHTML = `<div style="padding:20px; color:#94a3b8; font-weight:600;">No backend case conversations found.</div>`;
+                return;
+            }
+
             container.innerHTML = filtered.map(c => `
-                <div class="thread-item ${activeThreadId === c.id ? 'active' : ''}" onclick="selectThread('${c.id}')">
+                <div class="thread-item ${activeThreadId === c.id ? 'active' : ''}" onclick="selectThread('${escapeHtml(c.id)}')">
                     <div class="thread-top">
-                        <span class="participants">${c.participants}</span>
+                        <span class="participants">${escapeHtml(c.participants)}</span>
                         <div class="badge-row">
                             ${c.isFlagged ? '<span class="flag-tag">FLAGGED</span>' : ''}
                             ${c.isReviewed ? '<span class="reviewed-tag"><i class="fa-solid fa-check"></i></span>' : ''}
-                            <span class="dispute-tag">${c.id}</span>
+                            <span class="dispute-tag">${escapeHtml(c.id)}</span>
                         </div>
                     </div>
                     <div style="font-size:0.8rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        ${c.lastMessage}
+                        ${escapeHtml(c.lastMessage)}
                     </div>
                     <div style="font-size:0.7rem; color:#94a3b8; display:flex; justify-content:space-between; margin-top:5px;">
-                        <span>${c.type}</span>
-                        <span>${c.time}</span>
+                        <span>${escapeHtml(c.type)}</span>
+                        <span>${escapeHtml(c.time)}</span>
                     </div>
                 </div>
             `).join('');
@@ -146,7 +169,8 @@
         function selectThread(id) {
             activeThreadId = id;
             renderThreads();
-            const chat = AdminData.conversations.find(c => c.id === id);
+            const chat = getThread(id);
+            if (!chat) return;
             
             // Toggle Logic for Buttons
             const flagBtnText = chat.isFlagged ? 'Unflag Dispute' : 'Flag Dispute';
@@ -155,30 +179,41 @@
 
             document.getElementById('chat-header-area').innerHTML = `
                 <div>
-                    <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">${chat.participants}</h3>
-                    <span style="font-size:0.8rem; color:#64748b;">Monitoring Ref: ${chat.id}</span>
+                    <h3 style="margin:0; font-size:1.1rem; color:#1e293b;">${escapeHtml(chat.participants)}</h3>
+                    <span style="font-size:0.8rem; color:#64748b;">Monitoring Ref: ${escapeHtml(chat.id)}</span>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-outline" style="padding:8px 16px; border-color:${chat.isFlagged ? '#ef4444':'#e2e8f0'}; color:${chat.isFlagged ? '#ef4444':'#64748b'}" onclick="toggleThreadFlag('${id}')">
+                    <button class="btn-outline" style="padding:8px 16px; border-color:${chat.isFlagged ? '#ef4444':'#e2e8f0'}; color:${chat.isFlagged ? '#ef4444':'#64748b'}" onclick="toggleThreadFlag('${escapeHtml(id)}')">
                         <i class="fa-solid fa-triangle-exclamation"></i> ${flagBtnText}
                     </button>
-                    <button class="btn-primary-sm" style="background:${reviewBtnColor}; border:none;" onclick="markReviewed('${id}')">
+                    <button class="btn-primary-sm" style="background:${reviewBtnColor}; border:none;" onclick="markReviewed('${escapeHtml(id)}')">
                         <i class="fa-solid fa-check-double"></i> ${reviewBtnText}
                     </button>
                 </div>
             `;
 
             const body = document.getElementById('chat-body');
+            if (!chat.messages.length) {
+                body.innerHTML = `
+                    <div style="margin:auto; color:#94a3b8; text-align:center;">
+                        <i class="fa-solid fa-inbox" style="font-size:3rem; margin-bottom:12px;"></i>
+                        <p>No messages have been filed for this case yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
             body.innerHTML = chat.messages.map((m, idx) => `
                 <div class="msg-bubble ${idx % 2 === 0 ? 'msg-left' : 'msg-right'} ${m.flagged ? 'flagged-msg' : ''}">
-                    <div style="font-weight:800; font-size:0.7rem; margin-bottom:6px; opacity:0.8;">${m.sender.toUpperCase()}</div>
-                    <div>${m.text}</div>
+                    <div style="font-weight:800; font-size:0.7rem; margin-bottom:6px; opacity:0.8;">${escapeHtml(m.sender).toUpperCase()}</div>
+                    <div>${escapeHtml(m.text)}</div>
                     <div class="msg-meta">
-                        <span>${m.time}</span>
-                        <span class="flag-btn" onclick="toggleMsgFlag('${id}', ${idx})">
+                        <span>${escapeHtml(m.time)}</span>
+                        ${m.reviewed ? '<span><i class="fa-solid fa-check"></i> Reviewed</span>' : ''}
+                        <span class="flag-btn" onclick="toggleMsgFlag('${escapeHtml(id)}', ${idx})">
                             <i class="fa-solid fa-flag"></i> ${m.flagged ? 'Unflag' : 'Flag'}
                         </span>
-                        <span class="flag-btn" style="color:#ef4444" onclick="deleteMsg('${id}', ${idx})">
+                        <span class="flag-btn" style="color:#ef4444" onclick="deleteMsg('${escapeHtml(id)}', ${idx})">
                             <i class="fa-solid fa-trash"></i> Delete
                         </span>
                     </div>
@@ -187,39 +222,108 @@
             body.scrollTop = body.scrollHeight;
         }
 
-        function toggleThreadFlag(id) {
-            const chat = AdminData.conversations.find(c => c.id === id);
-            chat.isFlagged = !chat.isFlagged;
-            logAdminActivity(`${chat.isFlagged ? 'Flagged' : 'Unflagged'} Dispute ${id}`);
-            saveAdminData();
+        async function syncMessagesAndSelect(id) {
+            await window.syncAdminBackendData({ silent: true });
+            renderThreads();
             selectThread(id);
         }
 
-        function markReviewed(id) {
-            const chat = AdminData.conversations.find(c => c.id === id);
-            chat.isReviewed = !chat.isReviewed;
-            if(chat.isReviewed) logAdminActivity(`Dispute ${id} marked as Reviewed`);
-            saveAdminData();
-            selectThread(id);
+        async function updateCaseMessage(message, patch) {
+            const caseId = message.caseId || activeThreadId;
+            return requestAdminApi(`/cases/${encodeURIComponent(caseId)}/messages/${encodeURIComponent(message.id)}`, {
+                method: 'PATCH',
+                headers: getAdminRequestHeaders(),
+                body: patch
+            });
         }
 
-        function toggleMsgFlag(chatId, idx) {
-            const chat = AdminData.conversations.find(c => c.id === chatId);
-            chat.messages[idx].flagged = !chat.messages[idx].flagged;
-            saveAdminData();
-            selectThread(chatId);
-        }
+        async function toggleThreadFlag(id) {
+            const chat = getThread(id);
+            const messages = getActionableMessages(chat);
+            if (!messages.length) {
+                window.showAppToast("No backend messages are available to flag for this case.", "info");
+                return;
+            }
 
-        function deleteMsg(chatId, idx) {
-            if(confirm("Permanently delete this message from history?")) {
-                const chat = AdminData.conversations.find(c => c.id === chatId);
-                chat.messages.splice(idx, 1);
-                saveAdminData();
-                selectThread(chatId);
+            const nextFlag = !chat.isFlagged;
+            try {
+                await Promise.all(messages.map((message) => updateCaseMessage(message, { flagged: nextFlag })));
+                logAdminActivity(`${nextFlag ? 'Flagged' : 'Unflagged'} case conversation ${id}`);
+                await syncMessagesAndSelect(id);
+                window.showAppToast(nextFlag ? "Conversation flagged." : "Conversation unflagged.", "success");
+            } catch (error) {
+                window.showAppToast(error.message || "Could not update message flags.", "error");
             }
         }
 
-        document.addEventListener('DOMContentLoaded', renderThreads);
+        async function markReviewed(id) {
+            const chat = getThread(id);
+            const messages = getActionableMessages(chat);
+            if (!messages.length) {
+                window.showAppToast("No backend messages are available to review for this case.", "info");
+                return;
+            }
+
+            const nextReviewed = !chat.isReviewed;
+            try {
+                await Promise.all(messages.map((message) => updateCaseMessage(message, { reviewed: nextReviewed })));
+                if (nextReviewed) logAdminActivity(`Case conversation ${id} marked as reviewed`);
+                await syncMessagesAndSelect(id);
+                window.showAppToast(nextReviewed ? "Conversation marked reviewed." : "Review mark removed.", "success");
+            } catch (error) {
+                window.showAppToast(error.message || "Could not update review status.", "error");
+            }
+        }
+
+        async function toggleMsgFlag(chatId, idx) {
+            const chat = getThread(chatId);
+            const message = chat && chat.messages ? chat.messages[idx] : null;
+            if (!message || !message.id) {
+                window.showAppToast("This message is not linked to the backend.", "warning");
+                return;
+            }
+
+            try {
+                await updateCaseMessage(message, { flagged: !message.flagged });
+                await syncMessagesAndSelect(chatId);
+            } catch (error) {
+                window.showAppToast(error.message || "Could not update message flag.", "error");
+            }
+        }
+
+        async function deleteMsg(chatId, idx) {
+            const chat = getThread(chatId);
+            const message = chat && chat.messages ? chat.messages[idx] : null;
+            if (!message || !message.id) {
+                window.showAppToast("This message is not linked to the backend.", "warning");
+                return;
+            }
+
+            const confirmed = await showAppModal("Delete Message", "Permanently remove this message from the shared case record?", {
+                confirm: true,
+                type: "danger",
+                okText: "Delete"
+            });
+            if (!confirmed) return;
+
+            try {
+                const caseId = message.caseId || chatId;
+                await requestAdminApi(`/cases/${encodeURIComponent(caseId)}/messages/${encodeURIComponent(message.id)}`, {
+                    method: 'DELETE',
+                    headers: getAdminRequestHeaders()
+                });
+                logAdminActivity(`Deleted message ${message.id} from case ${caseId}`);
+                await syncMessagesAndSelect(chatId);
+                window.showAppToast("Message deleted from the backend.", "success");
+            } catch (error) {
+                window.showAppToast(error.message || "Could not delete the message.", "error");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            renderThreads();
+        });
     </script>
 </body>
 </html>

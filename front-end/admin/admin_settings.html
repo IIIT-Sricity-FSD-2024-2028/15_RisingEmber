@@ -128,7 +128,8 @@
     <script src="admin_sidebar.js"></script>
     <script src="admin_navbar.js"></script>
     <script>
-        function init() {
+        async function init() {
+            if (window.AdminDataReady) await window.AdminDataReady;
             const s = AdminData.settings;
             
             // Populate General
@@ -159,8 +160,11 @@
             document.getElementById('s-timeout').value = s.security.sessionTimeout;
         }
 
-        function saveAllSettings() {
-            const s = AdminData.settings;
+        function isValidSettingsEmail(value) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
+        }
+
+        async function saveAllSettings() {
             const generalEmail = document.getElementById('g-email').value.trim();
             const generalName = document.getElementById('g-name').value.trim();
             const generalPhone = document.getElementById('g-phone').value.trim();
@@ -171,45 +175,62 @@
             const sessionTimeout = Number(document.getElementById('s-timeout').value);
 
             if (!generalName || !generalEmail || !generalPhone) {
-                alert("Platform name, email, and phone are required.");
+                window.showAppToast("Platform name, email, and phone are required.", "warning");
+                return;
+            }
+
+            if (!isValidSettingsEmail(generalEmail)) {
+                window.showAppToast("Please enter a valid platform email address.", "warning");
                 return;
             }
 
             if ([resolutionDays, durationHours, maxFileSize, minPasswordLength, sessionTimeout].some(val => Number.isNaN(val) || val <= 0)) {
-                alert("Numeric settings must all be greater than zero.");
+                window.showAppToast("Numeric settings must all be greater than zero.", "warning");
                 return;
             }
 
-            // General
-            s.general.name = generalName;
-            s.general.email = generalEmail;
-            s.general.phone = generalPhone;
-            s.general.timezone = document.getElementById('g-tz').value;
+            const payload = {
+                general: {
+                    name: generalName,
+                    email: generalEmail,
+                    phone: generalPhone,
+                    timezone: document.getElementById('g-tz').value
+                },
+                arbitration: {
+                    maxResolutionTime: resolutionDays,
+                    defaultHearingDuration: durationHours,
+                    maxFileSize,
+                    allowedFileTypes: document.getElementById('a-types').value
+                },
+                userManagement: {
+                    allowNewUserRegistrations: document.getElementById('u-reg').checked,
+                    requireEmailVerification: document.getElementById('u-verify').checked,
+                    allowArbitratorApplications: document.getElementById('u-arb').checked
+                },
+                notifications: {
+                    emailNewCases: document.getElementById('n-case').checked,
+                    hearingReminders: document.getElementById('n-hear').checked,
+                    awardIssued: document.getElementById('n-award').checked
+                },
+                security: {
+                    minPasswordLength,
+                    twoFactorAuth: document.getElementById('s-2fa').value,
+                    sessionTimeout
+                }
+            };
 
-            // Arbitration
-            s.arbitration.maxResolutionTime = resolutionDays;
-            s.arbitration.defaultHearingDuration = durationHours;
-            s.arbitration.maxFileSize = maxFileSize;
-            s.arbitration.allowedFileTypes = document.getElementById('a-types').value;
-
-            // User Management
-            s.userManagement.allowNewUserRegistrations = document.getElementById('u-reg').checked;
-            s.userManagement.requireEmailVerification = document.getElementById('u-verify').checked;
-            s.userManagement.allowArbitratorApplications = document.getElementById('u-arb').checked;
-
-            // Notifications
-            s.notifications.emailNewCases = document.getElementById('n-case').checked;
-            s.notifications.hearingReminders = document.getElementById('n-hear').checked;
-            s.notifications.awardIssued = document.getElementById('n-award').checked;
-
-            // Security
-            s.security.minPasswordLength = minPasswordLength;
-            s.security.twoFactorAuth = document.getElementById('s-2fa').value;
-            s.security.sessionTimeout = sessionTimeout;
-
-            logAdminActivity("Updated platform configuration settings");
-            saveAdminData();
-            alert("Settings have been successfully updated and synchronized.");
+            try {
+                await requestAdminApi('/settings', {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: payload
+                });
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity("Updated platform configuration settings");
+                window.showAppToast("Settings saved to the backend successfully.", "success");
+            } catch (error) {
+                window.showAppToast(error.message || "Settings update failed.", "error");
+            }
         }
 
         document.addEventListener('DOMContentLoaded', init);

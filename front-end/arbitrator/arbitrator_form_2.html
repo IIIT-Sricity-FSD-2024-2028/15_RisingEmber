@@ -102,7 +102,7 @@
 
         function showError(inputId, message) {
             const input = document.getElementById(inputId);
-            alert(message); 
+            window.showAppToast(message, 'warning');
             if (input) {
                 input.style.borderColor = '#EF4444';
                 setTimeout(() => input.style.borderColor = '', 3000);
@@ -139,7 +139,7 @@
                 window.location.href = 'arbitrator_form_3.html';
             } catch(e) {
                 console.error("Local storage error:", e);
-                alert("Failed to save progress. Please check storage permissions.");
+                window.showAppToast("Failed to save progress. Please check storage permissions.", "error");
             }
         }
 

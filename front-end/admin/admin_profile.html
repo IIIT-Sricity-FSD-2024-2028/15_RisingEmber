@@ -147,11 +147,10 @@
                 reader.onload = function(e) {
                     // Update UI immediately
                     document.getElementById('p-avatar').src = e.target.result;
-                    // Update Database
+                    // Update staged profile data so Save Changes can persist it to the backend.
                     AdminData.profile.avatar = e.target.result;
                     logAdminActivity("Updated profile photograph");
                     saveAdminData();
-                    // Optional: alert user or refresh navbar
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -186,31 +185,48 @@
             const phone = document.getElementById('in-phone').value.trim();
 
             if (!name || !email || !phone) {
-                alert("Name, email, and phone are required.");
+                window.showAppToast("Name, email, and phone are required.", "warning");
                 return;
             }
             if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
-                alert("Please enter a valid full name using letters only.");
+                window.showAppToast("Please enter a valid full name using letters only.", "warning");
                 return;
             }
 
-            // Check if password fields were used to log activity
-            const newPass = document.querySelectorAll('input[type="password"]')[1].value;
-            if(newPass) logAdminActivity("Changed account password");
+            try {
+                const roleTitle = document.getElementById('in-role').value;
+                const department = document.getElementById('in-dept').value;
+                const newPass = document.querySelectorAll('input[type="password"]')[1].value;
 
-            AdminData.profile.name = name;
-            AdminData.profile.email = email;
-            AdminData.profile.phone = phone;
-            AdminData.profile.department = document.getElementById('in-dept').value;
-            AdminData.profile.role = document.getElementById('in-role').value;
+                await requestAdminApi('/users/me', {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        name,
+                        email,
+                        phone,
+                        avatarUrl: AdminData.profile.avatar,
+                        title: roleTitle,
+                        ...(newPass ? { password: newPass } : {})
+                    }
+                });
 
-            logAdminActivity("Updated personal information");
-            saveAdminData();
-            await showAppModal("Profile Saved", "Profile settings saved.", { okText: "Refresh Profile" });
-            location.reload();
+                AdminData.profile.department = department;
+                AdminData.profile.role = roleTitle;
+                logAdminActivity(newPass ? "Changed account password" : "Updated personal information");
+                saveAdminData();
+                await window.syncAdminBackendData({ silent: true });
+                await showAppModal("Profile Saved", "Profile settings saved.", { okText: "Refresh Profile" });
+                location.reload();
+            } catch (error) {
+                window.showAppToast(error.message || 'Profile update failed.', 'error');
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            init();
+        });
     </script>
 </body>
 </html>

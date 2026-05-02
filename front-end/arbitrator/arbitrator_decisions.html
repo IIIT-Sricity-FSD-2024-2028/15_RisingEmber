@@ -104,42 +104,33 @@
             fileInput.click();
         }
 
-        function handleFileSelected(input) {
+        async function handleFileSelected(input) {
             const caseId = input.getAttribute('data-current-case');
 
             if (input.files && input.files[0]) {
-                const fileName = input.files[0].name;
+                const selectedFile = input.files[0];
+                const caseDetails = ArbitratorData.allCases.find((item) => item.id === caseId);
 
-                const caseIndex = ArbitratorData.decisionsList.findIndex(item => item.id === caseId);
-
-                if (caseIndex !== -1) {
-                    ArbitratorData.decisionsList[caseIndex].status = 'Award Issued';
-                    ArbitratorData.decisionsList[caseIndex].statusClass = 'arb-badge-green';
-
-                    const caseDetails = ArbitratorData.allCases.find((item) => item.id === caseId);
-                    if (caseDetails) {
-                        caseDetails.status = 'Closed';
-                        caseDetails.statusColor = '#6B7280';
-                        caseDetails.statusClass = 'arb-badge-gray';
-                        caseDetails.next = '—';
+                try {
+                    if (!caseDetails) {
+                        throw new Error("The selected case could not be found.");
                     }
 
-                    ArbitratorData.caseDocuments.unshift({
-                        name: fileName,
-                        id: caseId,
-                        type: 'Award Document',
-                        uploadedBy: ArbitratorData.profile.name,
-                        date: createArbitratorDisplayDate(new Date()),
-                        size: createArbitratorFileSizeLabel(input.files[0].size),
-                        typeClass: 'arb-badge-green',
-                        fileLink: '#'
+                    const summary = `Final award uploaded for ${caseId} by ${ArbitratorData.profile.name}. Attachment: ${selectedFile.name}.`;
+                    await issueArbitratorAwardWithAttachment({
+                        caseId,
+                        file: selectedFile,
+                        title: `Final Award - ${caseId}`,
+                        summary
                     });
 
-                    saveData();
+                    await window.syncArbitratorBackendData({ silent: true });
                     renderTable(getFilteredDecisions());
-
-                    alert(`Award uploaded!\nFile: ${fileName}\nCase ${caseId} marked as 'Award Issued'.`);
+                    window.showAppToast(`Award recorded for ${caseId}.`, "success");
+                } catch (error) {
+                    window.showAppToast(error.message || "The award could not be uploaded.", "error");
                 }
+
                 input.value = '';
             }
         }
@@ -195,7 +186,8 @@
             renderTable(getFilteredDecisions());
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined' || !ArbitratorData.decisionsList) return;
             focusedCaseId = getArbitratorCaseIdFromUrl();
             renderTable(getFilteredDecisions());

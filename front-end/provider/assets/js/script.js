@@ -2,7 +2,7 @@
    ServiceHub – Provider Dashboard JS
    ============================================= */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
 
   /* ── 1. Sidebar Active State ── */
   const currentPage = window.location.pathname.split('/').pop() || 'provider_dashboard.html';
@@ -430,6 +430,220 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
+  function getProviderApiHeaders(userOverride) {
+    const provider = userOverride || activeUser || (typeof getActiveUser === 'function' ? getActiveUser() : null);
+    if (!provider || !provider.id) return {};
+
+    return {
+      'x-role': 'provider',
+      'x-actor-id': provider.id
+    };
+  }
+
+  function getProviderPrimaryLocation() {
+    return normalizeTextValue(
+      (activeUser && (activeUser.location || activeUser.city))
+      || ''
+    ) || 'Service area to be confirmed';
+  }
+
+  function stripProviderStageNote(note) {
+    const value = normalizeTextValue(note);
+    return value.replace(/^\[stage:[a-z_]+\]\s*/i, '');
+  }
+
+  function parseProviderStageMetadata(note, fallbackStatus) {
+    const raw = normalizeTextValue(note);
+    const match = raw.match(/^\[stage:([a-z_]+)\]\s*(.*)$/i);
+    const stage = match && match[1]
+      ? String(match[1]).toLowerCase()
+      : mapBookingStageToProvider(fallbackStatus);
+
+    return {
+      stage,
+      note: match ? normalizeTextValue(match[2]) : raw
+    };
+  }
+
+  function encodeProviderStageNote(stage, note) {
+    const safeStage = normalizeTextValue(stage) || 'accepted';
+    const safeNote = normalizeTextValue(note);
+    return `[stage:${safeStage}]${safeNote ? ` ${safeNote}` : ''}`;
+  }
+
+  function buildProviderServiceTags(service) {
+    const serviceName = normalizeTextValue(service && service.name).toLowerCase();
+    const category = normalizeTextValue(service && service.category);
+    const description = normalizeTextValue(service && service.description)
+      .toLowerCase()
+      .split(/[^a-z0-9]+/i)
+      .filter((token) => token.length >= 4)
+      .slice(0, 4);
+
+    return Array.from(new Set([category, ...serviceName.split(/\s+/), ...description]))
+      .map((token) => normalizeTextValue(token))
+      .filter((token) => token.length >= 3)
+      .slice(0, 8);
+  }
+
+  function buildProviderServicePayload(service) {
+    const safeService = normalizeServiceRecord(service || {});
+    return {
+      title: safeService.name,
+      description: safeService.description,
+      category: safeService.category,
+      price: Number(safeService.price) || 0,
+      durationMinutes: parseProviderDurationToMinutes(safeService.duration),
+      location: normalizeTextValue(safeService.location) || getProviderPrimaryLocation(),
+      image: normalizeTextValue(safeService.image),
+      tags: buildProviderServiceTags(safeService),
+      status: safeService.status === 'paused' ? 'paused' : 'active'
+    };
+  }
+
+  async function confirmProviderAction(title, message, options = {}) {
+    if (typeof window.showAppModal === 'function') {
+      return window.showAppModal(title, message, {
+        confirm: true,
+        okText: options.okText || 'Confirm',
+        cancelText: options.cancelText || 'Cancel',
+        type: options.type || 'danger'
+      });
+    }
+
+    showToast(message, options.type === 'danger' ? 'warning' : 'info');
+    return true;
+  }
+
+  function mapBookingStatusToProvider(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'requested') return 'pending';
+    if (value === 'confirmed') return 'active';
+    if (value === 'in_progress') return 'progress';
+    if (value === 'completed') return 'completed';
+    if (value === 'cancelled') return 'cancelled';
+    if (value === 'disputed') return 'progress';
+    return 'pending';
+  }
+
+  function mapBookingStageToProvider(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'requested') return 'pending';
+    if (value === 'confirmed') return 'accepted';
+    if (value === 'in_progress') return 'in_progress';
+    if (value === 'completed') return 'completed';
+    if (value === 'disputed') return 'in_progress';
+    return 'pending';
+  }
+
+  function mapCaseStatusToProvider(status) {
+    const value = String(status || '').trim().toLowerCase();
+    if (value === 'resolved' || value === 'closed') return 'resolved';
+    if (['under_review', 'assigned', 'hearing_scheduled', 'evidence_review'].includes(value)) return 'under_review';
+    return 'pending';
+  }
+
+  function formatProviderDuration(durationMinutes) {
+    const minutes = Number(durationMinutes) || 0;
+    if (!minutes) return 'Custom Quote';
+    if (minutes % 60 === 0) return `${minutes / 60} hour${minutes === 60 ? '' : 's'}`;
+    return `${minutes} mins`;
+  }
+
+  function parseProviderDurationToMinutes(durationValue) {
+    const value = String(durationValue || '').trim().toLowerCase();
+    const numericValue = parseFloat(value);
+    if (!Number.isFinite(numericValue) || numericValue <= 0) return 60;
+    if (value.includes('hour')) return Math.round(numericValue * 60);
+    if (value.includes('min')) return Math.round(numericValue);
+    return Math.round(numericValue * 60);
+  }
+
+  function formatProviderDate(isoValue) {
+    const date = new Date(isoValue);
+    if (Number.isNaN(date.getTime())) return 'Date to be confirmed';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function formatProviderTime(isoValue) {
+    const date = new Date(isoValue);
+    if (Number.isNaN(date.getTime())) return 'Time to be confirmed';
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function mapBackendServiceToProvider(service) {
+    return normalizeServiceRecord({
+      id: service.id,
+      providerId: service.providerId,
+      providerEmail: service.providerEmail || (activeUser && activeUser.email) || '',
+      name: service.title,
+      category: service.category,
+      price: Number(service.price) || 0,
+      duration: formatProviderDuration(service.durationMinutes),
+      description: service.description,
+      image: service.image || '',
+      status: service.status === 'paused' ? 'paused' : 'active'
+    });
+  }
+
+  function mapBackendBookingToProvider(booking) {
+    const bookingEvents = Array.isArray(booking.events) ? booking.events : [];
+    const parsedEvents = bookingEvents.map((event) => {
+      const parsedEvent = parseProviderStageMetadata(event.note, event.status);
+      return createStatusUpdate(parsedEvent.stage, parsedEvent.note, []);
+    });
+    const latestEvent = bookingEvents.length ? bookingEvents[bookingEvents.length - 1] : null;
+    const latestEventMeta = latestEvent
+      ? parseProviderStageMetadata(latestEvent.note, latestEvent.status)
+      : parseProviderStageMetadata(booking.lastStatusNote, booking.status);
+
+    return normalizeJobRecord({
+      id: booking.id,
+      service: booking.service && booking.service.title ? booking.service.title : 'Service Request',
+      customerName: booking.customer && booking.customer.name ? booking.customer.name : 'Customer',
+      customerAvatar: booking.customer && booking.customer.name
+        ? `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.customer.name)}&background=DBEAFE&color=1E3A8A&size=128`
+        : '',
+      date: formatProviderDate(booking.scheduledAt),
+      time: formatProviderTime(booking.scheduledAt),
+      location: booking.address || (booking.service && booking.service.location) || 'Location to be confirmed',
+      address: booking.address || (booking.service && booking.service.location) || 'Location to be confirmed',
+      customerPhone: booking.customer && booking.customer.phone ? booking.customer.phone : '+1 (555) 000-0000',
+      description: booking.notes || (booking.service && booking.service.description) || '',
+      status: mapBookingStatusToProvider(booking.status),
+      progressStage: latestEventMeta.stage || mapBookingStageToProvider(booking.status),
+      statusUpdates: parsedEvents,
+      notes: stripProviderStageNote(booking.lastStatusNote || latestEventMeta.note || ''),
+      providerEmail: booking.provider && booking.provider.email ? booking.provider.email : activeEmail || '',
+      price: Number(booking.totalAmount || (booking.service && booking.service.price) || 0)
+    });
+  }
+
+  function mapBackendCaseToProviderDispute(caseRecord) {
+    return normalizeDisputeRecord({
+      id: caseRecord.id,
+      bookingId: caseRecord.bookingId,
+      customerName: caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : 'Customer',
+      issue: caseRecord.title,
+      category: caseRecord.priority || 'general',
+      description: caseRecord.description,
+      status: mapCaseStatusToProvider(caseRecord.status),
+      providerEmail: caseRecord.provider && caseRecord.provider.email ? caseRecord.provider.email : activeEmail || '',
+      evidence: [],
+      createdAt: caseRecord.createdAt
+    });
+  }
+
+  function mapProviderJobStatusToBackend(job) {
+    if (job.progressStage === 'completed' || job.status === 'completed') return 'completed';
+    if (job.progressStage === 'in_progress' || job.status === 'progress') return 'in_progress';
+    if (['accepted', 'en_route', 'arrived'].includes(job.progressStage) || job.status === 'active') return 'confirmed';
+    if (job.status === 'completed') return 'completed';
+    if (job.status === 'progress') return 'in_progress';
+    if (job.status === 'pending') return 'requested';
+    return 'confirmed';
+  }
+
   function getProviderCollections(activeEmail) {
     const allServices = typeof readStorageJSON === 'function'
       ? readStorageJSON('sh_services', (typeof getDB === 'function' ? getDB('sh_services') : []))
@@ -497,6 +711,154 @@ document.addEventListener('DOMContentLoaded', () => {
     return activeUser;
   }
 
+  async function syncProviderBackendCollections(options = {}) {
+    if (!window.ServiceHubApi || typeof window.ServiceHubApi.request !== 'function') return null;
+    if (!activeUser || !activeUser.id) return null;
+
+    try {
+      const headers = getProviderApiHeaders(activeUser);
+      const [servicesFromApi, bookingsFromApi, casesFromApi] = await Promise.all([
+        window.ServiceHubApi.request(`/services?providerId=${encodeURIComponent(activeUser.id)}`, { headers }),
+        window.ServiceHubApi.request('/bookings', { headers }),
+        window.ServiceHubApi.request('/cases', { headers })
+      ]);
+
+      saveServicesCollection(Array.isArray(servicesFromApi) ? servicesFromApi.map(mapBackendServiceToProvider) : []);
+      saveJobsCollection(Array.isArray(bookingsFromApi) ? bookingsFromApi.map(mapBackendBookingToProvider) : []);
+      saveDisputesCollection(Array.isArray(casesFromApi) ? casesFromApi.map(mapBackendCaseToProviderDispute) : []);
+      return { servicesFromApi, bookingsFromApi, casesFromApi };
+    } catch (error) {
+      if (!options.silent) {
+        console.warn('Provider backend sync failed:', error);
+      }
+      return null;
+    }
+  }
+
+  async function createProviderServiceRecord(service) {
+    if (!window.ServiceHubApi || typeof window.ServiceHubApi.request !== 'function') {
+      const newService = normalizeServiceRecord(service);
+      allServices.unshift(newService);
+      saveServicesCollection(allServices);
+      refreshProviderCollections();
+      return newService;
+    }
+
+    const createdService = await window.ServiceHubApi.request('/services', {
+      method: 'POST',
+      headers: getProviderApiHeaders(activeUser),
+      body: buildProviderServicePayload(service)
+    });
+
+    await syncProviderBackendCollections({ silent: true });
+    refreshProviderCollections();
+    return visibleServices.find((entry) => entry.id === createdService.id) || mapBackendServiceToProvider(createdService);
+  }
+
+  async function deleteProviderServiceRecord(serviceId) {
+    if (!window.ServiceHubApi || typeof window.ServiceHubApi.request !== 'function') {
+      const existingService = allServices.find((entry) => entry.id === serviceId) || null;
+      allServices = allServices.filter((entry) => entry.id !== serviceId);
+      saveServicesCollection(allServices);
+      refreshProviderCollections();
+      return existingService;
+    }
+
+    await window.ServiceHubApi.request(`/services/${encodeURIComponent(serviceId)}`, {
+      method: 'DELETE',
+      headers: getProviderApiHeaders(activeUser)
+    });
+
+    await syncProviderBackendCollections({ silent: true });
+    refreshProviderCollections();
+    return null;
+  }
+
+  async function updateProviderProfileRecord(nextUser, passwordOverride = '') {
+    if (!window.ServiceHubApi || typeof window.ServiceHubApi.request !== 'function') {
+      return typeof persistProviderSession === 'function'
+        ? persistProviderSession(nextUser)
+        : nextUser;
+    }
+
+    const updatedProfile = await window.ServiceHubApi.request('/users/me', {
+      method: 'PATCH',
+      headers: getProviderApiHeaders(activeUser),
+      body: {
+        name: nextUser.name,
+        email: nextUser.email,
+        phone: nextUser.phone,
+        avatarUrl: nextUser.avatar || '',
+        businessName: nextUser.businessName || `${nextUser.name}'s Services`,
+        category: nextUser.category,
+        city: nextUser.location || '',
+        serviceArea: nextUser.location || '',
+        experienceLevel: nextUser.experience || '',
+        bio: nextUser.bio || ''
+      }
+    });
+
+    const persistedProfile = typeof persistProviderSessionFromProfileSummary === 'function'
+      ? persistProviderSessionFromProfileSummary(updatedProfile, passwordOverride || nextUser.password || '')
+      : nextUser;
+
+    await syncProviderBackendCollections({ silent: true });
+    refreshProviderCollections();
+    return persistedProfile;
+  }
+
+  async function createProviderDisputeRecord(payload) {
+    const safePayload = payload || {};
+    if (!window.ServiceHubApi || typeof window.ServiceHubApi.request !== 'function') {
+      const currentDisputes = typeof readStorageJSON === 'function'
+        ? readStorageJSON('sh_disputes', [])
+        : [];
+      const nextDispute = normalizeDisputeRecord(safePayload);
+      saveDisputesCollection([nextDispute, ...(Array.isArray(currentDisputes) ? currentDisputes : []).map(normalizeDisputeRecord)]);
+      refreshProviderCollections();
+      return nextDispute;
+    }
+
+    const createdCase = await window.ServiceHubApi.request('/cases', {
+      method: 'POST',
+      headers: getProviderApiHeaders(activeUser),
+      body: {
+        bookingId: safePayload.bookingId,
+        title: safePayload.title,
+        description: safePayload.description,
+        priority: safePayload.priority || 'medium'
+      }
+    });
+
+    const evidenceFiles = Array.isArray(safePayload.evidenceFiles) ? safePayload.evidenceFiles : [];
+    for (const file of evidenceFiles) {
+      const fileName = normalizeTextValue(file && file.name) || 'evidence-file';
+      const content = await readFileAsDataUrl(file);
+      await window.ServiceHubApi.request('/documents', {
+        method: 'POST',
+        headers: getProviderApiHeaders(activeUser),
+        body: {
+          caseId: createdCase.id,
+          title: `Evidence for ${safePayload.bookingId}`,
+          description: safePayload.description,
+          type: 'evidence',
+          fileName,
+          content
+        }
+      });
+    }
+
+    await syncProviderBackendCollections({ silent: true });
+    refreshProviderCollections();
+
+    const disputes = typeof readStorageJSON === 'function'
+      ? readStorageJSON('sh_disputes', [])
+      : [];
+    const mappedDisputes = Array.isArray(disputes) ? disputes.map(normalizeDisputeRecord) : [];
+    return mappedDisputes.find((entry) => entry.id === createdCase.id) || mapBackendCaseToProviderDispute(createdCase);
+  }
+
+  await syncProviderBackendCollections({ silent: true });
   consumeProviderFlash();
 
   document.querySelectorAll('.stat-card__value, .earnings-summary__amount').forEach(el => {
@@ -613,7 +975,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    saveBtn.addEventListener('click', (e) => {
+    saveBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       clearFieldErrors(document);
 
@@ -724,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (accountIndex === -1) {
         providerList.unshift({
           ...nextUser,
-          password: '',
+          password: previousIdentity.password || '',
           role: 'provider'
         });
       } else {
@@ -735,42 +1097,19 @@ document.addEventListener('DOMContentLoaded', () => {
         };
       }
 
+      let persistedUser = nextUser;
+      try {
+        persistedUser = await updateProviderProfileRecord(nextUser, previousIdentity.password || '');
+      } catch (error) {
+        showToast(error && error.message ? error.message : 'We could not save your provider profile right now.', 'error');
+        return;
+      }
+
       if (typeof saveProviderUsers === 'function') {
         saveProviderUsers(providerList);
       } else if (typeof writeStorageJSON === 'function') {
         writeStorageJSON('sh_providers_list', providerList);
       }
-
-      if (previousEmail && previousEmail !== email) {
-        const syncedServices = allServices.map((service) => (
-          normalizeEmail(service.providerEmail) === previousEmail
-            ? normalizeServiceRecord({ ...service, providerEmail: email })
-            : normalizeServiceRecord(service)
-        ));
-        const syncedJobs = allJobs.map((job) => (
-          normalizeEmail(job.providerEmail) === previousEmail
-            ? normalizeJobRecord({ ...job, providerEmail: email })
-            : normalizeJobRecord(job)
-        ));
-        const existingDisputes = typeof readStorageJSON === 'function'
-          ? readStorageJSON('sh_disputes', [])
-          : [];
-        const syncedDisputes = (Array.isArray(existingDisputes) ? existingDisputes : []).map((dispute) => (
-          normalizeEmail(dispute.providerEmail) === previousEmail
-            ? normalizeDisputeRecord({ ...dispute, providerEmail: email })
-            : normalizeDisputeRecord(dispute)
-        ));
-
-        allServices = syncedServices;
-        allJobs = syncedJobs;
-        saveServicesCollection(syncedServices);
-        saveJobsCollection(syncedJobs);
-        saveDisputesCollection(syncedDisputes);
-      }
-
-      const persistedUser = typeof persistProviderSession === 'function'
-        ? persistProviderSession(nextUser)
-        : nextUser;
 
       refreshActiveIdentity({ ...nextUser, ...persistedUser });
 
@@ -784,7 +1123,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (dropdownName) dropdownName.textContent = nextUser.name;
       if (navbarAvatar) navbarAvatar.src = getProviderAvatarSource(nextUser);
 
-      refreshProviderCollections();
       if (photoInput) photoInput.value = '';
       showToast('Profile saved successfully.', 'success');
     });
@@ -808,11 +1146,14 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.querySelectorAll('.delete-service-btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
+    btn.addEventListener('click', async function(e) {
       e.preventDefault();
       const card = this.closest('.service-card');
       const title = card.querySelector('.service-title').textContent;
-      if(confirm(`Delete "${title}"? This cannot be undone.`)) {
+      const confirmed = typeof showAppModal === 'function'
+        ? await showAppModal("Delete Service", `Delete "${title}"? This cannot be undone.`, { confirm: true, type: "danger", okText: "Delete" })
+        : false;
+      if(confirmed) {
         card.style.opacity = '0';
         setTimeout(() => card.remove(), 300);
       }
@@ -856,7 +1197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ({ allServices, visibleServices, allJobs, visibleJobs } = getProviderCollections(activeEmail));
   }
 
-  function updateJobById(jobId, updater) {
+  async function updateJobById(jobId, updater) {
     const jobIndex = allJobs.findIndex((job) => job.id === jobId);
     if (jobIndex === -1) return null;
 
@@ -867,13 +1208,33 @@ document.addEventListener('DOMContentLoaded', () => {
         : { ...currentJob, ...updater }
     );
 
+    if (window.ServiceHubApi && typeof window.ServiceHubApi.request === 'function' && activeUser && activeUser.id) {
+      const latestUpdate = Array.isArray(nextJob.statusUpdates) && nextJob.statusUpdates.length
+        ? nextJob.statusUpdates[nextJob.statusUpdates.length - 1]
+        : null;
+      const nextStage = normalizeTextValue((latestUpdate && latestUpdate.stage) || nextJob.progressStage || currentJob.progressStage) || 'accepted';
+      const nextNote = stripProviderStageNote((latestUpdate && latestUpdate.notes) || nextJob.notes || '');
+      const updatedBooking = await window.ServiceHubApi.request(`/bookings/${encodeURIComponent(jobId)}`, {
+        method: 'PATCH',
+        headers: getProviderApiHeaders(activeUser),
+        body: {
+          status: mapProviderJobStatusToBackend(nextJob),
+          note: encodeProviderStageNote(nextStage, nextNote)
+        }
+      });
+
+      await syncProviderBackendCollections({ silent: true });
+      refreshProviderCollections();
+      return visibleJobs.find((job) => job.id === jobId) || mapBackendBookingToProvider(updatedBooking);
+    }
+
     allJobs[jobIndex] = nextJob;
     saveJobsCollection(allJobs);
     refreshProviderCollections();
     return nextJob;
   }
 
-  function updateServiceById(serviceId, updater) {
+  async function updateServiceById(serviceId, updater) {
     const serviceIndex = allServices.findIndex((service) => service.id === serviceId);
     if (serviceIndex === -1) return null;
 
@@ -883,6 +1244,18 @@ document.addEventListener('DOMContentLoaded', () => {
         ? updater({ ...currentService })
         : { ...currentService, ...updater }
     );
+
+    if (window.ServiceHubApi && typeof window.ServiceHubApi.request === 'function' && activeUser && activeUser.id) {
+      const updatedService = await window.ServiceHubApi.request(`/services/${encodeURIComponent(serviceId)}`, {
+        method: 'PATCH',
+        headers: getProviderApiHeaders(activeUser),
+        body: buildProviderServicePayload(nextService)
+      });
+
+      await syncProviderBackendCollections({ silent: true });
+      refreshProviderCollections();
+      return visibleServices.find((service) => service.id === serviceId) || mapBackendServiceToProvider(updatedService);
+    }
 
     allServices[serviceIndex] = nextService;
     saveServicesCollection(allServices);
@@ -1132,7 +1505,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderJobs();
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
       const tab = e.target.closest('.job-tab');
       if (tab) {
         currentFilter = tab.getAttribute('data-filter') || 'all';
@@ -1144,16 +1517,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const acceptBtn = e.target.closest('.accept-job-btn');
       if (acceptBtn) {
         const jobId = acceptBtn.getAttribute('data-id');
-        const updatedJob = updateJobById(jobId, (job) => ({
-          ...job,
-          status: 'active',
-          progressStage: 'accepted',
-          statusUpdates: [...job.statusUpdates, createStatusUpdate('accepted', 'Job accepted by provider.', [])]
-        }));
+        try {
+          const updatedJob = await updateJobById(jobId, (job) => ({
+            ...job,
+            status: 'active',
+            progressStage: 'accepted',
+            statusUpdates: [...job.statusUpdates, createStatusUpdate('accepted', 'Job accepted by provider.', [])]
+          }));
 
-        if (updatedJob) {
+          if (!updatedJob) return;
           showToast(`${updatedJob.service} accepted.`, 'success');
           renderJobs();
+        } catch (error) {
+          showToast(error && error.message ? error.message : 'We could not accept this job right now.', 'error');
         }
       }
     });
@@ -1238,20 +1614,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (categoryFilter) categoryFilter.addEventListener('change', renderServices);
     if (statusFilter) statusFilter.addEventListener('change', renderServices);
 
-    document.addEventListener('change', (e) => {
+    document.addEventListener('change', async (e) => {
       const toggle = e.target.closest('.status-toggle');
       if (!toggle) return;
 
       const serviceId = toggle.getAttribute('data-id');
       const nextStatus = toggle.checked ? 'active' : 'paused';
-      const updatedService = updateServiceById(serviceId, { status: nextStatus });
-      if (updatedService) {
+      try {
+        const updatedService = await updateServiceById(serviceId, { status: nextStatus });
+        if (!updatedService) {
+          toggle.checked = !toggle.checked;
+          return;
+        }
         showToast(`${updatedService.name} is now ${nextStatus}.`, 'success');
         renderServices();
+      } catch (error) {
+        toggle.checked = !toggle.checked;
+        showToast(error && error.message ? error.message : 'We could not update this service right now.', 'error');
       }
     });
 
-    document.addEventListener('click', (e) => {
+    document.addEventListener('click', async (e) => {
       const deleteBtn = e.target.closest('.delete-service-btn');
       if (!deleteBtn) return;
       e.preventDefault();
@@ -1260,12 +1643,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const service = allServices.find((entry) => entry.id === serviceId);
       if (!service) return;
 
-      if (confirm(`Delete "${service.name}"? This cannot be undone.`)) {
-        allServices = allServices.filter((entry) => entry.id !== serviceId);
-        saveServicesCollection(allServices);
-        refreshProviderCollections();
+      const confirmed = await confirmProviderAction('Delete Service?', `Delete "${service.name}"? This cannot be undone.`, {
+        okText: 'Delete'
+      });
+      if (!confirmed) return;
+
+      try {
+        await deleteProviderServiceRecord(serviceId);
         renderServices();
         showToast(`${service.name} deleted.`, 'success');
+      } catch (error) {
+        showToast(error && error.message ? error.message : 'We could not delete this service right now.', 'error');
       }
     });
   }
@@ -1356,23 +1744,24 @@ document.addEventListener('DOMContentLoaded', () => {
         ? await readFileAsDataUrl(imageInput.files[0])
         : '';
 
-      const newService = normalizeServiceRecord({
-        id: 's' + Date.now(),
-        providerEmail: activeUser ? activeUser.email : 'unknown',
-        name: serviceName,
-        category,
-        price,
-        duration,
-        description,
-        status: 'active',
-        image: uploadedImage
-      });
+      try {
+        await createProviderServiceRecord({
+          providerEmail: activeUser ? activeUser.email : 'unknown',
+          name: serviceName,
+          category,
+          price,
+          duration,
+          description,
+          status: 'active',
+          image: uploadedImage,
+          location: getProviderPrimaryLocation()
+        });
 
-      allServices.unshift(newService);
-      saveServicesCollection(allServices);
-      refreshProviderCollections();
-      setProviderFlash('Service added successfully.', 'success');
-      window.location.href = buildProviderUrl('services.html');
+        setProviderFlash('Service added successfully.', 'success');
+        window.location.href = buildProviderUrl('services.html');
+      } catch (error) {
+        showToast(error && error.message ? error.message : 'We could not create this service right now.', 'error');
+      }
     });
   }
 
@@ -1533,33 +1922,42 @@ document.addEventListener('DOMContentLoaded', () => {
             nextImage = await readFileAsDataUrl(replacementFile) || nextImage;
           }
 
-          const updatedService = updateServiceById(selectedService.id, {
-            name: nextName,
-            category: nextCategory,
-            price: nextPrice,
-            duration: nextDuration,
-            description: nextDescription,
-            image: nextImage,
-            status: statusToggle && !statusToggle.checked ? 'paused' : 'active'
-          });
+          try {
+            const updatedService = await updateServiceById(selectedService.id, {
+              name: nextName,
+              category: nextCategory,
+              price: nextPrice,
+              duration: nextDuration,
+              description: nextDescription,
+              image: nextImage,
+              location: getProviderPrimaryLocation(),
+              status: statusToggle && !statusToggle.checked ? 'paused' : 'active'
+            });
 
-          if (updatedService) {
+            if (!updatedService) return;
             setProviderFlash('Service updated successfully.', 'success');
             window.location.href = 'services.html';
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'We could not update this service right now.', 'error');
           }
         });
       }
 
       if (deleteServiceBtn) {
-        deleteServiceBtn.addEventListener('click', (event) => {
+        deleteServiceBtn.addEventListener('click', async (event) => {
           event.preventDefault();
-          if (!confirm(`Delete "${selectedService.name}"? This cannot be undone.`)) return;
+          const confirmed = await confirmProviderAction('Delete Service?', `Delete "${selectedService.name}"? This cannot be undone.`, {
+            okText: 'Delete'
+          });
+          if (!confirmed) return;
 
-          allServices = allServices.filter((service) => service.id !== selectedService.id);
-          saveServicesCollection(allServices);
-          refreshProviderCollections();
-          setProviderFlash(`${selectedService.name} deleted.`, 'success');
-          window.location.href = 'services.html';
+          try {
+            await deleteProviderServiceRecord(selectedService.id);
+            setProviderFlash(`${selectedService.name} deleted.`, 'success');
+            window.location.href = 'services.html';
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'We could not delete this service right now.', 'error');
+          }
         });
       }
     }
@@ -1626,17 +2024,21 @@ document.addEventListener('DOMContentLoaded', () => {
       renderSelectedJob();
 
       if (acceptJobBtn) {
-        acceptJobBtn.addEventListener('click', () => {
-          const updatedJob = updateJobById(selectedJob.id, (job) => ({
-            ...job,
-            status: 'active',
-            progressStage: 'accepted',
-            statusUpdates: [...job.statusUpdates, createStatusUpdate('accepted', 'Job accepted by provider.', [])]
-          }));
-          if (!updatedJob) return;
-          selectedJob = updatedJob;
-          renderSelectedJob();
-          showToast('Job accepted successfully.', 'success');
+        acceptJobBtn.addEventListener('click', async () => {
+          try {
+            const updatedJob = await updateJobById(selectedJob.id, (job) => ({
+              ...job,
+              status: 'active',
+              progressStage: 'accepted',
+              statusUpdates: [...job.statusUpdates, createStatusUpdate('accepted', 'Job accepted by provider.', [])]
+            }));
+            if (!updatedJob) return;
+            selectedJob = updatedJob;
+            renderSelectedJob();
+            showToast('Job accepted successfully.', 'success');
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'We could not accept this job right now.', 'error');
+          }
         });
       }
 
@@ -1647,17 +2049,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (completeJobBtn) {
-        completeJobBtn.addEventListener('click', () => {
-          const updatedJob = updateJobById(selectedJob.id, (job) => ({
-            ...job,
-            status: 'completed',
-            progressStage: 'completed',
-            statusUpdates: [...job.statusUpdates, createStatusUpdate('completed', 'Job marked as completed.', [])]
-          }));
-          if (!updatedJob) return;
-          selectedJob = updatedJob;
-          renderSelectedJob();
-          showToast('Job marked as completed.', 'success');
+        completeJobBtn.addEventListener('click', async () => {
+          try {
+            const updatedJob = await updateJobById(selectedJob.id, (job) => ({
+              ...job,
+              status: 'completed',
+              progressStage: 'completed',
+              statusUpdates: [...job.statusUpdates, createStatusUpdate('completed', 'Job marked as completed.', [])]
+            }));
+            if (!updatedJob) return;
+            selectedJob = updatedJob;
+            renderSelectedJob();
+            showToast('Job marked as completed.', 'success');
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'We could not complete this job right now.', 'error');
+          }
         });
       }
     }
@@ -1707,17 +2113,21 @@ document.addEventListener('DOMContentLoaded', () => {
       renderTrackPage();
 
       if (trackStartServiceBtn) {
-        trackStartServiceBtn.addEventListener('click', () => {
-          const updatedJob = updateJobById(selectedJob.id, (job) => ({
-            ...job,
-            status: 'progress',
-            progressStage: 'in_progress',
-            statusUpdates: [...job.statusUpdates, createStatusUpdate('in_progress', 'Service started.', [])]
-          }));
-          if (!updatedJob) return;
-          selectedJob = updatedJob;
-          renderTrackPage();
-          showToast('Service marked as in progress.', 'success');
+        trackStartServiceBtn.addEventListener('click', async () => {
+          try {
+            const updatedJob = await updateJobById(selectedJob.id, (job) => ({
+              ...job,
+              status: 'progress',
+              progressStage: 'in_progress',
+              statusUpdates: [...job.statusUpdates, createStatusUpdate('in_progress', 'Service started.', [])]
+            }));
+            if (!updatedJob) return;
+            selectedJob = updatedJob;
+            renderTrackPage();
+            showToast('Service marked as in progress.', 'success');
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'We could not update this job right now.', 'error');
+          }
         });
       }
 
@@ -1728,17 +2138,21 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (trackCompleteJobBtn) {
-        trackCompleteJobBtn.addEventListener('click', () => {
-          const updatedJob = updateJobById(selectedJob.id, (job) => ({
-            ...job,
-            status: 'completed',
-            progressStage: 'completed',
-            statusUpdates: [...job.statusUpdates, createStatusUpdate('completed', 'Job completed from tracking page.', [])]
-          }));
-          if (!updatedJob) return;
-          selectedJob = updatedJob;
-          renderTrackPage();
-          showToast('Job marked as completed.', 'success');
+        trackCompleteJobBtn.addEventListener('click', async () => {
+          try {
+            const updatedJob = await updateJobById(selectedJob.id, (job) => ({
+              ...job,
+              status: 'completed',
+              progressStage: 'completed',
+              statusUpdates: [...job.statusUpdates, createStatusUpdate('completed', 'Job completed from tracking page.', [])]
+            }));
+            if (!updatedJob) return;
+            selectedJob = updatedJob;
+            renderTrackPage();
+            showToast('Job marked as completed.', 'success');
+          } catch (error) {
+            showToast(error && error.message ? error.message : 'We could not complete this job right now.', 'error');
+          }
         });
       }
 
@@ -1804,7 +2218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (matchingRadio) matchingRadio.checked = true;
       if (notesInput) notesInput.value = selectedJob.notes || '';
 
-      submitStatusBtn.addEventListener('click', (event) => {
+      submitStatusBtn.addEventListener('click', async (event) => {
         event.preventDefault();
 
         const selectedStatus = document.querySelector('input[name="job_status"]:checked');
@@ -1851,18 +2265,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const nextStage = stageMap[statusValue] || stageMap.in_progress;
-        const updatedJob = updateJobById(selectedJob.id, (job) => ({
-          ...job,
-          status: nextStage.status,
-          progressStage: nextStage.progressStage,
-          notes,
-          statusUpdates: [...job.statusUpdates, createStatusUpdate(nextStage.progressStage, notes || `Status updated to ${formatStatusLabel(nextStage.progressStage)}.`, evidence)]
-        }));
+        try {
+          const updatedJob = await updateJobById(selectedJob.id, (job) => ({
+            ...job,
+            status: nextStage.status,
+            progressStage: nextStage.progressStage,
+            notes,
+            statusUpdates: [...job.statusUpdates, createStatusUpdate(nextStage.progressStage, notes || `Status updated to ${formatStatusLabel(nextStage.progressStage)}.`, evidence)]
+          }));
 
-        if (!updatedJob) return;
+          if (!updatedJob) return;
 
-        setProviderFlash(`Status updated for ${updatedJob.service}.`, 'success');
-        window.location.href = buildProviderUrl('track-status.html', updatedJob.id);
+          setProviderFlash(`Status updated for ${updatedJob.service}.`, 'success');
+          window.location.href = buildProviderUrl('track-status.html', updatedJob.id);
+        } catch (error) {
+          showToast(error && error.message ? error.message : 'We could not save this status update right now.', 'error');
+        }
       });
     }
   }
@@ -1884,10 +2302,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (disputeCustomerInput) disputeCustomerInput.value = selectedJob.customerName;
     }
 
-    submitDisputeBtn.addEventListener('click', (event) => {
+    submitDisputeBtn.addEventListener('click', async (event) => {
       event.preventDefault();
 
-      const rawJobId = normalizeTextValue(disputeJobIdInput && disputeJobIdInput.value).replace(/^#+/, '').toUpperCase();
+      const rawJobId = normalizeTextValue(disputeJobIdInput && disputeJobIdInput.value).replace(/^#+/, '');
       const customerName = normalizeTextValue(disputeCustomerInput && disputeCustomerInput.value);
       const issueCategory = normalizeTextValue(disputeCategoryInput && disputeCategoryInput.value);
       const description = normalizeTextValue(disputeDescriptionInput && disputeDescriptionInput.value);
@@ -1904,8 +2322,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (disputeJobIdInput) disputeJobIdInput.focus();
         return;
       }
-      if (!/^JOB-[A-Z0-9-]+$/.test(rawJobId) && !/^[A-Z0-9-]{4,}$/.test(rawJobId)) {
-        showToast('Enter a valid job ID, for example JOB-20471.', 'error');
+      if (rawJobId.length < 4) {
+        showToast('Enter a valid booking or job ID.', 'error');
         if (disputeJobIdInput) disputeJobIdInput.focus();
         return;
       }
@@ -1938,28 +2356,32 @@ document.addEventListener('DOMContentLoaded', () => {
         ? readStorageJSON('sh_disputes', (typeof getDB === 'function' ? getDB('sh_disputes') : []))
         : [];
       const safeDisputes = Array.isArray(currentDisputes) ? currentDisputes.map(normalizeDisputeRecord) : [];
-      const hasOpenDuplicate = safeDisputes.some((dispute) => dispute.id.toUpperCase() === rawJobId && dispute.status !== 'resolved');
+      const relatedJob = visibleJobs.find((job) => String(job.id) === String(rawJobId)) || selectedJob || null;
+      const hasOpenDuplicate = safeDisputes.some((dispute) => (
+        (String(dispute.bookingId || dispute.id) === String(rawJobId))
+        && dispute.status !== 'resolved'
+      ));
       if (hasOpenDuplicate) {
         showToast('An open dispute already exists for this job ID.', 'error');
         if (disputeJobIdInput) disputeJobIdInput.focus();
         return;
       }
 
-      const nextDispute = normalizeDisputeRecord({
-        id: rawJobId,
-        customerName,
-        issue: issueCategory,
-        description,
-        status: 'pending',
-        providerEmail: activeEmail || '',
-        evidence: evidenceValidation.files.map((file) => file.name),
-        createdAt: new Date().toISOString()
-      });
+      try {
+        const nextDispute = await createProviderDisputeRecord({
+          bookingId: rawJobId,
+          title: `${issueCategory} dispute${relatedJob ? ` for ${relatedJob.service}` : ''}`,
+          description,
+          priority: /payment|damage|safety/i.test(issueCategory) ? 'high' : 'medium',
+          customerName,
+          evidenceFiles: evidenceValidation.files
+        });
 
-      safeDisputes.unshift(nextDispute);
-      saveDisputesCollection(safeDisputes);
-      setProviderFlash(`Dispute submitted for ${nextDispute.id}.`, 'success');
-      window.location.href = 'disputes.html';
+        setProviderFlash(`Dispute submitted for ${nextDispute.id}.`, 'success');
+        window.location.href = 'disputes.html';
+      } catch (error) {
+        showToast(error && error.message ? error.message : 'We could not submit this dispute right now.', 'error');
+      }
     });
   }
 

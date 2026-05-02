@@ -169,7 +169,7 @@
             return 'data:text/plain;charset=utf-8,' + encodeURIComponent(summary);
         }
 
-        function handleFileSelect(input) {
+        async function handleFileSelect(input) {
             if (!currentCase || !input.files || !input.files[0]) {
                 return;
             }
@@ -178,57 +178,33 @@
             const fileName = selectedFile.name;
             const documentType = currentUploadType === 'Decision' ? 'Award Document' : 'Order Document';
 
-            const finalizeUpload = (fileLink) => {
-                ArbitratorData.caseDocuments.unshift({
-                    name: fileName,
-                    id: currentCase.id,
-                    type: documentType,
-                    uploadedBy: ArbitratorData.profile.name,
-                    date: createArbitratorDisplayDate(new Date()),
-                    size: createArbitratorFileSizeLabel(selectedFile.size),
-                    typeClass: getDocumentBadgeClass(documentType),
-                    fileLink: fileLink || '#'
-                });
-
+            try {
                 if (currentUploadType === 'Decision') {
-                    const decisionIndex = ArbitratorData.decisionsList.findIndex((item) => item.id === currentCase.id);
-                    if (decisionIndex !== -1) {
-                        ArbitratorData.decisionsList[decisionIndex].status = 'Award Issued';
-                        ArbitratorData.decisionsList[decisionIndex].statusClass = 'arb-badge-green';
-                    } else {
-                        ArbitratorData.decisionsList.unshift({
-                            id: currentCase.id,
-                            parties: `${currentCase.claimant} vs ${currentCase.respondent}`,
-                            type: currentCase.type,
-                            deadline: createArbitratorDisplayDate(new Date()),
-                            status: 'Award Issued',
-                            statusClass: 'arb-badge-green',
-                            priority: '—',
-                            amount: currentCase.amount
-                        });
-                    }
-
-                    currentCase.status = 'Closed';
-                    currentCase.statusColor = '#6B7280';
-                    currentCase.statusClass = 'arb-badge-gray';
-                    currentCase.next = '—';
+                    const summary = `Final decision issued for ${currentCase.id} by ${ArbitratorData.profile.name}. Attachment: ${fileName}.`;
+                    await issueArbitratorAwardWithAttachment({
+                        caseId: currentCase.id,
+                        file: selectedFile,
+                        title: `Final Award - ${currentCase.id}`,
+                        summary
+                    });
+                } else {
+                    await uploadArbitratorCaseDocument({
+                        caseId: currentCase.id,
+                        file: selectedFile,
+                        title: `${documentType} - ${currentCase.id}`,
+                        description: `${documentType} uploaded from case details for ${currentCase.id}.`,
+                        typeLabel: documentType
+                    });
                 }
 
-                saveData();
+                await window.syncArbitratorBackendData({ silent: true });
                 loadCaseData();
-
-                alert(`${currentUploadType} uploaded: ${fileName}`);
+                window.showAppToast(`${currentUploadType} uploaded: ${fileName}`, "success");
+            } catch (error) {
+                window.showAppToast(error.message || `The ${currentUploadType.toLowerCase()} could not be uploaded.`, "error");
+            } finally {
                 input.value = '';
-            };
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                finalizeUpload(event && event.target ? event.target.result : '#');
-            };
-            reader.onerror = function() {
-                finalizeUpload('#');
-            };
-            reader.readAsDataURL(selectedFile);
+            }
         }
 
         function loadCaseData() {
@@ -344,7 +320,8 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             loadCaseData();
         });
     </script>

@@ -214,7 +214,7 @@ async function handleLogout() {
             type: "danger",
             okText: "Sign Out"
         })
-        : window.confirm("Your session will be terminated. Are you sure?");
+        : true;
     if (!confirmed) return;
 
     if (window.AdminData && window.AdminData.session) {

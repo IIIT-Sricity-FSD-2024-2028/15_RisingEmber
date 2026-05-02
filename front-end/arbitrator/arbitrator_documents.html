@@ -181,55 +181,40 @@
             return Number.isNaN(altParsed.getTime()) ? '' : altParsed.toISOString().slice(0, 10);
         }
 
-        function handleUpload() {
+        async function handleUpload() {
             const fileInput = document.getElementById('modalFile');
             const caseId = document.getElementById('modalCase').value;
             const docType = document.getElementById('modalType').value;
 
             if (fileInput.files.length === 0) {
-                alert("Please select a file first");
+                window.showAppToast("Please select a file first.", "warning");
                 return;
             }
 
-            const fileName = fileInput.files[0].name;
-            const fileSize = (fileInput.files[0].size / 1024 / 1024).toFixed(1) + " MB";
-            const today = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            if (!caseId) {
+                window.showAppToast("Please choose a case before uploading.", "warning");
+                return;
+            }
 
-            let badgeClass = "arb-badge-blue";
-            if (docType === "Evidence") badgeClass = "arb-badge-yellow";
-            if (docType === "Response Document") badgeClass = "arb-badge-green";
+            try {
+                const selectedFile = fileInput.files[0];
+                await uploadArbitratorCaseDocument({
+                    caseId,
+                    file: selectedFile,
+                    title: `${docType} - ${caseId}`,
+                    description: `${docType} uploaded from the arbitrator portal for ${caseId}.`,
+                    typeLabel: docType
+                });
 
-            const persistUpload = (fileLink) => {
-                if (typeof ArbitratorData !== 'undefined') {
-                    ArbitratorData.caseDocuments.unshift({
-                        name: fileName,
-                        id: caseId,
-                        type: docType,
-                        uploadedBy: ArbitratorData.profile.name,
-                        date: today,
-                        size: fileSize,
-                        typeClass: badgeClass,
-                        fileLink: fileLink || "#"
-                    });
-
-                    ArbitratorData.stats.docsToReview = ArbitratorData.caseDocuments.length;
-                    saveData();
-                }
-
-                alert("Document uploaded successfully!");
+                await window.syncArbitratorBackendData({ silent: true });
                 closeModal();
                 fileInput.value = '';
+                populateDocumentTypeFilters();
                 filterDocuments();
-            };
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                persistUpload(event && event.target ? event.target.result : '#');
-            };
-            reader.onerror = function() {
-                persistUpload('#');
-            };
-            reader.readAsDataURL(fileInput.files[0]);
+                window.showAppToast("Document uploaded successfully.", "success");
+            } catch (error) {
+                window.showAppToast(error.message || "The document could not be uploaded.", "error");
+            }
         }
 
         function filterDocuments() {
@@ -269,7 +254,8 @@
             `).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
             // Populate case filter dropdown
             const caseFilter = document.getElementById('caseFilter');

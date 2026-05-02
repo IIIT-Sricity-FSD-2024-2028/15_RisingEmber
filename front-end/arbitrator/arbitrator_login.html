@@ -177,24 +177,22 @@
         event.preventDefault();
         const email = document.getElementById('loginEmail').value.trim();
         if (!email) {
-          alert('Enter your arbitrator email first so we can reset the correct account.');
+          window.showAppToast('Enter your arbitrator email first so we can reset the correct account.', 'warning');
           return;
         }
 
-        const nextPassword = typeof window.showAppPrompt === 'function'
-          ? await window.showAppPrompt('Reset Password', `Enter a new password for this arbitrator account: ${email}`, {
-              inputType: 'password',
-              placeholder: 'New password (8+ chars)'
-            })
-          : window.prompt('Enter a new password for this arbitrator account.');
+        const nextPassword = await window.showAppPrompt('Reset Password', `Enter a new password for this arbitrator account: ${email}`, {
+          inputType: 'password',
+          placeholder: 'New password (8+ chars)'
+        });
         if (nextPassword === null || nextPassword === false) return;
 
         try {
-          resetArbitratorPassword(email, nextPassword);
+          await resetArbitratorPassword(email, nextPassword);
           document.getElementById('loginPassword').value = nextPassword;
-          alert('Password reset complete. You can log in with the new password now.');
+          window.showAppToast('Password reset complete. You can log in with the new password now.', 'success');
         } catch (error) {
-          alert(error.message);
+          window.showAppToast(error.message, 'error');
         }
       });
     }
@@ -206,7 +204,7 @@
       const originalText = loginBtn.innerHTML;
 
       if (!email || !password) {
-        alert('Please enter your email address and password.');
+        window.showAppToast('Please enter your email address and password.', 'warning');
         return;
       }
 
@@ -218,7 +216,7 @@
         await arbitratorLogin(email, password, 'arbitrator');
         window.location.replace('arbitrator_dashboard.html');
       } catch (error) {
-        alert(error.message);
+        window.showAppToast(error.message, 'error');
         loginBtn.innerHTML = originalText;
         loginBtn.style.opacity = '1';
         loginBtn.style.pointerEvents = 'auto';

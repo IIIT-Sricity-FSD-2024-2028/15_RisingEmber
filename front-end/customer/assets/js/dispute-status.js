@@ -1,7 +1,14 @@
 // customer/assets/js/dispute-status.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for dispute status:", error);
+    }
+  }
   const disputes = app && typeof app.getCustomerDisputes === "function"
     ? app.getCustomerDisputes()
     : (JSON.parse(localStorage.getItem("serviceHub_disputes")) || []);

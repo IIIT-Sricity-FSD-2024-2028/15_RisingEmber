@@ -101,13 +101,14 @@
             e.preventDefault();
             
             try {
-                // Verification of Database
-                if (!window.AdminData || !window.AdminData.users || !window.AdminData.userStats) {
-                    throw new Error("Local Database (AdminData) is not initialized correctly.");
+                if (!window.AdminData) {
+                    throw new Error("Admin data is not ready yet.");
                 }
 
                 const name = document.getElementById('fullName').value.trim();
                 const email = document.getElementById('emailAddr').value.trim();
+                const phone = document.getElementById('phoneNum').value.trim();
+                const password = document.getElementById('userPass').value.trim();
                 const role = document.getElementById('userRole').value;
                 const statusRadio = document.querySelector('input[name="status"]:checked');
                 const status = statusRadio ? statusRadio.value : "Active";
@@ -116,26 +117,72 @@
                     throw new Error("Please enter a valid full name using letters only.");
                 }
 
-                const newUser = {
-                    id: "USR-" + Math.floor(1000 + Math.random() * 9000),
-                    name: name,
-                    email: email,
-                    role: role,
-                    status: status,
-                    date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`
-                };
+                if (!password || password.length < 6) {
+                    throw new Error("Password must be at least 6 characters long.");
+                }
 
-                // Add to array
-                AdminData.users.unshift(newUser);
-                
-                // Update stats
-                AdminData.userStats.totalUsers++;
-                if(status === 'Active') AdminData.userStats.activeUsers++;
-                if(status === 'Pending') AdminData.userStats.pendingApprovals++;
+                let createdUser = null;
 
-                // Save
-                saveAdminData();
+                if (role === 'Customer') {
+                    if (status === 'Pending') {
+                        throw new Error("Pending approval is only supported for arbitrator applications in this build.");
+                    }
+                    const response = await requestAdminApi('/customers/register', {
+                        method: 'POST',
+                        body: {
+                            name,
+                            email,
+                            phone,
+                            password
+                        }
+                    });
+                    createdUser = response.profileSummary || response;
+                } else if (role === 'Service Provider') {
+                    if (status === 'Pending') {
+                        throw new Error("Pending approval is only supported for arbitrator applications in this build.");
+                    }
+                    const response = await requestAdminApi('/providers/register', {
+                        method: 'POST',
+                        body: {
+                            name,
+                            email,
+                            phone,
+                            password,
+                            businessName: `${name} Services`,
+                            category: 'General Services',
+                            serviceArea: 'Remote'
+                        }
+                    });
+                    createdUser = response.profileSummary || response;
+                } else if (role === 'Arbitrator') {
+                    const response = await requestAdminApi('/arbitrators/applications', {
+                        method: 'POST',
+                        body: {
+                            name,
+                            email,
+                            phone,
+                            password,
+                            specialization: 'General Arbitration',
+                            experienceYears: 5,
+                            bio: 'Application created by admin.'
+                        }
+                    });
+                    createdUser = response.profileSummary || response;
+
+                    if (status === 'Active' && createdUser && createdUser.id) {
+                        await requestAdminApi(`/users/${encodeURIComponent(createdUser.id)}`, {
+                            method: 'PATCH',
+                            headers: getAdminRequestHeaders(),
+                            body: {
+                                approvalStatus: 'approved'
+                            }
+                        });
+                    }
+                } else {
+                    throw new Error("Please choose a valid user role.");
+                }
+
+                await window.syncAdminBackendData({ silent: true });
 
                 await showAppModal("User Created", "Success: User " + name + " created.", { okText: "Back to Users" });
                 window.location.href = 'admin_users.html';

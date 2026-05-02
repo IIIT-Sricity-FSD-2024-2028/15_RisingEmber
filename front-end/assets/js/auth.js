@@ -16,6 +16,8 @@ const AUTH_KEYS = {
 
 const APP_TOAST_STYLE_ID = 'sh-app-toast-styles';
 const APP_TOAST_CONTAINER_ID = 'sh-app-toast-container';
+const API_BASE_URL_KEY = 'serviceHub_api_base_url';
+const DEFAULT_API_BASE_URL = 'http://127.0.0.1:3002/api/v1';
 
 function ensureAppToastStyles() {
   if (typeof document === 'undefined' || document.getElementById(APP_TOAST_STYLE_ID)) return;
@@ -165,7 +167,7 @@ if (typeof window !== 'undefined') {
     window.confirm = function patchedConfirm(message) {
       // Note: Native confirm is synchronous. Custom modals are asynchronous.
       // This patch is mainly for safety; explicit showAppModal is preferred.
-      console.warn('Native confirm() called. Use showAppModal() for a better experience.');
+      console.warn('Native confirmation was requested. Use showAppModal for a better experience.');
       return window.__serviceHubNativeConfirm(message);
     };
   }
@@ -437,6 +439,70 @@ function removeStorageKeys(...keys) {
   keys.forEach((key) => localStorage.removeItem(key));
 }
 
+function getServiceHubApiBaseUrl() {
+  const explicitBaseUrl = String(
+    (typeof window !== 'undefined' && window.SERVICE_HUB_API_BASE_URL) ||
+    localStorage.getItem(API_BASE_URL_KEY) ||
+    DEFAULT_API_BASE_URL
+  ).trim();
+
+  return explicitBaseUrl.replace(/\/+$/, '');
+}
+
+function buildApiErrorMessage(payload, fallbackMessage) {
+  if (!payload) return fallbackMessage;
+  if (typeof payload === 'string') return payload;
+  if (Array.isArray(payload.message)) return payload.message.join('\n');
+  if (typeof payload.message === 'string') return payload.message;
+  if (typeof payload.error === 'string') return payload.error;
+  return fallbackMessage;
+}
+
+async function requestServiceHubApi(path, options = {}) {
+  const headers = { ...(options.headers || {}) };
+  let body = options.body;
+
+  if (body !== undefined && body !== null && !(body instanceof FormData)) {
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+    body = typeof body === 'string' ? body : JSON.stringify(body);
+  }
+
+  let response;
+  try {
+    response = await fetch(`${getServiceHubApiBaseUrl()}${path}`, {
+      method: options.method || 'GET',
+      headers,
+      body,
+    });
+  } catch (error) {
+    throw new Error('We could not reach the ServiceHub backend. Please make sure the NestJS server is running.');
+  }
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(buildApiErrorMessage(payload, 'The backend request failed.'));
+  }
+
+  if (payload && typeof payload === 'object' && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+    return payload.data;
+  }
+
+  return payload;
+}
+
+if (typeof window !== 'undefined') {
+  window.ServiceHubApi = window.ServiceHubApi || {
+    request: requestServiceHubApi,
+    getBaseUrl: getServiceHubApiBaseUrl
+  };
+}
+
 function normalizeEmail(email) {
   return String(email || '').trim().toLowerCase();
 }
@@ -492,6 +558,7 @@ function persistActiveUser(user) {
 
 function buildProviderSession(user) {
   return {
+    id: String(user.id || '').trim(),
     name: String(user.name || '').trim(),
     email: normalizeEmail(user.email),
     phone: String(user.phone || '').trim(),
@@ -501,6 +568,8 @@ function buildProviderSession(user) {
     location: String(user.location || '').trim(),
     bio: String(user.bio || '').trim(),
     avatar: String(user.avatar || '').trim(),
+    businessName: String(user.businessName || '').trim(),
+    password: String(user.password || '').trim(),
     isLoggedIn: true,
     role: 'provider'
   };
@@ -510,6 +579,7 @@ function persistProviderSession(user) {
   const sessionUser = buildProviderSession(user);
 
   saveProviderProfile({
+    id: user.id || sessionUser.id || '',
     name: sessionUser.name,
     email: sessionUser.email,
     phone: sessionUser.phone,
@@ -518,7 +588,8 @@ function persistProviderSession(user) {
     experience: sessionUser.experience,
     location: sessionUser.location,
     bio: sessionUser.bio,
-    avatar: sessionUser.avatar
+    avatar: sessionUser.avatar,
+    businessName: String(user.businessName || sessionUser.businessName || '').trim()
   });
 
   writeStorageJSON(AUTH_KEYS.PROVIDER, sessionUser);
@@ -527,11 +598,46 @@ function persistProviderSession(user) {
   return sessionUser;
 }
 
-function resetProviderPassword(identifier, nextPassword) {
+function buildProviderSessionFromProfileSummary(profileSummary, passwordOverride = '') {
+  const profile = profileSummary && profileSummary.profile ? profileSummary.profile : {};
+  return {
+    id: profileSummary.id,
+    name: String(profileSummary.name || '').trim(),
+    email: normalizeEmail(profileSummary.email),
+    phone: String(profileSummary.phone || '').trim(),
+    walletBalance: Number(profileSummary.walletBalance) || 0,
+    category: String(profile.category || '').trim(),
+    experience: String(profile.experienceLevel || (profile.experienceYears ? `${profile.experienceYears}+ years` : profile.experience || '')).trim(),
+    location: String(profile.serviceArea || profile.city || '').trim(),
+    bio: String(profile.bio || '').trim(),
+    avatar: String(profileSummary.avatarUrl || '').trim(),
+    businessName: String(profile.businessName || '').trim(),
+    password: String(passwordOverride || ''),
+    isLoggedIn: true,
+    role: 'provider'
+  };
+}
+
+function persistProviderSessionFromProfileSummary(profileSummary, passwordOverride = '') {
+  const nextProvider = buildProviderSessionFromProfileSummary(profileSummary, passwordOverride);
+  const providersList = getProviderUsers();
+  const nextProvidersList = providersList.slice();
+  const providerIndex = nextProvidersList.findIndex((provider) => (
+    normalizeEmail(provider.email) === nextProvider.email || provider.id === nextProvider.id
+  ));
+
+  if (providerIndex === -1) nextProvidersList.unshift(nextProvider);
+  else nextProvidersList[providerIndex] = { ...nextProvidersList[providerIndex], ...nextProvider };
+
+  saveProviderUsers(nextProvidersList);
+  return persistProviderSession(nextProvider);
+}
+
+async function resetProviderPassword(identifier, nextPassword) {
   const users = getProviderUsers();
   const userIndex = findProviderUserIndex(identifier, users);
 
-  if (userIndex === -1) {
+  if (userIndex === -1 && !isValidEmail(identifier) && !isValidPhone(identifier)) {
     throw new Error('We could not find a provider account with that email or phone.');
   }
 
@@ -539,12 +645,25 @@ function resetProviderPassword(identifier, nextPassword) {
     throw new Error('Your new password must be at least 8 characters and include upper, lower, number, and symbol.');
   }
 
-  users[userIndex] = {
-    ...users[userIndex],
-    password: String(nextPassword || '')
-  };
-  saveProviderUsers(users);
-  return users[userIndex];
+  const resetResult = await requestServiceHubApi('/session/password-reset', {
+    method: 'POST',
+    body: {
+      role: 'provider',
+      identifier,
+      password: String(nextPassword || '')
+    }
+  });
+
+  if (userIndex !== -1) {
+    users[userIndex] = {
+      ...users[userIndex],
+      password: String(nextPassword || '')
+    };
+    saveProviderUsers(users);
+    return users[userIndex];
+  }
+
+  return persistProviderSessionFromProfileSummary(resetResult.profileSummary, nextPassword);
 }
 
 /* ============================================
@@ -577,9 +696,8 @@ if (typeof window !== 'undefined') {
    ============================================ */
 function providerLogin(email, password, expectedRole = 'provider') {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const loginValue = String(email || '').trim();
-      const normalizedEmail = normalizeEmail(loginValue);
       const normalizedPhone = normalizePhone(loginValue);
       const isEmailLogin = isValidEmail(loginValue);
       const isPhoneLogin = normalizedPhone.length >= 10;
@@ -595,54 +713,36 @@ function providerLogin(email, password, expectedRole = 'provider') {
       }
 
       const providersList = getProviderUsers();
-      let matchedUser = null;
-
-      for (const registeredUser of providersList) {
-        if (!registeredUser || typeof registeredUser !== 'object') continue;
-
+      const matchedUser = providersList.find((registeredUser) => {
+        if (!registeredUser || typeof registeredUser !== 'object') return false;
         const registeredEmail = normalizeEmail(registeredUser.email);
         const registeredPhone = normalizePhone(registeredUser.phone);
-        const emailMatches = isEmailLogin && registeredEmail === normalizedEmail;
-        const phoneMatches = isPhoneLogin && registeredPhone && registeredPhone === normalizedPhone;
+        return (isEmailLogin && registeredEmail === normalizeEmail(loginValue)) ||
+          (isPhoneLogin && registeredPhone && registeredPhone === normalizedPhone);
+      }) || null;
 
-        if (emailMatches || phoneMatches) {
-          matchedUser = registeredUser;
-          break;
-        }
+      const backendEmail = matchedUser ? matchedUser.email : normalizeEmail(loginValue);
+
+      try {
+        const loginData = await requestServiceHubApi('/session/login', {
+          method: 'POST',
+          body: {
+            role: expectedRole,
+            email: backendEmail,
+            password
+          }
+        });
+        resolve(persistProviderSessionFromProfileSummary(loginData.profileSummary, password));
+      } catch (error) {
+        reject(error);
       }
-
-      if (!matchedUser) {
-        reject(new Error('No account found with this email or phone. Please sign up first.'));
-        return;
-      }
-
-      const userRole = matchedUser.role || 'provider';
-      if (userRole !== expectedRole) {
-        reject(new Error('This account is not registered as a provider.'));
-        return;
-      }
-
-      if (!matchedUser.password) {
-        // Fallback for corrupted sessions due to the previous bug: Auto-repair the password.
-        matchedUser.password = password; 
-        const userIndex = providersList.findIndex(u => u.email === matchedUser.email);
-        if (userIndex !== -1) {
-          providersList[userIndex].password = password;
-          saveProviderUsers(providersList);
-        }
-      } else if (matchedUser.password !== password) {
-        reject(new Error('Incorrect password. Please try again.'));
-        return;
-      }
-
-      resolve(persistProviderSession(matchedUser));
-    }, 500);
+    }, 250);
   });
 }
 
 function providerSignup(name, email, phone, password) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const trimmedName = String(name || '').trim();
       const normalizedEmail = normalizeEmail(email);
       const trimmedPhone = String(phone || '').trim();
@@ -678,37 +778,24 @@ function providerSignup(name, email, phone, password) {
         return;
       }
 
-      const providersList = getProviderUsers();
+      try {
+        const registration = await requestServiceHubApi('/providers/register', {
+          method: 'POST',
+          body: {
+            name: trimmedName,
+            email: normalizedEmail,
+            phone: trimmedPhone,
+            password,
+            businessName: `${trimmedName}'s Services`,
+            category: 'General Services'
+          }
+        });
 
-      for (const registeredUser of providersList) {
-        const registeredEmail = normalizeEmail(registeredUser.email);
-        const registeredPhone = normalizePhone(registeredUser.phone);
-
-        if (registeredEmail === normalizedEmail) {
-          reject(new Error('An account with this email already exists. Please log in instead.'));
-          return;
-        }
-
-        if (registeredPhone && registeredPhone === normalizedPhone) {
-          reject(new Error('An account with this phone number already exists. Please log in instead.'));
-          return;
-        }
+        resolve(persistProviderSessionFromProfileSummary(registration.profileSummary, password));
+      } catch (error) {
+        reject(error);
       }
-
-      const newProvider = {
-        name: trimmedName,
-        email: normalizedEmail,
-        phone: trimmedPhone,
-        password,
-        walletBalance: 0,
-        role: 'provider'
-      };
-
-      providersList.push(newProvider);
-      saveProviderUsers(providersList);
-
-      resolve(persistProviderSession(newProvider));
-    }, 500);
+    }, 250);
   });
 }
 
@@ -720,6 +807,7 @@ function getProviderSession() {
     const normalizedSession = {
       ...providerProfile,
       ...sessionData,
+      id: String(sessionData.id || providerProfile.id || '').trim(),
       email: normalizeEmail(sessionData.email || providerProfile.email),
       phone: String(sessionData.phone || providerProfile.phone || '').trim(),
       walletBalance: Number(
@@ -732,6 +820,8 @@ function getProviderSession() {
       location: String(sessionData.location || providerProfile.location || '').trim(),
       bio: String(sessionData.bio || providerProfile.bio || '').trim(),
       avatar: String(sessionData.avatar || providerProfile.avatar || '').trim(),
+      businessName: String(sessionData.businessName || providerProfile.businessName || '').trim(),
+      password: String(sessionData.password || providerProfile.password || '').trim(),
       role: 'provider',
       isLoggedIn: sessionData.isLoggedIn !== false
     };
@@ -790,12 +880,108 @@ function saveArbitratorDatabase(database) {
   return database;
 }
 
+function buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOverride = '') {
+  const profile = profileSummary && profileSummary.profile ? profileSummary.profile : {};
+  const existingWorkspace = getArbitratorDatabase() || {};
+  const previousProfile = { ...(existingWorkspace.profile || {}) };
+  const nextId = String(
+    profileSummary.id
+    || (existingWorkspace.auth && existingWorkspace.auth.id)
+    || (typeof generateArbitratorId === 'function' ? generateArbitratorId() : `ARB-${Date.now()}`)
+  );
+  const approvalStatus = String(profile.approvalStatus || 'approved').toLowerCase();
+  const approved = approvalStatus === 'approved';
+
+  const workspace = {
+    ...existingWorkspace,
+    registration: {
+      ...(existingWorkspace.registration || {}),
+      isComplete: true,
+      lastStep: 4,
+      formData: {
+        ...((existingWorkspace.registration && existingWorkspace.registration.formData) || {}),
+        name: String(profileSummary.name || '').trim(),
+        email: normalizeEmail(profileSummary.email),
+        phone: String(profileSummary.phone || '').trim(),
+        password: String(passwordOverride || ((existingWorkspace.auth && existingWorkspace.auth.password) || ''))
+      }
+    },
+    profile: {
+      ...(existingWorkspace.profile || {}),
+      id: nextId,
+      name: String(profileSummary.name || '').trim(),
+      email: normalizeEmail(profileSummary.email),
+      phone: String(profileSummary.phone || '').trim(),
+      location: String(profile.serviceArea || profile.city || (existingWorkspace.profile && existingWorkspace.profile.location) || '').trim(),
+      title: String(profile.specialization || profile.title || (existingWorkspace.profile && existingWorkspace.profile.title) || 'Arbitrator').trim(),
+      avatar: String(
+        profileSummary.avatarUrl
+        || (existingWorkspace.profile && existingWorkspace.profile.avatar)
+        || `https://ui-avatars.com/api/?name=${encodeURIComponent(String(profileSummary.name || 'Arbitrator').trim())}&background=1E3A8A&color=fff&size=128`
+      ).trim(),
+      bio: String(profile.bio || (existingWorkspace.profile && existingWorkspace.profile.bio) || '').trim()
+    },
+    auth: {
+      ...(existingWorkspace.auth || {}),
+      id: nextId,
+      email: normalizeEmail(profileSummary.email),
+      password: String(passwordOverride || ((existingWorkspace.auth && existingWorkspace.auth.password) || '')),
+      role: 'arbitrator',
+      approved
+    }
+  };
+
+  if (typeof personalizeArbitratorWorkspace === 'function') {
+    personalizeArbitratorWorkspace(workspace, workspace.profile, previousProfile);
+  }
+
+  return { workspace, approved };
+}
+
+function persistArbitratorProfileSummary(profileSummary, passwordOverride = '', options = {}) {
+  const { workspace, approved } = buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOverride);
+  const shouldActivateSession = options.activateSession !== false && approved;
+
+  if (typeof setActiveArbitratorId === 'function') {
+    setActiveArbitratorId(workspace.profile.id);
+  }
+
+  if (typeof upsertArbitratorAccount === 'function') {
+    upsertArbitratorAccount(workspace);
+  }
+
+  saveArbitratorDatabase(workspace);
+
+  const authData = {
+    id: workspace.profile.id,
+    name: workspace.profile.name,
+    email: workspace.auth.email,
+    phone: String(workspace.profile.phone || '').trim(),
+    isLoggedIn: shouldActivateSession,
+    role: 'arbitrator'
+  };
+
+  if (shouldActivateSession) {
+    writeStorageJSON(AUTH_KEYS.ARBITRATOR, authData);
+    persistActiveUser(authData);
+  } else {
+    localStorage.removeItem(AUTH_KEYS.ARBITRATOR);
+    const activeUser = getActiveUser();
+    if (activeUser && activeUser.role === 'arbitrator') {
+      removeStorageKeys(AUTH_KEYS.ACTIVE_USER, AUTH_KEYS.ACTIVE_SESSION);
+    }
+  }
+
+  return { authData, workspace, approved };
+}
+
 function getArbitratorSession() {
   const sessionData = readStorageJSON(AUTH_KEYS.ARBITRATOR, null);
 
   if (sessionData && sessionData.email) {
     const normalizedSession = {
       ...sessionData,
+      id: String(sessionData.id || '').trim(),
       email: normalizeEmail(sessionData.email),
       phone: String(sessionData.phone || '').trim(),
       role: 'arbitrator',
@@ -817,7 +1003,7 @@ function getArbitratorSession() {
 
 function arbitratorLogin(email, password, expectedRole = 'arbitrator') {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const normalizedEmail = normalizeEmail(email);
       const providedPassword = String(password || '');
 
@@ -830,88 +1016,39 @@ function arbitratorLogin(email, password, expectedRole = 'arbitrator') {
         reject(new Error('Please enter a valid email address'));
         return;
       }
+      try {
+        const loginData = await requestServiceHubApi('/session/login', {
+          method: 'POST',
+          body: {
+            role: expectedRole,
+            email: normalizedEmail,
+            password: providedPassword
+          }
+        });
 
-      const arbitratorAccounts = getArbitratorAccountRegistry();
-      const matchedAccount = arbitratorAccounts.find((account) => {
-        const accountEmail = normalizeEmail(
-          (account.auth && account.auth.email) ||
-          (account.profile && account.profile.email)
-        );
-        return accountEmail === normalizedEmail;
-      });
+        const approvalStatus = String(
+          loginData && loginData.profileSummary && loginData.profileSummary.profile
+            ? loginData.profileSummary.profile.approvalStatus
+            : 'approved'
+        ).toLowerCase();
 
-      if (!matchedAccount) {
-        reject(new Error('No registered arbitrator found. Please complete the registration process.'));
-        return;
+        if (approvalStatus !== 'approved') {
+          reject(new Error('Your arbitrator account is not active yet.'));
+          return;
+        }
+
+        const result = persistArbitratorProfileSummary(loginData.profileSummary, providedPassword, { activateSession: true });
+        resolve(result.authData);
+      } catch (error) {
+        reject(error);
       }
-
-      const account = {
-        ...(matchedAccount.auth || {}),
-        email: normalizeEmail((matchedAccount.auth && matchedAccount.auth.email) || matchedAccount.profile.email),
-        role: (matchedAccount.auth && matchedAccount.auth.role) || 'arbitrator',
-        approved: matchedAccount.auth ? matchedAccount.auth.approved !== false : true,
-        password: String((matchedAccount.auth && matchedAccount.auth.password) || '')
-      };
-
-      if (!matchedAccount.registration || matchedAccount.registration.isComplete !== true) {
-        reject(new Error('Please complete the registration process before logging in.'));
-        return;
-      }
-
-      if (account.email !== normalizedEmail) {
-        reject(new Error('Invalid credentials. Only registered arbitrators can access this portal.'));
-        return;
-      }
-
-      if (account.role !== expectedRole) {
-        reject(new Error('This account is not registered as an arbitrator.'));
-        return;
-      }
-
-      if (!account.approved) {
-        reject(new Error('Your arbitrator account is not active yet.'));
-        return;
-      }
-
-      // Backward-compatible migration for existing local demo accounts with no stored password yet.
-      if (!account.password) {
-        account.password = providedPassword;
-        matchedAccount.auth = account;
-      } else if (account.password !== providedPassword) {
-        reject(new Error('Incorrect password. Please try again.'));
-        return;
-      }
-
-      const authData = {
-        name: matchedAccount.profile.name,
-        email: account.email,
-        phone: String(matchedAccount.profile.phone || '').trim(),
-        isLoggedIn: true,
-        role: 'arbitrator'
-      };
-
-      matchedAccount.profile.email = authData.email;
-
-      if (typeof setActiveArbitratorId === 'function' && matchedAccount.profile && matchedAccount.profile.id) {
-        setActiveArbitratorId(matchedAccount.profile.id);
-      }
-
-      if (typeof upsertArbitratorAccount === 'function') {
-        upsertArbitratorAccount(matchedAccount);
-      }
-
-      saveArbitratorDatabase(matchedAccount);
-      writeStorageJSON(AUTH_KEYS.ARBITRATOR, authData);
-      persistActiveUser(authData);
-
-      resolve(authData);
     }, 500);
   });
 }
 
 function arbitratorSignup(name, email, password, metadata = {}) {
   return new Promise((resolve, reject) => {
-    setTimeout(() => {
+    setTimeout(async () => {
       const trimmedName = String(name || '').trim();
       const normalizedEmail = normalizeEmail(email);
       const providedPassword = String(password || '');
@@ -935,80 +1072,29 @@ function arbitratorSignup(name, email, password, metadata = {}) {
         reject(new Error('Password must be at least 8 characters long'));
         return;
       }
-
-      const existingAccount = getArbitratorAccountRegistry().find((account) => {
-        const accountEmail = normalizeEmail(
-          (account.auth && account.auth.email) ||
-          (account.profile && account.profile.email)
+      try {
+        const experienceYears = Math.max(
+          0,
+          parseInt(String(metadata.experience || metadata.experienceYears || '0').match(/\d+/)?.[0] || '0', 10)
         );
-        return accountEmail === normalizedEmail;
-      });
+        const registration = await requestServiceHubApi('/arbitrators/applications', {
+          method: 'POST',
+          body: {
+            name: trimmedName,
+            email: normalizedEmail,
+            password: providedPassword,
+            phone: String(metadata.phone || '').trim(),
+            specialization: String(metadata.specialization || metadata.title || 'General Arbitration').trim(),
+            experienceYears,
+            bio: String(metadata.bio || '').trim()
+          }
+        });
 
-      if (existingAccount) {
-        reject(new Error('An arbitrator account with this email already exists. Please log in instead.'));
-        return;
+        const result = persistArbitratorProfileSummary(registration.profileSummary, providedPassword, { activateSession: false });
+        resolve(result.authData);
+      } catch (error) {
+        reject(error);
       }
-
-      const arbitratorDB = getArbitratorDatabase() || {};
-      const previousProfile = { ...(arbitratorDB.profile || {}) };
-      arbitratorDB.registration = {
-        ...(arbitratorDB.registration || {}),
-        isComplete: true,
-        lastStep: 4,
-        formData: {
-          ...((arbitratorDB.registration && arbitratorDB.registration.formData) || {}),
-          password: providedPassword
-        }
-      };
-      arbitratorDB.profile = {
-        ...(arbitratorDB.profile || {}),
-        name: trimmedName,
-        email: normalizedEmail,
-        phone: String(metadata.phone || (arbitratorDB.profile && arbitratorDB.profile.phone) || '').trim(),
-        location: String(metadata.location || (arbitratorDB.profile && arbitratorDB.profile.location) || '').trim(),
-        title: String(metadata.title || (arbitratorDB.profile && arbitratorDB.profile.title) || 'Senior Arbitrator').trim(),
-        avatar: String(
-          metadata.avatar ||
-          (arbitratorDB.profile && arbitratorDB.profile.avatar) ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(trimmedName)}&background=1E3A8A&color=fff&size=128`
-        )
-      };
-      arbitratorDB.auth = {
-        ...(arbitratorDB.auth || {}),
-        id: String((arbitratorDB.profile && arbitratorDB.profile.id) || (typeof generateArbitratorId === 'function' ? generateArbitratorId() : `ARB-${Date.now()}`)),
-        email: normalizedEmail,
-        password: providedPassword,
-        role: 'arbitrator',
-        approved: metadata.approved !== false
-      };
-      arbitratorDB.profile.id = arbitratorDB.auth.id;
-
-      if (typeof personalizeArbitratorWorkspace === 'function') {
-        personalizeArbitratorWorkspace(arbitratorDB, arbitratorDB.profile, previousProfile);
-      }
-
-      if (typeof setActiveArbitratorId === 'function') {
-        setActiveArbitratorId(arbitratorDB.profile.id);
-      }
-
-      if (typeof upsertArbitratorAccount === 'function') {
-        upsertArbitratorAccount(arbitratorDB);
-      }
-
-      saveArbitratorDatabase(arbitratorDB);
-
-      const authData = {
-        name: trimmedName,
-        email: normalizedEmail,
-        phone: arbitratorDB.profile.phone,
-        isLoggedIn: true,
-        role: 'arbitrator'
-      };
-
-      writeStorageJSON(AUTH_KEYS.ARBITRATOR, authData);
-      persistActiveUser(authData);
-
-      resolve(authData);
     }, 500);
   });
 }
@@ -1031,7 +1117,7 @@ function arbitratorLogout() {
   }
 }
 
-function resetArbitratorPassword(identifier, nextPassword) {
+async function resetArbitratorPassword(identifier, nextPassword) {
   const lookupValue = normalizeEmail(identifier);
   if (!lookupValue) {
     throw new Error('Enter a valid arbitrator email address first.');
@@ -1041,42 +1127,17 @@ function resetArbitratorPassword(identifier, nextPassword) {
     throw new Error('Your new password must be at least 8 characters and include upper, lower, number, and symbol.');
   }
 
-  const accounts = getArbitratorAccountRegistry();
-  const account = accounts.find((entry) => normalizeEmail(
-    (entry.auth && entry.auth.email) || (entry.profile && entry.profile.email)
-  ) === lookupValue);
+  const resetResult = await requestServiceHubApi('/session/password-reset', {
+    method: 'POST',
+    body: {
+      role: 'arbitrator',
+      identifier: lookupValue,
+      password: String(nextPassword || '')
+    }
+  });
 
-  if (!account) {
-    throw new Error('We could not find a registered arbitrator with that email address.');
-  }
-
-  account.auth = {
-    ...(account.auth || {}),
-    email: lookupValue,
-    password: String(nextPassword || ''),
-    role: 'arbitrator',
-    approved: account.auth ? account.auth.approved !== false : true
-  };
-
-  if (typeof upsertArbitratorAccount === 'function') {
-    upsertArbitratorAccount(account);
-  } else if (typeof saveArbitratorAccounts === 'function') {
-    const updatedAccounts = accounts.map((entry) => (
-      String((entry.profile && entry.profile.id) || '') === String((account.profile && account.profile.id) || '')
-        ? account
-        : entry
-    ));
-    saveArbitratorAccounts(updatedAccounts);
-  }
-
-  const activeArbitrator = typeof getActiveArbitratorId === 'function'
-    ? getActiveArbitratorId()
-    : '';
-  if (activeArbitrator && account.profile && String(account.profile.id || '') === String(activeArbitrator)) {
-    saveArbitratorDatabase(account);
-  }
-
-  return account;
+  const result = persistArbitratorProfileSummary(resetResult.profileSummary, nextPassword, { activateSession: false });
+  return result.workspace;
 }
 
 /* ============================================

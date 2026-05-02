@@ -153,7 +153,7 @@
           if (nextPassword === null || nextPassword === false) return;
 
           try {
-            resetProviderPassword(identifier, nextPassword);
+            await resetProviderPassword(identifier, nextPassword);
             document.getElementById('loginPassword').value = nextPassword;
             showMessage('<i class="fa-regular fa-circle-check" style="margin-right:6px;"></i> <strong>Password reset complete.</strong> You can log in with the new password now.', 'success');
           } catch (error) {

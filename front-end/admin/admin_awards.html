@@ -138,7 +138,7 @@
                     <td>
                         <div class="actions-cell">
                             <button class="btn-act" onclick="editAward('${a.id}')" title="Edit/View"><i class="fa-solid fa-eye"></i></button>
-                            <button class="btn-act btn-disabled" onclick="alert('Security: Award document access is restricted.')" title="Download Restricted"><i class="fa-solid fa-download"></i></button>
+                            <button class="btn-act btn-disabled" onclick="window.showAppToast('Security: Award document access is restricted.', 'warning')" title="Download Restricted"><i class="fa-solid fa-download"></i></button>
                             <button class="btn-act" onclick="deleteAward('${a.id}')" title="Delete" style="color:#ef4444"><i class="fa-solid fa-trash"></i></button>
                         </div>
                     </td>
@@ -163,19 +163,18 @@
             window.location.href = `admin_award_details.html?id=${encodeURIComponent(id)}`;
         }
 
-        function deleteAward(id) {
-            if(confirm("Permanently delete this ruling record from the system?")) {
-                AdminData.awards = AdminData.awards.filter(a => a.id !== id);
-                logAdminActivity(`Removed Award Record: ${id}`);
-                saveAdminData();
-                renderTable();
-            }
+        async function deleteAward(id) {
+            await showAppModal(
+                'Deletion Not Available',
+                `Permanent award deletion for ${id} is not exposed by the current backend. Amend the award or update its status from the detail view instead.`,
+                { okText: 'Understood', type: 'warning' }
+            );
         }
 
         function exportAwards() {
             const list = AdminData.awards || [];
             if (list.length === 0) {
-                alert("No awards available to export.");
+                window.showAppToast("No awards available to export.", "info");
                 return;
             }
 
@@ -193,7 +192,10 @@
             window.URL.revokeObjectURL(url);
         }
 
-        document.addEventListener('DOMContentLoaded', renderTable);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            renderTable();
+        });
     </script>
 </body>
 </html>

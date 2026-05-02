@@ -1,8 +1,16 @@
 // customer/assets/js/profile.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
   if (!app) return;
+
+  if (app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for profile page:", error);
+    }
+  }
 
   const currentCustomer = app.getCurrentCustomer();
   if (!currentCustomer) {
@@ -80,9 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (saveButton) {
-    saveButton.addEventListener("click", () => {
+    saveButton.addEventListener("click", async () => {
       try {
-        const updatedCustomer = app.updateCustomerProfile({
+        const updatedCustomer = await app.updateCustomerProfile({
           name: document.getElementById("profile-name").value,
           email: document.getElementById("profile-email").value,
           phone: document.getElementById("profile-phone").value,
@@ -101,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (passwordForm) {
-    passwordForm.addEventListener("submit", (event) => {
+    passwordForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const currentPassword = document.getElementById("current-password").value;
@@ -122,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        app.updateCustomerPassword(currentPassword, newPassword);
+        await app.updateCustomerPassword(currentPassword, newPassword);
         passwordForm.reset();
         showMessage(passwordSuccess, "Password changed successfully.", "success");
       } catch (error) {

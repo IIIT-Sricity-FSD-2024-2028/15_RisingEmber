@@ -1,6 +1,15 @@
 // assets/js/customer-dashboard.js
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const app = window.CustomerApp;
+    if (app && app.ready && typeof app.ready.then === 'function') {
+        try {
+            await app.ready;
+        } catch (error) {
+            console.warn('Customer backend sync unavailable for dashboard:', error);
+        }
+    }
+
     const servicesGrid = document.getElementById('dashboard-services-grid');
     const navSearch = document.getElementById('nav-search');
     const bannerSearch = document.getElementById('banner-search');

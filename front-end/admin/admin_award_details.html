@@ -32,11 +32,12 @@
                     <div class="content-card">
                         <div class="card-title" style="margin-bottom:20px; font-weight:700;">Award Metadata</div>
                         <div class="info-grid">
-                            <div class="info-item"><label>Award ID</label><input type="text" id="in-id" class="edit-input"></div>
-                            <div class="info-item"><label>Decision Date</label><input type="date" id="in-date" class="edit-input"></div>
+                            <div class="info-item"><label>Award ID</label><input type="text" id="in-id" class="edit-input" disabled></div>
+                            <div class="info-item"><label>Decision Date</label><input type="date" id="in-date" class="edit-input" disabled></div>
                             <div class="info-item" style="grid-column: span 2;"><label>Case Title</label><input type="text" id="in-title" class="edit-input"></div>
-                            <div class="info-item"><label>Case ID Ref</label><input type="text" id="in-case" class="edit-input"></div>
-                            <div class="info-item"><label>Presiding Arbitrator</label><input type="text" id="in-arb" class="edit-input"></div>
+                            <div class="info-item"><label>Case ID Ref</label><input type="text" id="in-case" class="edit-input" disabled></div>
+                            <div class="info-item"><label>Presiding Arbitrator</label><input type="text" id="in-arb" class="edit-input" disabled></div>
+                            <div class="info-item" style="grid-column: span 2;"><label>Award Summary</label><textarea id="in-summary" class="edit-input" style="min-height:120px; resize:vertical;"></textarea></div>
                         </div>
                     </div>
 
@@ -55,7 +56,7 @@
                         <select id="in-status" class="edit-input" style="margin: 10px 0 20px 0;">
                             <option value="Issued">Issued</option>
                             <option value="Draft">Draft</option>
-                            <option value="Archived">Archived</option>
+                            <option value="Amended">Amended</option>
                         </select>
                         <button class="btn-save" onclick="saveAward()">Save Changes</button>
                         <button class="action-btn" style="width:100%; margin-top:10px; background:#f1f5f9; color:#64748b; border:none; padding:12px; border-radius:8px; cursor:pointer;" onclick="window.location.href='admin_awards.html'">Cancel</button>
@@ -75,9 +76,16 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const awdId = decodeURIComponent(urlParams.get('id') || "");
-        let currentAwd = AdminData.awards.find(a => a.id === awdId);
+        let currentAwd = null;
 
-        function init() {
+        function refreshCurrentAward() {
+            currentAwd = (AdminData.awards || []).find(a => a.id === awdId) || null;
+            return currentAwd;
+        }
+
+        async function init() {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            refreshCurrentAward();
             if(!currentAwd) return window.location.href='admin_awards.html';
             document.getElementById('sub-header').innerText = `Managing Ruling: ${currentAwd.id}`;
             
@@ -86,6 +94,7 @@
             document.getElementById('in-title').value = currentAwd.title;
             document.getElementById('in-case').value = currentAwd.caseId;
             document.getElementById('in-arb').value = currentAwd.arbitrator;
+            document.getElementById('in-summary').value = currentAwd.summary || currentAwd.title || "";
             document.getElementById('in-status').value = currentAwd.status;
 
             // Lookup Parties from Case DB
@@ -97,29 +106,44 @@
         }
 
         async function saveAward() {
-            const oldId = currentAwd.id;
-            const nextId = document.getElementById('in-id').value.trim();
-            const nextDate = document.getElementById('in-date').value;
             const nextTitle = document.getElementById('in-title').value.trim();
-            const nextCaseId = document.getElementById('in-case').value.trim();
-            const nextArbitrator = document.getElementById('in-arb').value.trim();
+            const nextSummary = document.getElementById('in-summary').value.trim();
+            const nextStatus = document.getElementById('in-status').value;
 
-            if (!nextId || !nextDate || !nextTitle || !nextCaseId || !nextArbitrator) {
-                alert("Award ID, decision date, case title, case ID, and arbitrator are required.");
+            if (!nextTitle || !nextSummary) {
+                window.showAppToast("Award title and summary are required.", "warning");
                 return;
             }
 
-            currentAwd.id = nextId;
-            currentAwd.date = nextDate;
-            currentAwd.title = nextTitle;
-            currentAwd.caseId = nextCaseId;
-            currentAwd.arbitrator = nextArbitrator;
-            currentAwd.status = document.getElementById('in-status').value;
+            if (nextSummary.length < 10) {
+                window.showAppToast("Award summary must be at least 10 characters long.", "warning");
+                return;
+            }
 
-            logAdminActivity(`Modified Award Record: ${oldId}`);
-            saveAdminData();
-            await showAppModal("Award Updated", "Record synchronized successfully.", { okText: "Back to Awards" });
-            window.location.href = 'admin_awards.html';
+            try {
+                await requestAdminApi(`/awards/${encodeURIComponent(currentAwd.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        title: nextTitle,
+                        summary: nextSummary,
+                        status: mapAwardStatusToBackend(nextStatus)
+                    }
+                });
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity(`Modified award record: ${currentAwd.id}`);
+                await showAppModal("Award Updated", "Record synchronized with the backend successfully.", { okText: "Back to Awards" });
+                window.location.href = 'admin_awards.html';
+            } catch (error) {
+                window.showAppToast(error.message || "Award update failed.", "error");
+            }
+        }
+
+        function mapAwardStatusToBackend(statusLabel) {
+            const value = String(statusLabel || '').toLowerCase();
+            if (value.includes('issued')) return 'issued';
+            if (value.includes('amended')) return 'amended';
+            return 'draft';
         }
 
         document.addEventListener('DOMContentLoaded', init);

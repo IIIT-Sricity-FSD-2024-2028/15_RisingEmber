@@ -813,6 +813,318 @@ function normalizeArbitratorData(rawData) {
     return syncArbitratorDerivedData(normalizedData);
 }
 
+function getArbitratorApiBaseUrl() {
+    return String(
+        (typeof window !== "undefined" && window.SERVICE_HUB_API_BASE_URL)
+        || localStorage.getItem("serviceHub_api_base_url")
+        || "http://127.0.0.1:3002/api/v1"
+    ).trim().replace(/\/+$/, "");
+}
+
+async function requestArbitratorApi(path, options = {}) {
+    if (window.ServiceHubApi && typeof window.ServiceHubApi.request === "function") {
+        return window.ServiceHubApi.request(path, options);
+    }
+
+    const headers = { ...(options.headers || {}) };
+    let body = options.body;
+
+    if (body !== undefined && body !== null && !(body instanceof FormData)) {
+        headers["Content-Type"] = headers["Content-Type"] || "application/json";
+        body = typeof body === "string" ? body : JSON.stringify(body);
+    }
+
+    const response = await fetch(`${getArbitratorApiBaseUrl()}${path}`, {
+        method: options.method || "GET",
+        headers,
+        body
+    });
+
+    let payload = null;
+    try {
+        payload = await response.json();
+    } catch (error) {
+        payload = null;
+    }
+
+    if (!response.ok) {
+        const message = payload && payload.message
+            ? (Array.isArray(payload.message) ? payload.message.join("\n") : payload.message)
+            : "The backend request failed.";
+        throw new Error(message);
+    }
+
+    return payload && Object.prototype.hasOwnProperty.call(payload, "data") ? payload.data : payload;
+}
+
+function getArbitratorBackendActorId() {
+    const activeUser = readStorageJSONSafe("activeUser", null);
+    if (activeUser && activeUser.role === "arbitrator" && activeUser.id) {
+        return String(activeUser.id);
+    }
+
+    const session = readStorageJSONSafe("sh_arbitrator_auth", null);
+    if (session && session.id) {
+        return String(session.id);
+    }
+
+    return String((window.ArbitratorData && window.ArbitratorData.auth && window.ArbitratorData.auth.id) || "");
+}
+
+function readStorageJSONSafe(key, fallback = null) {
+    try {
+        const rawValue = localStorage.getItem(key);
+        return rawValue ? JSON.parse(rawValue) : fallback;
+    } catch (error) {
+        return fallback;
+    }
+}
+
+function humanizeArbitratorToken(value) {
+    const token = String(value || "").replace(/_/g, " ").trim();
+    return token ? token.charAt(0).toUpperCase() + token.slice(1) : "";
+}
+
+function mapBackendHearingTypeLabel(type) {
+    const value = String(type || "").toLowerCase();
+    if (value === "video") return "Virtual Hearing";
+    if (value === "phone") return "Phone Hearing";
+    if (value === "in_person") return "Physical Hearing";
+    return humanizeArbitratorToken(type) || "General Hearing";
+}
+
+function mapBackendDocumentLabel(document) {
+    const rawType = String(document && document.type ? document.type : "").toLowerCase();
+    const searchableText = [
+        document && document.title,
+        document && document.description,
+        document && document.fileName
+    ].join(" ").toLowerCase();
+
+    if (rawType === "award_attachment") return "Award Document";
+    if (rawType === "identity") return "Identity Document";
+    if (rawType === "invoice") return "Invoice";
+    if (rawType === "evidence") {
+        return searchableText.includes("witness") ? "Witness Statement" : "Evidence";
+    }
+    if (rawType === "contract") {
+        return searchableText.includes("response") ? "Response Document" : "Claim Document";
+    }
+    if (searchableText.includes("order")) return "Order Document";
+    if (searchableText.includes("response")) return "Response Document";
+    if (searchableText.includes("witness")) return "Witness Statement";
+    return "Other Document";
+}
+
+function formatArbitratorBackendDate(dateInput) {
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function formatArbitratorBackendTime(dateInput) {
+    const date = new Date(dateInput);
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}
+
+function formatArbitratorAmount(amount, currency) {
+    const numericAmount = Number(amount) || 0;
+    return new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: currency || "INR",
+        maximumFractionDigits: 0
+    }).format(numericAmount);
+}
+
+function mapArbitratorCaseStatus(status) {
+    const value = String(status || "").toLowerCase();
+    if (value === "under_review" || value === "assigned") return { label: "Under Review", className: "arb-badge-blue", color: "#1E40AF" };
+    if (value === "evidence_review") return { label: "Evidence Review", className: "arb-badge-yellow", color: "#92400E" };
+    if (value === "hearing_scheduled") return { label: "Hearing Scheduled", className: "arb-badge-green", color: "#065F46" };
+    if (value === "resolved") return { label: "Resolved", className: "arb-badge-purple", color: "#6B21A8" };
+    if (value === "closed") return { label: "Closed", className: "arb-badge-gray", color: "#6B7280" };
+    return { label: "Under Review", className: "arb-badge-blue", color: "#1E40AF" };
+}
+
+function mapBackendCaseToArbitrator(caseRecord, hearingsByCaseId) {
+    const hearing = hearingsByCaseId.get(caseRecord.id) || null;
+    const statusMeta = mapArbitratorCaseStatus(caseRecord.status);
+    const claimant = caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : "Customer";
+    const respondent = caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "Provider";
+
+    return {
+        id: caseRecord.id,
+        type: (caseRecord.booking && caseRecord.booking.service && caseRecord.booking.service.category) || humanizeArbitratorToken(caseRecord.priority) || "General",
+        claimant,
+        respondent,
+        amount: formatArbitratorAmount(
+            caseRecord.booking ? caseRecord.booking.totalAmount : 0,
+            caseRecord.booking ? caseRecord.booking.currency : "INR"
+        ),
+        assigned: formatArbitratorBackendDate(caseRecord.createdAt),
+        next: hearing ? formatArbitratorBackendDate(hearing.scheduledAt) : "—",
+        status: statusMeta.label,
+        statusColor: statusMeta.color,
+        statusClass: statusMeta.className,
+        description: caseRecord.description,
+        hearingDate: hearing ? formatArbitratorBackendDate(hearing.scheduledAt) : "",
+        hearingTime: hearing ? formatArbitratorBackendTime(hearing.scheduledAt) : "",
+        hearingType: hearing ? mapBackendHearingTypeLabel(hearing.type) : ""
+    };
+}
+
+function mapBackendHearingToArbitrator(hearing, caseRecord) {
+    return {
+        id: hearing.caseId,
+        hearingId: hearing.id,
+        parties: caseRecord
+            ? `${caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : "Customer"} vs ${caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "Provider"}`
+            : "Case Hearing",
+        date: formatArbitratorBackendDate(hearing.scheduledAt),
+        time: formatArbitratorBackendTime(hearing.scheduledAt),
+        type: mapBackendHearingTypeLabel(hearing.type),
+        status: humanizeArbitratorToken(hearing.status),
+        statusClass: "arb-badge-blue",
+        link: hearing.type === "video" ? "Backend Managed" : "",
+        location: hearing.type === "in_person" ? "Backend Managed" : ""
+    };
+}
+
+function mapBackendDocumentToArbitrator(document) {
+    const typeLabel = mapBackendDocumentLabel(document);
+    const typeClass = /award/i.test(typeLabel)
+        ? "arb-badge-green"
+        : (/claim|contract|identity/i.test(typeLabel) ? "arb-badge-blue" : "arb-badge-yellow");
+
+    return {
+        name: document.fileName || document.title,
+        id: document.caseId,
+        documentId: document.id,
+        type: typeLabel,
+        uploadedBy: document.uploader && document.uploader.name ? document.uploader.name : "Case Party",
+        date: formatArbitratorBackendDate(document.createdAt),
+        size: document.content ? `${(String(document.content).length / 1024 / 1024).toFixed(1)} MB` : "N/A",
+        typeClass,
+        fileLink: document.content || "#"
+    };
+}
+
+function mapBackendDecisionList(cases, awards, hearingsByCaseId) {
+    const awardsByCaseId = new Map((Array.isArray(awards) ? awards : []).map((award) => [award.caseId, award]));
+    return (Array.isArray(cases) ? cases : []).map((caseRecord) => {
+        const award = awardsByCaseId.get(caseRecord.id) || null;
+        const hearing = hearingsByCaseId.get(caseRecord.id) || null;
+        const awardIssued = Boolean(award && String(award.status || "").toLowerCase() === "issued");
+        return {
+            id: caseRecord.id,
+            parties: `${caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : "Customer"} vs ${caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "Provider"}`,
+            type: (caseRecord.booking && caseRecord.booking.service && caseRecord.booking.service.category) || humanizeArbitratorToken(caseRecord.priority) || "General",
+            deadline: hearing ? formatArbitratorBackendDate(hearing.scheduledAt) : formatArbitratorBackendDate(caseRecord.updatedAt),
+            status: awardIssued ? "Award Issued" : "Awaiting Decision",
+            statusClass: awardIssued ? "arb-badge-green" : "arb-badge-yellow",
+            priority: humanizeArbitratorToken(caseRecord.priority) || "Medium",
+            amount: formatArbitratorAmount(
+                caseRecord.booking ? caseRecord.booking.totalAmount : 0,
+                caseRecord.booking ? caseRecord.booking.currency : "INR"
+            ),
+            awardId: award && award.id ? award.id : ""
+        };
+    });
+}
+
+function mapBackendChatData(cases) {
+    return (Array.isArray(cases) ? cases : []).reduce((accumulator, caseRecord) => {
+        const caseId = caseRecord.id;
+        accumulator[caseId] = {
+            parties: `${caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : "Customer"} vs ${caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "Provider"}`,
+            participants: [
+                { name: caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : "Customer", role: "Customer", avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : "Customer")}&background=DBEAFE&color=1E3A8A` },
+                { name: caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "Provider", role: "Provider", avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "Provider")}&background=E0E7FF&color=4338CA` }
+            ],
+            messages: Array.isArray(caseRecord.messages)
+                ? caseRecord.messages.map((message) => ({
+                    name: humanizeArbitratorToken(message.authorRole),
+                    role: humanizeArbitratorToken(message.authorRole),
+                    time: formatArbitratorBackendTime(message.createdAt),
+                    text: message.message,
+                    avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(humanizeArbitratorToken(message.authorRole) || "User")}&background=1E3A8A&color=fff`
+                }))
+                : []
+        };
+        return accumulator;
+    }, {});
+}
+
+async function syncArbitratorBackendData(options = {}) {
+    const actorId = getArbitratorBackendActorId();
+    if (!actorId) return window.ArbitratorData;
+
+    try {
+        const headers = {
+            "x-role": "arbitrator",
+            "x-actor-id": actorId
+        };
+        const [profileSummary, cases, hearings, documents, awards, notifications] = await Promise.all([
+            requestArbitratorApi("/users/me", { headers }),
+            requestArbitratorApi("/cases", { headers }),
+            requestArbitratorApi("/hearings", { headers }),
+            requestArbitratorApi("/documents", { headers }),
+            requestArbitratorApi("/awards", { headers }),
+            requestArbitratorApi("/notifications", { headers })
+        ]);
+
+        const hearingsByCaseId = new Map((Array.isArray(hearings) ? hearings : []).map((hearing) => [hearing.caseId, hearing]));
+        const mappedCases = Array.isArray(cases) ? cases.map((caseRecord) => mapBackendCaseToArbitrator(caseRecord, hearingsByCaseId)) : [];
+        const mappedDocuments = Array.isArray(documents) ? documents.map(mapBackendDocumentToArbitrator) : [];
+
+        const nextWorkspace = persistArbitratorData({
+            ...window.ArbitratorData,
+            profile: {
+                ...(window.ArbitratorData.profile || {}),
+                id: profileSummary && profileSummary.id ? profileSummary.id : actorId,
+                name: profileSummary && profileSummary.name ? profileSummary.name : (window.ArbitratorData.profile && window.ArbitratorData.profile.name),
+                email: profileSummary && profileSummary.email ? normalizeArbitratorEmail(profileSummary.email) : (window.ArbitratorData.profile && window.ArbitratorData.profile.email),
+                phone: profileSummary && profileSummary.phone ? profileSummary.phone : (window.ArbitratorData.profile && window.ArbitratorData.profile.phone),
+                location: profileSummary && profileSummary.profile ? (profileSummary.profile.serviceArea || profileSummary.profile.city || (window.ArbitratorData.profile && window.ArbitratorData.profile.location)) : (window.ArbitratorData.profile && window.ArbitratorData.profile.location),
+                title: profileSummary && profileSummary.profile ? (profileSummary.profile.specialization || (window.ArbitratorData.profile && window.ArbitratorData.profile.title)) : (window.ArbitratorData.profile && window.ArbitratorData.profile.title),
+                avatar: profileSummary && profileSummary.avatarUrl ? profileSummary.avatarUrl : (window.ArbitratorData.profile && window.ArbitratorData.profile.avatar),
+                bio: profileSummary && profileSummary.profile ? (profileSummary.profile.bio || (window.ArbitratorData.profile && window.ArbitratorData.profile.bio)) : (window.ArbitratorData.profile && window.ArbitratorData.profile.bio)
+            },
+            auth: {
+                ...(window.ArbitratorData.auth || {}),
+                id: actorId,
+                email: profileSummary && profileSummary.email ? normalizeArbitratorEmail(profileSummary.email) : (window.ArbitratorData.auth && window.ArbitratorData.auth.email),
+                role: "arbitrator",
+                approved: profileSummary && profileSummary.profile ? String(profileSummary.profile.approvalStatus || "").toLowerCase() === "approved" : true
+            },
+            allCases: mappedCases,
+            hearingsList: Array.isArray(hearings) ? hearings.map((hearing) => mapBackendHearingToArbitrator(
+                hearing,
+                Array.isArray(cases) ? cases.find((caseRecord) => caseRecord.id === hearing.caseId) : null
+            )) : [],
+            caseDocuments: mappedDocuments,
+            decisionsList: mapBackendDecisionList(cases, awards, hearingsByCaseId),
+            notifications: Array.isArray(notifications) ? notifications.map((notification) => ({
+                id: notification.id,
+                type: notification.entityType || "case",
+                text: `${notification.title}: ${notification.body}`,
+                time: formatArbitratorBackendDate(notification.createdAt),
+                read: Boolean(notification.read)
+            })) : [],
+            chatData: mapBackendChatData(cases)
+        });
+
+        window.dispatchEvent(new CustomEvent("servicehub:arbitrator-data-synced", { detail: nextWorkspace }));
+        return nextWorkspace;
+    } catch (error) {
+        if (!options.silent) {
+            console.warn("Arbitrator backend sync failed:", error);
+        }
+        return window.ArbitratorData;
+    }
+}
+
 function persistArbitratorData(nextData) {
     const normalizedData = normalizeArbitratorData(nextData);
     localStorage.setItem(ARBITRATOR_STORAGE_KEYS.DB, JSON.stringify(normalizedData));
@@ -836,6 +1148,11 @@ const initialWorkspace = activeArbitratorAccount || (
 );
 
 window.ArbitratorData = persistArbitratorData(initialWorkspace);
+window.syncArbitratorBackendData = syncArbitratorBackendData;
+window.requestArbitratorApi = requestArbitratorApi;
+window.ArbitratorDataReady = getArbitratorBackendActorId()
+    ? syncArbitratorBackendData({ silent: true })
+    : Promise.resolve(window.ArbitratorData);
 
 /**
  * GLOBAL UTILITY: saveData()

@@ -1,7 +1,14 @@
 // customer/assets/js/booking-confirmation.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for booking confirmation:", error);
+    }
+  }
   const latestBookingId = localStorage.getItem("latestBookingId") || localStorage.getItem("selectedBookingId");
   const bookings = app && typeof app.getCustomerBookings === "function"
     ? app.getCustomerBookings()

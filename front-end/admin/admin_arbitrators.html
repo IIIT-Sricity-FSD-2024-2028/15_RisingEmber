@@ -181,29 +181,13 @@
             `).join('');
         }
 
-        function addNewArbitrator() {
-            const id = "#ARB" + Math.floor(1000 + Math.random() * 8999);
-            const newArb = {
-                id: id,
-                name: "New Arbitrator",
-                email: "pending@verification.com",
-                specialization: "General",
-                experience: "0 years",
-                status: "Pending",
-                location: "Not Specified",
-                phone: "N/A",
-                organization: "N/A",
-                certification: "N/A",
-                expertise: "General",
-                avatar: `https://i.pravatar.cc/150?u=${id}`,
-                metrics: { activeCases: 0, closedCases: 0, avgResolution: "0 days", upcomingHearings: 0, rating: 0, totalReviews: 0, successRate: "0%" },
-                pastCases: [],
-                documents: [],
-                adminNotes: ""
-            };
-            AdminData.arbitrators.unshift(newArb);
-            saveAdminData();
-            initPage();
+        async function addNewArbitrator() {
+            await showAppModal(
+                'Use Shared Onboarding',
+                'Create new arbitrators through the shared user creation flow so the account and approval pipeline stay linked to the backend.',
+                { okText: 'Open Create User', type: 'info' }
+            );
+            window.location.href = 'admin_create_user.html';
         }
 
         function viewArbitrator(id) {
@@ -215,21 +199,36 @@
             window.location.href = `admin_arbitrator_profile.html?id=${encodeURIComponent(id)}`;
         }
 
-        function toggleArbStatus(id) {
+        async function toggleArbStatus(id) {
             const arb = AdminData.arbitrators.find(a => a.id === id);
             if(arb) {
-                arb.status = (arb.status === 'Suspended' ? 'Active' : 'Suspended');
-                saveAdminData();
-                initPage();
+                try {
+                    if (typeof window.requestAdminApi === 'function') {
+                        await window.requestAdminApi(`/users/${encodeURIComponent(id)}`, {
+                            method: 'PATCH',
+                            headers: window.getAdminRequestHeaders ? window.getAdminRequestHeaders() : {},
+                            body: {
+                                approvalStatus: arb.status === 'Suspended' ? 'approved' : 'rejected'
+                            }
+                        });
+                        if (window.syncAdminBackendData) await window.syncAdminBackendData({ silent: true, force: true });
+                    } else {
+                        arb.status = (arb.status === 'Suspended' ? 'Active' : 'Suspended');
+                        saveAdminData();
+                    }
+                    initPage();
+                } catch (error) {
+                    window.showAppModal('Update Failed', error && error.message ? error.message : 'We could not update this arbitrator right now.', { type: 'danger' });
+                }
             }
         }
 
-        function deleteArbitrator(id) {
-            if(confirm(`Remove arbitrator ${id}?`)) {
-                AdminData.arbitrators = AdminData.arbitrators.filter(a => a.id !== id);
-                saveAdminData();
-                initPage();
-            }
+        async function deleteArbitrator(id) {
+            await showAppModal(
+                'Deletion Not Available',
+                `Permanent arbitrator deletion for ${id} is not exposed by the current backend. Suspend the arbitrator instead if access should be removed.`,
+                { okText: 'Understood', type: 'warning' }
+            );
         }
 
         function exportArbsToCSV() {
@@ -245,7 +244,10 @@
             a.click();
         }
 
-        document.addEventListener('DOMContentLoaded', initPage);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            initPage();
+        });
     </script>
 </body>
 </html>

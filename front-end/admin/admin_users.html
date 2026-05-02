@@ -192,32 +192,63 @@
         /**
          * Quickly updates status (Approve/Reject/Disable) without leaving the page
          */
-        function updateUserStatus(userId, newStatus) {
-            const userIndex = AdminData.users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
+        async function updateUserStatus(userId, newStatus) {
+            const user = AdminData.users.find(u => u.id === userId);
+            if (!user) return;
+
+            try {
+                const payload = {};
+                const isArbitrator = user.role === 'Arbitrator';
+
                 if (newStatus === 'Rejected') {
-                    AdminData.users.splice(userIndex, 1);
-                } else {
-                    AdminData.users[userIndex].status = newStatus;
+                    if (isArbitrator) {
+                        payload.approvalStatus = 'rejected';
+                    } else {
+                        payload.isActive = false;
+                    }
+                } else if (newStatus === 'Active') {
+                    if (isArbitrator) {
+                        payload.approvalStatus = 'approved';
+                    } else {
+                        payload.isActive = true;
+                    }
+                } else if (newStatus === 'Suspended') {
+                    if (isArbitrator) {
+                        payload.approvalStatus = 'rejected';
+                    } else {
+                        payload.isActive = false;
+                    }
                 }
-                saveAdminData();
+
+                await requestAdminApi(`/users/${encodeURIComponent(userId)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: payload
+                });
+                await window.syncAdminBackendData({ silent: true });
                 renderUserManagement();
+                window.showAppToast(`User ${userId} updated successfully.`, 'success');
+            } catch (error) {
+                window.showAppToast(error.message || `Unable to update user ${userId}.`, 'error');
             }
         }
 
         /**
          * Permanent delete function
          */
-        function deleteUser(userId) {
-            if (confirm(`Are you sure you want to permanently delete user ${userId}?`)) {
-                AdminData.users = AdminData.users.filter(u => u.id !== userId);
-                saveAdminData();
-                renderUserManagement();
-            }
+        async function deleteUser(userId) {
+            await showAppModal(
+                'Deletion Not Available',
+                `Permanent deletion for ${userId} is not exposed by the current backend. Use Disable or Reject to deactivate the account instead.`,
+                { okText: 'Understood', type: 'warning' }
+            );
         }
 
         // Run render on load
-        document.addEventListener('DOMContentLoaded', renderUserManagement);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            renderUserManagement();
+        });
     </script>
 </body>
 </html>

@@ -185,8 +185,11 @@ function initMyBookings() {
     });
 }
 
-window.cancelBooking = (id) => {
-    if (!confirm("Are you sure you want to cancel this booking?")) return;
+window.cancelBooking = async (id) => {
+    const confirmed = window.CustomerApp && typeof window.CustomerApp.requestConfirmation === 'function'
+        ? await window.CustomerApp.requestConfirmation("Cancel Booking", "Are you sure you want to cancel this booking?", { confirm: true, type: "danger", okText: "Cancel Booking" })
+        : true;
+    if (!confirmed) return;
     const db = JSON.parse(localStorage.getItem('serviceHub_bookings'));
     const item = db.find(i => i.bookingId === id);
     if (item) item.status = 'Cancelled';

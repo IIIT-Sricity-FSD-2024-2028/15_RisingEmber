@@ -227,32 +227,26 @@
             renderMessages();
         }
 
-        function sendMessage() {
+        async function sendMessage() {
             const input = document.getElementById('msgInput');
             if (!input) return;
             const text = input.value.trim();
             if (!text || !activeCaseId || !ArbitratorData.chatData[activeCaseId]) return;
 
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-            const newMsg = {
-                name: ArbitratorData.profile.name,
-                role: "Arbitrator",
-                time: timeStr,
-                text: text,
-                avatar: ArbitratorData.profile.avatar
-            };
-
-            ArbitratorData.chatData[activeCaseId].messages.push(newMsg);
-            saveData();
-
-            input.value = "";
-            renderMessages();
-            renderConversations();
+            try {
+                await appendArbitratorCaseMessage(activeCaseId, text);
+                await window.syncArbitratorBackendData({ silent: true });
+                input.value = "";
+                renderMessages();
+                renderConversations();
+                window.showAppToast("Message sent successfully.", "success", { duration: 2200 });
+            } catch (error) {
+                window.showAppToast(error.message || "The message could not be sent.", "error");
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             if (!guardArbitratorPage()) return;
             const requestedCaseId = getArbitratorCaseIdFromUrl();
             const requestedCase = getArbitratorCaseById(requestedCaseId);
