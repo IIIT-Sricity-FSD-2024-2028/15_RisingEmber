@@ -1,7 +1,14 @@
 // customer/assets/js/dispute-form.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for dispute form:", error);
+    }
+  }
   const form = document.getElementById("disputeForm");
   if (!form) return;
 
@@ -141,7 +148,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     updateFeedback("", "info");
 
@@ -168,68 +175,34 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const disputes = app && typeof app.getCustomerDisputes === "function"
-      ? app.getCustomerDisputes()
-      : (JSON.parse(localStorage.getItem("serviceHub_disputes")) || []);
-    const disputeId = `DSP-${String(Date.now()).slice(-8)}`;
-    const now = new Date();
+    try {
+      const dispute = app && typeof app.createCustomerDispute === "function"
+        ? await app.createCustomerDispute({
+            bookingId: contextBooking.bookingId,
+            title: `${contextBooking.title} dispute`,
+            description,
+            evidence: selectedFiles
+          })
+        : null;
 
-    const dispute = {
-      id: disputeId,
-      bookingId: contextBooking.bookingId,
-      service: contextBooking.title,
-      provider: contextBooking.provider,
-      category,
-      status: "pending",
-      date: now.toISOString().split("T")[0],
-      submittedAt: now.toISOString(),
-      desc: description,
-      evidence: selectedFiles,
-      timeline: [
-        {
-          title: "Dispute Submitted",
-          detail: "Your dispute was successfully submitted and assigned to the support team.",
-          status: "completed",
-          at: now.toISOString()
-        },
-        {
-          title: "Pending Review",
-          detail: "Our team will review the booking details and any evidence you uploaded.",
-          status: "active",
-          at: now.toISOString()
-        },
-        {
-          title: "Provider Response",
-          detail: "The service provider will be asked to respond to your dispute.",
-          status: "pending"
-        },
-        {
-          title: "Resolution",
-          detail: "A final decision will be shared once the review is complete.",
-          status: "pending"
-        }
-      ]
-    };
+      if (dispute) {
+        localStorage.setItem("latestDisputeId", dispute.id);
+        localStorage.setItem("selectedDisputeId", dispute.id);
+      }
+      localStorage.removeItem("pendingDisputeContext");
 
-    const nextDisputes = [dispute].concat(Array.isArray(disputes) ? disputes : []);
-    if (app && typeof app.saveCustomerDisputes === "function") {
-      app.saveCustomerDisputes(nextDisputes);
-    } else {
-      localStorage.setItem("serviceHub_disputes", JSON.stringify(nextDisputes));
+      if (app) {
+        app.addNotification(
+          "Dispute submitted",
+          `Your dispute for ${contextBooking.title} was submitted successfully.`,
+          { href: "dispute-submitted.html", icon: "fa-file-circle-exclamation", tone: "orange" }
+        );
+      }
+
+      window.location.href = "dispute-submitted.html";
+    } catch (error) {
+      updateFeedback(error.message, "error");
     }
-    localStorage.setItem("latestDisputeId", disputeId);
-    localStorage.setItem("selectedDisputeId", disputeId);
-    localStorage.removeItem("pendingDisputeContext");
-
-    if (app) {
-      app.addNotification(
-        "Dispute submitted",
-        `Your dispute for ${dispute.service} was submitted successfully.`,
-        { href: "dispute-submitted.html", icon: "fa-file-circle-exclamation", tone: "orange" }
-      );
-    }
-
-    window.location.href = "dispute-submitted.html";
   });
 
   populateContext();

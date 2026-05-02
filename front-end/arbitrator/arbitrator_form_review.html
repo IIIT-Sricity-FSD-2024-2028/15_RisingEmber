@@ -120,13 +120,13 @@
             const isConfirmed = document.getElementById('finalConfirm').checked;
 
             if (!isConfirmed) {
-                alert("Please confirm the information accuracy by checking the box.");
+                window.showAppToast("Please confirm the information accuracy by checking the box.", "warning");
                 return;
             }
 
             const formData = ArbitratorData.registration.formData;
             if (!formData.password || formData.password.length < 8) {
-                alert("Please return to Step 1 and create a valid password.");
+                window.showAppToast("Please return to Step 1 and create a valid password.", "warning");
                 return;
             }
 
@@ -134,12 +134,15 @@
                 await arbitratorSignup(formData.name, formData.email, formData.password, {
                     phone: formData.phone,
                     location: formData.country,
-                    title: formData.title
+                    title: formData.title,
+                    specialization: formData.expertise,
+                    experience: formData.experience,
+                    bio: formData.prevExperience
                 });
 
                 window.location.href = 'arbitrator_success.html';
             } catch (error) {
-                alert(error.message);
+                window.showAppToast(error.message, "error");
             }
         }
     </script>

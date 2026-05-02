@@ -1,7 +1,14 @@
 // customer/assets/js/cancel-booking.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for cancellation page:", error);
+    }
+  }
   const bookings = app && typeof app.getCustomerBookings === "function"
     ? app.getCustomerBookings()
     : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
@@ -41,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       updateFeedback("", "info");
 
@@ -63,34 +70,26 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const nextBookings = bookings.map((item) => {
-        if (item.bookingId !== booking.bookingId) return item;
-        return {
-          ...item,
-          status: "Cancelled",
-          cancellationReason: selectedReason.value,
-          cancellationNotes: comments,
-          cancelledAt: new Date().toISOString()
-        };
-      });
+      try {
+        if (app && typeof app.cancelCustomerBooking === "function") {
+          await app.cancelCustomerBooking(booking.bookingId, selectedReason.value, comments);
+        }
 
-      if (app && typeof app.saveCustomerBookings === "function") {
-        app.saveCustomerBookings(nextBookings);
-      } else {
-        localStorage.setItem("serviceHub_bookings", JSON.stringify(nextBookings));
+        localStorage.setItem("latestCancellationBookingId", booking.bookingId);
+        localStorage.setItem("selectedBookingId", booking.bookingId);
+
+        if (app) {
+          app.addNotification(
+            "Booking cancelled",
+            `${booking.title} was cancelled successfully.`,
+            { href: "cancellation-confirmed.html", icon: "fa-calendar-xmark", tone: "red" }
+          );
+        }
+
+        window.location.href = "cancellation-confirmed.html";
+      } catch (error) {
+        updateFeedback(error.message, "error");
       }
-      localStorage.setItem("latestCancellationBookingId", booking.bookingId);
-      localStorage.setItem("selectedBookingId", booking.bookingId);
-
-      if (app) {
-        app.addNotification(
-          "Booking cancelled",
-          `${booking.title} was cancelled successfully.`,
-          { href: "cancellation-confirmed.html", icon: "fa-calendar-xmark", tone: "red" }
-        );
-      }
-
-      window.location.href = "cancellation-confirmed.html";
     });
   }
 

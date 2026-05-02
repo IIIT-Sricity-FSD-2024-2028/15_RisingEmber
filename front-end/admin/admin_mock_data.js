@@ -6,6 +6,8 @@
     const ADMIN_DB_KEY = 'admin_db';
     const ADMIN_PUBLIC_PAGES = new Set(['admin_landing.html']);
     const ADMIN_FEEDBACK_STYLE_ID = 'admin-app-feedback-styles';
+    const ADMIN_API_BASE_URL_KEY = 'serviceHub_api_base_url';
+    const ADMIN_DEFAULT_API_BASE_URL = 'http://127.0.0.1:3002/api/v1';
 
     function ensureAdminFeedbackStyles() {
         if (typeof document === 'undefined' || document.getElementById(ADMIN_FEEDBACK_STYLE_ID)) return;
@@ -327,13 +329,15 @@
     const initialAdminData = {
         session: {
             isLoggedIn: false,
-            lastLogin: null
+            lastLogin: null,
+            actorId: 'user_1001',
+            role: 'admin'
         },
         profile: {
-            name: "Michael Thompson",
+            name: "Naina Kapoor",
             role: "System Administrator",
-            email: "michael.thompson@arbitratepro.com",
-            phone: "+1 (555) 123-4567",
+            email: "admin@servicehub.test",
+            phone: "9999999991",
             department: "System Administration",
             avatar: "https://i.pravatar.cc/150?u=admin_m"
         },
@@ -837,11 +841,14 @@
     function normalizeMessages(messages) {
         if (!Array.isArray(messages)) return [];
         return messages.map((message) => ({
+            id: message && message.id ? message.id : "",
+            caseId: message && message.caseId ? message.caseId : "",
             user: message && (message.user || message.sender) ? (message.user || message.sender) : "System",
             sender: message && (message.sender || message.user) ? (message.sender || message.user) : "System",
             text: message && message.text ? message.text : "",
             time: message && message.time ? message.time : "Just now",
-            flagged: Boolean(message && message.flagged)
+            flagged: Boolean(message && message.flagged),
+            reviewed: Boolean(message && message.reviewed)
         }));
     }
 
@@ -931,6 +938,7 @@
             id: `AWD-${new Date().getFullYear()}-${String(index + 1).padStart(3, '0')}`,
             caseId: linkedCase ? linkedCase.id : "",
             title: linkedCase ? linkedCase.title : "Untitled Award",
+            summary: linkedCase ? (linkedCase.notes || linkedCase.title || "Award summary pending.") : "Award summary pending.",
             arbitrator: linkedCase ? linkedCase.arbitrator.name : "Unassigned",
             date: toIsoDate(award && award.date, new Date()),
             status: "Draft"
@@ -962,6 +970,7 @@
     function normalizeConversation(conversation, index) {
         const defaults = {
             id: `#10${String(index + 20)}`,
+            caseId: "",
             participants: "Conversation",
             type: "General",
             lastMessage: "",
@@ -974,12 +983,17 @@
 
         const normalized = deepMerge(defaults, conversation);
         normalized.messages = normalizeMessages(normalized.messages).map((message) => ({
+            id: message.id,
+            caseId: message.caseId || normalized.caseId || normalized.id,
             sender: message.sender,
             time: message.time,
             text: message.text,
-            flagged: message.flagged
+            flagged: message.flagged,
+            reviewed: message.reviewed
         }));
         normalized.lastMessage = normalized.lastMessage || (normalized.messages[normalized.messages.length - 1] || {}).text || "";
+        normalized.isFlagged = normalized.isFlagged || normalized.messages.some((message) => message.flagged);
+        normalized.isReviewed = normalized.isReviewed || (normalized.messages.length > 0 && normalized.messages.every((message) => message.reviewed));
         return normalized;
     }
 
@@ -1090,6 +1104,371 @@
             .map((award, index) => normalizeAward(award, index, normalized.cases));
 
         return syncDerivedData(normalized);
+    }
+
+    function getAdminApiBaseUrl() {
+        return String(
+            (typeof window !== 'undefined' && window.SERVICE_HUB_API_BASE_URL)
+            || localStorage.getItem(ADMIN_API_BASE_URL_KEY)
+            || ADMIN_DEFAULT_API_BASE_URL
+        ).trim().replace(/\/+$/, '');
+    }
+
+    async function requestAdminApi(path, options = {}) {
+        const headers = { ...(options.headers || {}) };
+        let body = options.body;
+
+        if (body !== undefined && body !== null && !(body instanceof FormData)) {
+            headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+            body = typeof body === 'string' ? body : JSON.stringify(body);
+        }
+
+        const response = await fetch(`${getAdminApiBaseUrl()}${path}`, {
+            method: options.method || 'GET',
+            headers,
+            body
+        });
+
+        let payload = null;
+        try {
+            payload = await response.json();
+        } catch (error) {
+            payload = null;
+        }
+
+        if (!response.ok) {
+            const message = payload && payload.message
+                ? (Array.isArray(payload.message) ? payload.message.join('\n') : payload.message)
+                : 'The backend request failed.';
+            throw new Error(message);
+        }
+
+        return payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
+    }
+
+    function getAdminRequestHeaders() {
+        const session = window.AdminData && window.AdminData.session ? window.AdminData.session : {};
+        return {
+            'x-role': 'admin',
+            'x-actor-id': session.actorId || 'user_1001'
+        };
+    }
+
+    function humanizeAdminToken(value) {
+        const token = String(value || '').replace(/_/g, ' ').trim();
+        return token ? token.charAt(0).toUpperCase() + token.slice(1) : '';
+    }
+
+    function mapBackendUserStatus(user) {
+        const profile = user && user.profile ? user.profile : {};
+        if (user && user.role === 'arbitrator') {
+            const approval = String(profile.approvalStatus || '').toLowerCase();
+            if (approval === 'approved') return 'Active';
+            if (approval === 'rejected') return 'Suspended';
+            return 'Pending';
+        }
+        return user && user.isActive === false ? 'Suspended' : 'Active';
+    }
+
+    function mapBackendRoleLabel(role) {
+        const value = String(role || '').toLowerCase();
+        if (value === 'provider') return 'Service Provider';
+        if (value === 'customer') return 'Customer';
+        if (value === 'arbitrator') return 'Arbitrator';
+        return 'Admin';
+    }
+
+    function mapBackendUserToAdminUser(user, cases) {
+        const relatedCases = Array.isArray(cases)
+            ? cases.filter((caseItem) => (
+                caseItem.customerId === user.id
+                || caseItem.providerId === user.id
+                || caseItem.arbitratorId === user.id
+            ))
+            : [];
+        const profile = user && user.profile ? user.profile : {};
+
+        return normalizeUser({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: mapBackendRoleLabel(user.role),
+            status: mapBackendUserStatus(user),
+            date: formatLongDate(user.createdAt),
+            avatar: user.avatarUrl || '',
+            phone: user.phone || '',
+            org: profile.businessName || profile.specialization || profile.title || 'Independent',
+            address: profile.address || profile.city || profile.serviceArea || '',
+            lastLogin: user.updatedAt ? new Date(user.updatedAt).toLocaleString() : 'Never',
+            stats: {
+                involved: relatedCases.length,
+                won: 0,
+                lost: 0,
+                pending: relatedCases.filter((caseItem) => !['resolved', 'closed'].includes(String(caseItem.status || '').toLowerCase())).length
+            },
+            permissions: []
+        }, 0);
+    }
+
+    function mapBackendArbitratorToAdmin(arbitrator, cases, hearings) {
+        const profile = arbitrator && arbitrator.profile ? arbitrator.profile : {};
+        const assignedCases = Array.isArray(cases) ? cases.filter((caseItem) => caseItem.arbitratorId === arbitrator.id) : [];
+        const assignedHearings = Array.isArray(hearings) ? hearings.filter((hearing) => hearing.arbitratorId === arbitrator.id) : [];
+        const approval = String(profile.approvalStatus || '').toLowerCase();
+
+        return normalizeArbitrator({
+            id: arbitrator.id,
+            name: arbitrator.name,
+            email: arbitrator.email,
+            specialization: profile.specialization || 'General',
+            experience: profile.experienceYears ? `${profile.experienceYears} years` : 'Pending',
+            location: profile.city || profile.serviceArea || 'Not Specified',
+            phone: arbitrator.phone || '',
+            organization: 'ServiceHub Arbitrator Panel',
+            certification: approval === 'approved' ? 'Verified' : 'Pending Review',
+            expertise: profile.specialization || 'General',
+            status: approval === 'approved' ? 'Active' : (approval === 'rejected' ? 'Suspended' : 'Pending'),
+            avatar: arbitrator.avatarUrl || '',
+            metrics: {
+                activeCases: assignedCases.filter((caseItem) => !['resolved', 'closed'].includes(String(caseItem.status || '').toLowerCase())).length,
+                closedCases: assignedCases.filter((caseItem) => ['resolved', 'closed'].includes(String(caseItem.status || '').toLowerCase())).length,
+                avgResolution: 'TBD',
+                upcomingHearings: assignedHearings.length,
+                rating: 0,
+                totalReviews: 0,
+                successRate: '0%'
+            },
+            casesHandled: assignedCases.length,
+            pastCases: assignedCases.map((caseItem) => caseItem.id),
+            documents: [],
+            adminNotes: profile.bio || ''
+        }, 0);
+    }
+
+    function mapBackendCaseStatus(status) {
+        const value = String(status || '').toLowerCase();
+        if (value === 'open') return 'Open';
+        if (value === 'under_review') return 'Under Review';
+        if (value === 'assigned') return 'Assigned';
+        if (value === 'hearing_scheduled') return 'Hearing Scheduled';
+        if (value === 'evidence_review') return 'Evidence Review';
+        if (value === 'resolved') return 'Awarded';
+        if (value === 'closed') return 'Closed';
+        return humanizeAdminToken(value) || 'Open';
+    }
+
+    function mapBackendCaseToAdmin(caseRecord) {
+        const messages = Array.isArray(caseRecord.messages) ? caseRecord.messages : [];
+        return normalizeCaseRecord({
+            id: caseRecord.id,
+            backendId: caseRecord.id,
+            bookingId: caseRecord.bookingId,
+            title: caseRecord.title,
+            customer: {
+                name: caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : 'Unknown Customer',
+                email: caseRecord.customer && caseRecord.customer.email ? caseRecord.customer.email : '',
+                phone: caseRecord.customer && caseRecord.customer.phone ? caseRecord.customer.phone : ''
+            },
+            provider: {
+                company: caseRecord.provider && caseRecord.provider.profile && caseRecord.provider.profile.businessName
+                    ? caseRecord.provider.profile.businessName
+                    : (caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : 'Pending Assignment'),
+                name: caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : '',
+                email: caseRecord.provider && caseRecord.provider.email ? caseRecord.provider.email : '',
+                phone: caseRecord.provider && caseRecord.provider.phone ? caseRecord.provider.phone : ''
+            },
+            arbitrator: caseRecord.arbitrator
+                ? {
+                    id: caseRecord.arbitrator.id,
+                    name: caseRecord.arbitrator.name,
+                    email: caseRecord.arbitrator.email,
+                    status: 'Assigned'
+                }
+                : { id: '', name: 'Unassigned', email: '', status: 'Unassigned' },
+            type: caseRecord.booking && caseRecord.booking.service ? caseRecord.booking.service.category : 'General',
+            status: mapBackendCaseStatus(caseRecord.status),
+            filedDateISO: toIsoDate(caseRecord.createdAt, new Date()),
+            filedDate: formatLongDate(caseRecord.createdAt),
+            timeline: [
+                { event: 'Case filed', date: formatLongDate(caseRecord.createdAt), completed: true },
+                ...messages.slice(0, 4).map((message) => ({
+                    event: `${humanizeAdminToken(message.authorRole)} update`,
+                    date: formatLongDate(message.createdAt),
+                    completed: true
+                }))
+            ],
+            messages: messages.map((message) => ({
+                id: message.id,
+                caseId: caseRecord.id,
+                user: `${humanizeAdminToken(message.authorRole)}${message.authorId ? '' : ''}`,
+                sender: humanizeAdminToken(message.authorRole),
+                text: message.message,
+                time: new Date(message.createdAt).toLocaleString(),
+                flagged: Boolean(message.flagged),
+                reviewed: Boolean(message.reviewed)
+            })),
+            notes: caseRecord.resolutionSummary || caseRecord.description || ''
+        }, 0);
+    }
+
+    function mapBackendCaseToAdminConversation(caseRecord) {
+        const messages = Array.isArray(caseRecord.messages) ? caseRecord.messages : [];
+        const customerName = caseRecord.customer && caseRecord.customer.name ? caseRecord.customer.name : 'Unknown Customer';
+        const providerName = caseRecord.provider && caseRecord.provider.profile && caseRecord.provider.profile.businessName
+            ? caseRecord.provider.profile.businessName
+            : (caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : 'Pending Provider');
+        const mappedMessages = messages.map((message) => ({
+            id: message.id,
+            caseId: caseRecord.id,
+            sender: humanizeAdminToken(message.authorRole),
+            time: new Date(message.createdAt).toLocaleString(),
+            text: message.message,
+            flagged: Boolean(message.flagged),
+            reviewed: Boolean(message.reviewed)
+        }));
+        const latestMessage = mappedMessages[mappedMessages.length - 1];
+
+        return normalizeConversation({
+            id: caseRecord.id,
+            caseId: caseRecord.id,
+            participants: `${customerName} vs. ${providerName}`,
+            type: 'Case Monitoring',
+            lastMessage: latestMessage ? latestMessage.text : 'No messages submitted for this case yet.',
+            time: latestMessage ? latestMessage.time : formatLongDate(caseRecord.updatedAt || caseRecord.createdAt),
+            status: mapBackendCaseStatus(caseRecord.status),
+            isFlagged: mappedMessages.some((message) => message.flagged),
+            isReviewed: mappedMessages.length > 0 && mappedMessages.every((message) => message.reviewed),
+            messages: mappedMessages
+        }, 0);
+    }
+
+    function mapBackendHearingToAdmin(hearing) {
+        return normalizeHearing({
+            id: hearing.id,
+            caseId: hearing.caseId,
+            arbitrator: hearing.arbitrator && hearing.arbitrator.name ? hearing.arbitrator.name : 'Unassigned',
+            date: toIsoDate(hearing.scheduledAt, new Date()),
+            time: new Date(hearing.scheduledAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
+            type: hearing.type === 'in_person' ? 'Physical' : humanizeAdminToken(hearing.type),
+            status: humanizeAdminToken(hearing.status)
+        }, 0, window.AdminData && window.AdminData.cases ? window.AdminData.cases : []);
+    }
+
+    function mapBackendDocumentToAdmin(document) {
+        return normalizeDocument({
+            id: document.id,
+            name: document.fileName || document.title,
+            caseId: document.caseId,
+            uploader: document.uploader && document.uploader.name ? document.uploader.name : 'Admin',
+            uploaderRole: humanizeAdminToken(document.uploaderRole),
+            type: humanizeAdminToken(document.type),
+            date: formatLongDate(document.createdAt),
+            status: humanizeAdminToken(document.status),
+            size: document.content ? `${(String(document.content).length / 1024 / 1024).toFixed(2)} MB` : 'N/A',
+            fileLink: document.content || ''
+        }, 0, window.AdminData && window.AdminData.cases ? window.AdminData.cases : []);
+    }
+
+    function mapBackendAwardToAdmin(award) {
+        return normalizeAward({
+            id: award.id,
+            caseId: award.caseId,
+            title: award.title,
+            summary: award.summary || '',
+            arbitrator: award.arbitrator && award.arbitrator.name ? award.arbitrator.name : 'Unassigned',
+            date: toIsoDate(award.decisionDate || award.updatedAt || award.createdAt, new Date()),
+            status: humanizeAdminToken(award.status)
+        }, 0, window.AdminData && window.AdminData.cases ? window.AdminData.cases : []);
+    }
+
+    function mapBackendArbitratorApplication(user) {
+        const profile = user && user.profile ? user.profile : {};
+        const approval = String(profile.approvalStatus || '').toLowerCase();
+        return normalizeApplication({
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            country: profile.city || profile.serviceArea || 'India',
+            flag: 'IN',
+            exp: profile.experienceYears ? `${profile.experienceYears} years` : 'Pending',
+            spec: profile.specialization || profile.category || 'General',
+            status: approval === 'approved' ? 'Approved' : (approval === 'rejected' ? 'Rejected' : 'Pending Review')
+        }, 0);
+    }
+
+    async function syncAdminBackendData(options = {}) {
+        const session = window.AdminData && window.AdminData.session ? window.AdminData.session : {};
+        if (!session.isLoggedIn && !options.force) return window.AdminData;
+
+        try {
+            const headers = getAdminRequestHeaders();
+            const [me, users, cases, hearings, documents, awards, dashboard, settings] = await Promise.all([
+                requestAdminApi('/users/me', { headers }),
+                requestAdminApi('/users', { headers }),
+                requestAdminApi('/cases', { headers }),
+                requestAdminApi('/hearings', { headers }),
+                requestAdminApi('/documents', { headers }),
+                requestAdminApi('/awards', { headers }),
+                requestAdminApi('/dashboard/admin', { headers }),
+                requestAdminApi('/settings', { headers })
+            ]);
+
+            const mappedCases = Array.isArray(cases) ? cases.map(mapBackendCaseToAdmin) : [];
+            const mappedUsers = Array.isArray(users) ? users.map((user) => mapBackendUserToAdminUser(user, cases)) : [];
+            const mappedArbitrators = Array.isArray(users)
+                ? users
+                    .filter((user) => String(user.role || '').toLowerCase() === 'arbitrator')
+                    .map((user) => mapBackendArbitratorToAdmin(user, cases, hearings))
+                : [];
+
+            const nextData = normalizeAdminData({
+                ...window.AdminData,
+                session: {
+                    ...window.AdminData.session,
+                    actorId: me && me.id ? me.id : (window.AdminData.session.actorId || 'user_1001'),
+                    role: 'admin'
+                },
+                profile: {
+                    ...window.AdminData.profile,
+                    name: me && me.name ? me.name : window.AdminData.profile.name,
+                    email: me && me.email ? me.email : window.AdminData.profile.email,
+                    phone: me && me.phone ? me.phone : window.AdminData.profile.phone,
+                    avatar: me && me.avatarUrl ? me.avatarUrl : window.AdminData.profile.avatar
+                },
+                users: mappedUsers,
+                arbitrators: mappedArbitrators,
+                cases: mappedCases,
+                conversations: Array.isArray(cases) ? cases.map(mapBackendCaseToAdminConversation) : [],
+                hearings: Array.isArray(hearings) ? hearings.map(mapBackendHearingToAdmin) : [],
+                documents: Array.isArray(documents) ? documents.map(mapBackendDocumentToAdmin) : [],
+                awards: Array.isArray(awards) ? awards.map(mapBackendAwardToAdmin) : [],
+                settings: settings || window.AdminData.settings,
+                applications: Array.isArray(users)
+                    ? users
+                        .filter((user) => String(user.role || '').toLowerCase() === 'arbitrator')
+                        .map(mapBackendArbitratorApplication)
+                    : [],
+                stats: {
+                    ...window.AdminData.stats,
+                    totalUsers: dashboard && dashboard.metrics ? dashboard.metrics.totalUsers : 0,
+                    activeDisputes: dashboard && dashboard.metrics ? dashboard.metrics.openCases : 0,
+                    resolvedCases: mappedCases.filter((item) => item.status === 'Awarded' || item.status === 'Closed').length,
+                    verifiedArbitrators: mappedArbitrators.filter((item) => item.status === 'Active').length,
+                    newApplications: mappedArbitrators.length,
+                    pendingReviews: mappedArbitrators.filter((item) => item.status === 'Pending').length
+                }
+            });
+
+            window.AdminData = nextData;
+            localStorage.setItem(ADMIN_DB_KEY, JSON.stringify(window.AdminData));
+            window.dispatchEvent(new CustomEvent('servicehub:admin-data-synced', { detail: nextData }));
+            return nextData;
+        } catch (error) {
+            if (!options.silent) {
+                console.warn('Admin backend sync failed:', error);
+            }
+            return window.AdminData;
+        }
     }
 
     function getAdminCurrentPage() {
@@ -1215,6 +1594,9 @@
     window.enforceAdminSession = enforceAdminSession;
     window.getAdminNotifications = getAdminNotifications;
     window.createAdminCaseRecord = createAdminCaseRecord;
+    window.syncAdminBackendData = syncAdminBackendData;
+    window.requestAdminApi = requestAdminApi;
+    window.getAdminRequestHeaders = getAdminRequestHeaders;
     window.showAppToast = window.showAppToast || showAppToast;
     window.showAppModal = window.showAppModal || showAppModal;
     window.showAppPrompt = window.showAppPrompt || showAppPrompt;
@@ -1228,4 +1610,10 @@
     }
 
     enforceAdminSession();
+
+    if (window.AdminData && window.AdminData.session && window.AdminData.session.isLoggedIn) {
+        window.AdminDataReady = syncAdminBackendData({ silent: true });
+    } else {
+        window.AdminDataReady = Promise.resolve(window.AdminData);
+    }
 })();

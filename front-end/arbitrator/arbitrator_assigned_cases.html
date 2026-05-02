@@ -152,7 +152,8 @@
             toggleFilter();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
             populateStatusOptions();
             renderCases(ArbitratorData.allCases);

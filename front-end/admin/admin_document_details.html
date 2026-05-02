@@ -78,9 +78,30 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const docId = decodeURIComponent(urlParams.get('id') || "");
-        let currentDoc = AdminData.documents.find(d => d.id === docId);
+        let currentDoc = null;
+
+        function refreshCurrentDoc() {
+            currentDoc = (AdminData.documents || []).find(d => d.id === docId) || null;
+            return currentDoc;
+        }
+
+        function mapAdminDocumentTypeToBackend(value) {
+            const normalized = String(value || '').toLowerCase();
+            if (normalized.includes('contract')) return 'contract';
+            if (normalized.includes('identity')) return 'identity';
+            if (normalized.includes('evidence')) return 'evidence';
+            return 'other';
+        }
+
+        function mapAdminDocumentStatusToBackend(value) {
+            const normalized = String(value || '').toLowerCase();
+            if (normalized === 'verified') return 'accepted';
+            if (normalized === 'flagged') return 'rejected';
+            return 'uploaded';
+        }
 
         function init() {
+            refreshCurrentDoc();
             if(!currentDoc) return window.location.href='admin_documents.html';
             document.getElementById('doc-sub-header').innerText = `Editing System Record: ${currentDoc.id}`;
             
@@ -94,6 +115,9 @@
         }
 
         async function saveChanges() {
+            refreshCurrentDoc();
+            if (!currentDoc) return;
+
             const oldId = currentDoc.id;
             const nextId = document.getElementById('in-id').value.trim();
             const nextName = document.getElementById('in-name').value.trim();
@@ -101,25 +125,45 @@
             const nextUploader = document.getElementById('in-uploader').value.trim();
 
             if (!nextId || !nextName || !nextCaseId || !nextUploader) {
-                alert("Document ID, name, case ID, and uploader are required.");
+                window.showAppToast("Document ID, name, case ID, and uploader are required.", "warning");
                 return;
             }
 
-            currentDoc.id = nextId;
-            currentDoc.name = nextName;
-            currentDoc.caseId = nextCaseId;
-            currentDoc.uploader = nextUploader;
-            currentDoc.type = document.getElementById('in-type').value;
-            currentDoc.date = document.getElementById('in-date').value;
-            currentDoc.status = document.getElementById('in-status').value;
+            if (nextId !== currentDoc.id || nextCaseId !== currentDoc.caseId || nextUploader !== currentDoc.uploader) {
+                await showAppModal(
+                    "Immutable Document Links",
+                    "Document ID, linked case, and uploader are managed by the shared backend. You can update the title, type, and review status here, but not reassign ownership.",
+                    { type: "warning", okText: "Understood" }
+                );
+                init();
+                return;
+            }
 
-            logAdminActivity(`Updated Doc Metadata: ${oldId} -> ${currentDoc.id}`);
-            saveAdminData();
-            await showAppModal("Document Updated", "Changes saved to persistent database.", { okText: "Back to Documents" });
-            window.location.href = 'admin_documents.html';
+            try {
+                await requestAdminApi(`/documents/${encodeURIComponent(currentDoc.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        title: nextName,
+                        fileName: nextName,
+                        type: mapAdminDocumentTypeToBackend(document.getElementById('in-type').value),
+                        status: mapAdminDocumentStatusToBackend(document.getElementById('in-status').value)
+                    }
+                });
+
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity(`Updated Doc Metadata: ${oldId}`);
+                await showAppModal("Document Updated", "Changes saved to the shared backend.", { okText: "Back to Documents" });
+                window.location.href = 'admin_documents.html';
+            } catch (error) {
+                window.showAppToast(error.message || "Document update failed.", "error");
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            init();
+        });
     </script>
 </body>
 </html>

@@ -344,17 +344,32 @@
             document.body.removeChild(link);
         }
 
-        function updateAppStatus(id, newStatus, newClass) {
+        async function updateAppStatus(id, newStatus, newClass) {
             const app = AdminData.applications.find(a => a.id === id);
             if(app) {
                 if (app.status === newStatus) {
                     return;
                 }
-                app.status = newStatus;
-                app.statusClass = newClass;
-                saveAdminData();
-                logAdminActivity(`Application ${id} moved to ${newStatus}`);
-                renderDashboard();
+                try {
+                    if (typeof window.requestAdminApi === 'function') {
+                        await window.requestAdminApi(`/users/${encodeURIComponent(id)}`, {
+                            method: 'PATCH',
+                            headers: window.getAdminRequestHeaders ? window.getAdminRequestHeaders() : {},
+                            body: {
+                                approvalStatus: newStatus === 'Approved' ? 'approved' : (newStatus === 'Rejected' ? 'rejected' : 'pending')
+                            }
+                        });
+                        if (window.syncAdminBackendData) await window.syncAdminBackendData({ silent: true, force: true });
+                    } else {
+                        app.status = newStatus;
+                        app.statusClass = newClass;
+                        saveAdminData();
+                    }
+                    logAdminActivity(`Application ${id} moved to ${newStatus}`);
+                    renderDashboard();
+                } catch (error) {
+                    window.showAppModal('Update Failed', error && error.message ? error.message : 'We could not update this application right now.', { type: 'danger' });
+                }
             }
         }
 
@@ -365,7 +380,10 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', renderDashboard);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            renderDashboard();
+        });
     </script>
 </body>
 </html>

@@ -30,6 +30,8 @@
         .btn-blue { background: #3b82f6; color: white; }
         .btn-red { background: #ef4444; color: white; }
         .msg-box { background: #f8fafc; border-radius: 8px; padding: 12px; margin-bottom: 10px; }
+        .assign-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 12px; }
+        .assign-row button { border: none; border-radius: 6px; padding: 8px 12px; background: #1d4ed8; color: white; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body class="admin-dashboard-layout">
@@ -88,6 +90,10 @@
                         <div class="content-card">
                             <div class="card-title">Arbitrator</div>
                             <div id="arb-name-display" style="font-weight:700">---</div>
+                            <div class="assign-row">
+                                <select id="arb-select" class="edit-input" aria-label="Assign arbitrator"></select>
+                                <button type="button" onclick="assignArbitratorToCase()">Assign</button>
+                            </div>
                         </div>
                     </div>
 
@@ -123,6 +129,15 @@
         const rawId = urlParams.get('id');
         const caseId = decodeURIComponent(rawId || "");
         let currentCase = null;
+
+        function mapAdminCaseStatusToBackend(statusLabel) {
+            const value = String(statusLabel || '').toLowerCase();
+            if (value.includes('hearing')) return 'hearing_scheduled';
+            if (value.includes('review')) return 'under_review';
+            if (value.includes('award') || value.includes('resolved')) return 'resolved';
+            if (value.includes('closed')) return 'closed';
+            return 'open';
+        }
 
         function refreshCurrentCase() {
             currentCase = (AdminData.cases || []).find(c => c.id === caseId) || null;
@@ -165,6 +180,7 @@
             document.getElementById('display-prov-comp').innerText = currentCase.provider.company || currentCase.provider.name || "Pending Assignment";
             document.getElementById('arb-name-display').innerText = currentCase.arbitrator.name || "Unassigned";
             document.getElementById('case-notes').value = currentCase.notes || "";
+            populateArbitratorOptions();
 
             // Inputs
             document.getElementById('edit-title').value = currentCase.title || "";
@@ -190,6 +206,68 @@
                 : `<div style="color:#94a3b8; font-size:0.9rem;">No messages attached to this case.</div>`;
         }
 
+        function populateArbitratorOptions() {
+            const select = document.getElementById('arb-select');
+            if (!select) return;
+
+            const currentArbitratorId = currentCase && currentCase.arbitrator ? currentCase.arbitrator.id : "";
+            const arbitrators = (AdminData.arbitrators || [])
+                .filter((item) => item && item.id && item.status !== 'Suspended')
+                .sort((left, right) => String(left.name || '').localeCompare(String(right.name || '')));
+
+            select.innerHTML = [
+                `<option value="">Select arbitrator</option>`,
+                ...arbitrators.map((arbitrator) => `
+                    <option value="${arbitrator.id}" ${arbitrator.id === currentArbitratorId ? 'selected' : ''}>
+                        ${arbitrator.name} ${arbitrator.status ? `(${arbitrator.status})` : ''}
+                    </option>
+                `)
+            ].join('');
+        }
+
+        async function assignArbitratorToCase() {
+            refreshCurrentCase();
+            if (!currentCase) return;
+
+            const select = document.getElementById('arb-select');
+            const arbitratorId = select ? select.value : "";
+            if (!arbitratorId) {
+                window.showAppToast("Please select an arbitrator before assigning the case.", "warning");
+                return;
+            }
+
+            if (currentCase.arbitrator && currentCase.arbitrator.id === arbitratorId) {
+                window.showAppToast("That arbitrator is already assigned to this case.", "info");
+                return;
+            }
+
+            const selectedArbitrator = (AdminData.arbitrators || []).find((item) => item.id === arbitratorId);
+            const confirmed = await showAppModal(
+                "Assign Arbitrator",
+                `Assign ${selectedArbitrator ? selectedArbitrator.name : 'this arbitrator'} to ${currentCase.id}?`,
+                { confirm: true, okText: "Assign", type: "info" }
+            );
+            if (!confirmed) return;
+
+            try {
+                await requestAdminApi(`/cases/${encodeURIComponent(currentCase.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        arbitratorId,
+                        message: `Admin assigned ${selectedArbitrator ? selectedArbitrator.name : 'an arbitrator'} to this case.`
+                    }
+                });
+                await window.syncAdminBackendData({ silent: true });
+                refreshCurrentCase();
+                logAdminActivity(`Assigned arbitrator ${arbitratorId} to case ${currentCase.id}`);
+                window.showAppToast("Arbitrator assigned successfully.", "success");
+                loadCaseData();
+            } catch (error) {
+                window.showAppToast(error.message || "Arbitrator assignment failed.", "error");
+            }
+        }
+
         function toggleEditMode() {
             const elements = [
                 'display-title', 'edit-title', 'display-type', 'edit-type', 
@@ -206,7 +284,7 @@
                 '<i class="fa-solid fa-xmark"></i> Cancel' : '<i class="fa-solid fa-pen-to-square"></i> Edit Case Details';
         }
 
-        function saveCaseChanges() {
+        async function saveCaseChanges() {
             refreshCurrentCase();
             if (!currentCase) return;
 
@@ -218,49 +296,95 @@
             const providerCompany = document.getElementById('edit-prov-comp').value.trim();
 
             if (!title || !type || !customerName || !providerCompany) {
-                alert("Title, type, customer name, and provider name are all required.");
+                window.showAppToast("Title, type, customer name, and provider name are all required.", "warning");
                 return;
             }
             if (!(typeof isValidHumanName === 'function' ? isValidHumanName(customerName) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(customerName))) {
-                alert("Please enter a valid customer name using letters only.");
+                window.showAppToast("Please enter a valid customer name using letters only.", "warning");
                 return;
             }
 
-            currentCase.title = title;
-            currentCase.type = type;
-            currentCase.status = document.getElementById('edit-status').value;
-            currentCase.customer.name = customerName;
-            currentCase.provider.company = providerCompany;
-            currentCase.notes = document.getElementById('case-notes').value;
-
-            saveAdminData();
-            logAdminActivity(`Updated case ${currentCase.id}`);
-            alert("Changes Saved Successfully!");
-
-            if (!document.getElementById('edit-title').classList.contains('hidden')) {
-                toggleEditMode();
+            if (
+                title !== (currentCase.title || '') ||
+                type !== (currentCase.type || '') ||
+                customerName !== (currentCase.customer.name || '') ||
+                providerCompany !== (currentCase.provider.company || currentCase.provider.name || '')
+            ) {
+                await showAppModal(
+                    "Immutable Case Details",
+                    "Case title, type, customer, and provider details are derived from the linked booking and dispute records. Please edit them from the source workflow instead of overriding them here.",
+                    { type: "warning", okText: "Understood" }
+                );
+                loadCaseData();
+                return;
             }
-            loadCaseData();
-        }
 
-        function closeCase() {
-            refreshCurrentCase();
-            if(confirm("Confirm closure of this case?")) {
-                currentCase.status = "Closed";
-                if (Array.isArray(currentCase.timeline)) {
-                    currentCase.timeline.push({
-                        event: "Case closed",
-                        date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                        completed: true
-                    });
+            try {
+                const selectedStatus = document.getElementById('edit-status').value;
+                const notes = document.getElementById('case-notes').value;
+                const payload = {
+                    status: mapAdminCaseStatusToBackend(selectedStatus)
+                };
+
+                if (selectedStatus === 'Closed' && notes.trim()) {
+                    payload.resolutionSummary = notes.trim();
                 }
-                saveAdminData();
-                logAdminActivity(`Closed case ${currentCase.id}`);
-                window.location.href = 'admin_cases.html';
+
+                await requestAdminApi(`/cases/${encodeURIComponent(currentCase.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: payload
+                });
+
+                await window.syncAdminBackendData({ silent: true });
+                refreshCurrentCase();
+                if (currentCase) {
+                    ensureCaseShape(currentCase);
+                    currentCase.notes = notes;
+                    saveAdminData();
+                }
+
+                logAdminActivity(`Updated case ${caseId}`);
+                if (!document.getElementById('edit-title').classList.contains('hidden')) {
+                    toggleEditMode();
+                }
+                await showAppModal("Case Updated", "Case status saved successfully.", { okText: "Refresh Case" });
+                loadCaseData();
+            } catch (error) {
+                window.showAppToast(error.message || "Case update failed.", "error");
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => { loadCaseData(); });
+        async function closeCase() {
+            refreshCurrentCase();
+            const confirmed = await showAppModal("Close Case", "Confirm closure of this case?", {
+                confirm: true,
+                okText: "Close Case",
+                type: "warning"
+            });
+            if (confirmed && currentCase) {
+                try {
+                    await requestAdminApi(`/cases/${encodeURIComponent(currentCase.id)}`, {
+                        method: 'PATCH',
+                        headers: getAdminRequestHeaders(),
+                        body: {
+                            status: 'closed',
+                            resolutionSummary: document.getElementById('case-notes').value.trim()
+                        }
+                    });
+                    await window.syncAdminBackendData({ silent: true });
+                    logAdminActivity(`Closed case ${currentCase.id}`);
+                    window.location.href = 'admin_cases.html';
+                } catch (error) {
+                    window.showAppToast(error.message || "Case closure failed.", "error");
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            loadCaseData();
+        });
     </script>
 </body>
 </html>

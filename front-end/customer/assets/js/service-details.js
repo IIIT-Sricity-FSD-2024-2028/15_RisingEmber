@@ -1,7 +1,19 @@
 // customer/assets/js/service-details.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  const notify = (message, type = "info") => {
+    if (app && typeof app.showToast === "function") app.showToast(message, type);
+    else if (typeof window.showAppToast === "function") window.showAppToast(message, type);
+    else console.warn(message);
+  };
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for service details:", error);
+    }
+  }
   const serviceId = localStorage.getItem("selectedServiceId");
   const services = JSON.parse(localStorage.getItem("serviceHub_services")) || [];
   const service = services.find((item) => item.id === serviceId);
@@ -108,7 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedDate = dateInput ? dateInput.value : "";
 
       if (!selectedDate) {
-        app ? app.showToast("Please select a date for your service.", "warning") : alert("Please select a date for your service.");
+        notify("Please select a date for your service.", "warning");
         return;
       }
 
@@ -116,12 +128,12 @@ document.addEventListener("DOMContentLoaded", () => {
       today.setHours(0, 0, 0, 0);
       const chosenDate = new Date(`${selectedDate}T00:00:00`);
       if (chosenDate < today) {
-        app ? app.showToast("Please choose a future service date.", "warning") : alert("Please choose a future service date.");
+        notify("Please choose a future service date.", "warning");
         return;
       }
 
       if (!selectedTimeButton) {
-        app ? app.showToast("Please select a time slot.", "warning") : alert("Please select a time slot.");
+        notify("Please select a time slot.", "warning");
         return;
       }
 

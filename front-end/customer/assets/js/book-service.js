@@ -1,7 +1,19 @@
 // customer/assets/js/book-service.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  const notify = (message, type = "info") => {
+    if (app && typeof app.showToast === "function") app.showToast(message, type);
+    else if (typeof window.showAppToast === "function") window.showAppToast(message, type);
+    else console.warn(message);
+  };
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for booking form:", error);
+    }
+  }
   const pendingBooking = app && typeof app.readJSON === "function"
     ? app.readJSON("pendingBooking", null)
     : (() => {
@@ -78,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (confirmButton) {
-    confirmButton.addEventListener("click", (event) => {
+    confirmButton.addEventListener("click", async (event) => {
       event.preventDefault();
 
       const address = addressInput ? addressInput.value.trim() : "";
@@ -91,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (!bookingDate) {
-        app ? app.showToast("Please select a service date.", "warning") : alert("Please select a service date.");
+        notify("Please select a service date.", "warning");
         return;
       }
 
@@ -99,58 +111,45 @@ document.addEventListener("DOMContentLoaded", () => {
       today.setHours(0, 0, 0, 0);
       const selectedDate = new Date(`${bookingDate}T00:00:00`);
       if (selectedDate < today) {
-        app ? app.showToast("Please choose a future service date.", "warning") : alert("Please choose a future service date.");
+        notify("Please choose a future service date.", "warning");
         return;
       }
 
       if (!bookingTime) {
-        app ? app.showToast("Please select a service time.", "warning") : alert("Please select a service time.");
+        notify("Please select a service time.", "warning");
         return;
       }
 
       setAddressValidity("");
 
-      const bookings = app && typeof app.getCustomerBookings === "function"
-        ? app.getCustomerBookings()
-        : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);
-      const bookingId = `BK-${Math.floor(Math.random() * 90000 + 10000)}`;
-      const newBooking = {
-        bookingId,
-        serviceId: pendingBooking.id,
-        title: pendingBooking.title,
-        provider: pendingBooking.provider,
-        providerImage: pendingBooking.providerImage || "",
-        date: bookingDate,
-        time: bookingTime,
-        address,
-        durationHours: hours,
-        unitPrice: Number(pendingBooking.price) || 0,
-        total: Number(total.toFixed(2)),
-        status: "Confirmed",
-        createdAt: new Date().toISOString(),
-        customerEmail: customer ? customer.email : "",
-        customerId: customer ? customer.id : ""
-      };
+      try {
+        const newBooking = app && typeof app.createCustomerBooking === "function"
+          ? await app.createCustomerBooking({
+              serviceId: pendingBooking.id,
+              title: pendingBooking.title,
+              date: bookingDate,
+              time: bookingTime,
+              address
+            })
+          : null;
 
-      const nextBookings = [newBooking].concat(Array.isArray(bookings) ? bookings : []);
-      if (app && typeof app.saveCustomerBookings === "function") {
-        app.saveCustomerBookings(nextBookings);
-      } else {
-        localStorage.setItem("serviceHub_bookings", JSON.stringify(nextBookings));
+        const bookingId = newBooking ? newBooking.bookingId : `BK-${Math.floor(Math.random() * 90000 + 10000)}`;
+        localStorage.setItem("latestBookingId", bookingId);
+        localStorage.setItem("selectedBookingId", bookingId);
+        localStorage.removeItem("pendingBooking");
+
+        if (app && newBooking) {
+          app.addNotification(
+            "Booking confirmed",
+            `${newBooking.title} was booked for ${app.formatDisplayDate(newBooking.date, { month: "short", day: "numeric" })} at ${newBooking.time}.`,
+            { href: "booking-confirmation.html", icon: "fa-calendar-check", tone: "green" }
+          );
+        }
+
+        window.location.href = "booking-confirmation.html";
+      } catch (error) {
+        notify(error.message, "error");
       }
-      localStorage.setItem("latestBookingId", bookingId);
-      localStorage.setItem("selectedBookingId", bookingId);
-      localStorage.removeItem("pendingBooking");
-
-      if (app) {
-        app.addNotification(
-          "Booking confirmed",
-          `${newBooking.title} was booked for ${app.formatDisplayDate(newBooking.date, { month: "short", day: "numeric" })} at ${newBooking.time}.`,
-          { href: "booking-confirmation.html", icon: "fa-calendar-check", tone: "green" }
-        );
-      }
-
-      window.location.href = "booking-confirmation.html";
     });
   }
 });

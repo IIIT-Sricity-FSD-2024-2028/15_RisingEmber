@@ -132,9 +132,15 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const userId = urlParams.get('id');
-        let currentUser = AdminData.users.find(u => u.id === userId);
+        let currentUser = null;
+
+        function refreshCurrentUser() {
+            currentUser = (AdminData.users || []).find(u => u.id === userId) || null;
+            return currentUser;
+        }
 
         async function loadUserData() {
+            refreshCurrentUser();
             if(!currentUser) {
                 await showAppModal("User Not Found", "That user record could not be found in the admin database.", {
                     type: "danger",
@@ -181,54 +187,94 @@
         }
 
         async function saveChanges() {
+            refreshCurrentUser();
+            if (!currentUser) return;
+
             const name = document.getElementById('edit-name').value.trim();
             const email = document.getElementById('edit-email').value.trim();
             if (!name || !email) {
-                alert("Name and email are required.");
+                window.showAppToast("Name and email are required.", "warning");
                 return;
             }
             if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
-                alert("Please enter a valid full name using letters only.");
+                window.showAppToast("Please enter a valid full name using letters only.", "warning");
                 return;
             }
 
-            // Updating the object with values from the inputs
-            currentUser.name = name;
-            currentUser.email = email;
-            currentUser.phone = document.getElementById('edit-phone').value;
-            currentUser.org = document.getElementById('edit-org').value;
-            currentUser.address = document.getElementById('edit-address').value;
-            
-            // SAVING THE UPDATED DATES
-            currentUser.date = document.getElementById('edit-created').value;
-            currentUser.lastLogin = document.getElementById('edit-lastlogin').value;
-            
-            currentUser.role = document.getElementById('edit-role').value;
-            currentUser.status = document.getElementById('status-toggle').checked ? 'Active' : 'Suspended';
+            const requestedRole = document.getElementById('edit-role').value;
+            if (requestedRole !== currentUser.role) {
+                await showAppModal(
+                    "Role Change Not Available",
+                    "Role migration is not exposed by the current backend. Please keep the existing role and update the user through the matching onboarding flow if a role change is required.",
+                    { type: "warning", okText: "Understood" }
+                );
+                return;
+            }
 
-            // Updating Permissions array
-            currentUser.permissions = [];
-            document.querySelectorAll('.perm-list input:checked').forEach(cb => {
-                currentUser.permissions.push(cb.value);
-            });
+            try {
+                const phone = document.getElementById('edit-phone').value.trim();
+                const org = document.getElementById('edit-org').value.trim();
+                const address = document.getElementById('edit-address').value.trim();
+                const createdAtLabel = document.getElementById('edit-created').value;
+                const lastLoginLabel = document.getElementById('edit-lastlogin').value;
+                const permissions = Array.from(document.querySelectorAll('.perm-list input:checked')).map((checkbox) => checkbox.value);
+                const payload = {
+                    name,
+                    email,
+                    phone
+                };
 
-            // Write to localStorage
-            saveAdminData();
-            logAdminActivity(`Updated user ${currentUser.id}`);
-            await showAppModal("User Updated", "Success! Profile updated and changes saved to local memory.", { okText: "Refresh Profile" });
-            location.reload();
-        }
+                if (currentUser.role === 'Customer') {
+                    payload.city = org;
+                    payload.address = address;
+                } else if (currentUser.role === 'Service Provider') {
+                    payload.businessName = org || name;
+                    payload.serviceArea = address;
+                }
 
-        function deleteCurrentUser() {
-            if(confirm(`Are you sure? This is permanent and ${currentUser.name}'s data will be lost.`)) {
-                AdminData.users = AdminData.users.filter(u => u.id !== userId);
-                saveAdminData();
-                logAdminActivity(`Deleted user ${userId}`);
-                window.location.href = 'admin_users.html';
+                if (currentUser.role === 'Arbitrator') {
+                    payload.approvalStatus = document.getElementById('status-toggle').checked ? 'approved' : 'rejected';
+                } else {
+                    payload.isActive = document.getElementById('status-toggle').checked;
+                }
+
+                await requestAdminApi(`/users/${encodeURIComponent(currentUser.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: payload
+                });
+
+                await window.syncAdminBackendData({ silent: true });
+                const syncedUser = refreshCurrentUser();
+                if (syncedUser) {
+                    syncedUser.org = org;
+                    syncedUser.address = address;
+                    syncedUser.date = createdAtLabel;
+                    syncedUser.lastLogin = lastLoginLabel;
+                    syncedUser.permissions = permissions;
+                    saveAdminData();
+                }
+
+                logAdminActivity(`Updated user ${currentUser.id}`);
+                await showAppModal("User Updated", "User details saved successfully.", { okText: "Refresh Profile" });
+                location.reload();
+            } catch (error) {
+                window.showAppToast(error.message || "User update failed.", "error");
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => { loadUserData(); });
+        async function deleteCurrentUser() {
+            await showAppModal(
+                "Deletion Not Available",
+                "Permanent user deletion is not exposed by the current backend. Disable the account instead from this page or the main user list.",
+                { type: "warning", okText: "Understood" }
+            );
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            loadUserData();
+        });
     </script>
 </body>
 </html>

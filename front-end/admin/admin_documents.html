@@ -203,23 +203,39 @@
             triggerDownload(buildDocumentDownloadHref(doc), safeFilename);
         }
 
-        function deleteDoc(id) {
-            if(confirm(`Permanently remove document ${id}?`)) {
-                AdminData.documents = AdminData.documents.filter(d => d.id !== id);
-                logAdminActivity(`Deleted Document ${id}`);
-                init();
+        async function deleteDoc(id) {
+            const confirmed = await window.showAppModal(`Delete Document ${id}`, "Permanently remove this document from the shared backend?", {
+                confirm: true,
+                type: "danger",
+                okText: "Delete"
+            });
+            if(confirmed) {
+                try {
+                    if (typeof window.requestAdminApi === 'function') {
+                        await window.requestAdminApi(`/documents/${encodeURIComponent(id)}`, {
+                            method: 'DELETE',
+                            headers: window.getAdminRequestHeaders ? window.getAdminRequestHeaders() : {}
+                        });
+                        if (window.syncAdminBackendData) await window.syncAdminBackendData({ silent: true, force: true });
+                    } else {
+                        AdminData.documents = AdminData.documents.filter(d => d.id !== id);
+                    }
+                    logAdminActivity(`Deleted Document ${id}`);
+                    init();
+                } catch (error) {
+                    window.showAppModal('Delete Failed', error && error.message ? error.message : 'We could not remove that document right now.', { type: 'danger' });
+                }
             }
         }
 
         function handleFileUpload(input) {
             if(input.files && input.files[0]) {
                 const file = input.files[0];
-                const newId = "#DOC-" + Math.floor(1000 + Math.random() * 8999);
                 const persistUpload = (fileLink) => {
+                    const candidateCase = (AdminData.cases || []).find((item) => item.status !== 'Closed') || {};
                     const newDoc = {
-                        id: newId,
                         name: file.name,
-                        caseId: "CS-PENDING",
+                        caseId: candidateCase.id || "",
                         uploader: "Admin",
                         uploaderRole: "Admin",
                         type: "Evidence",
@@ -228,11 +244,35 @@
                         size: (file.size / 1024 / 1024).toFixed(2) + " MB",
                         fileLink: fileLink || ""
                     };
-                    AdminData.documents.unshift(newDoc);
-                    logAdminActivity(`Uploaded: ${file.name}`);
-                    saveAdminData();
-                    input.value = "";
-                    init();
+                    const uploadToBackend = async () => {
+                        try {
+                            if (typeof window.requestAdminApi === 'function' && newDoc.caseId) {
+                                await window.requestAdminApi('/documents', {
+                                    method: 'POST',
+                                    headers: window.getAdminRequestHeaders ? window.getAdminRequestHeaders() : {},
+                                    body: {
+                                        caseId: newDoc.caseId,
+                                        title: file.name,
+                                        description: `Uploaded from admin documents page.`,
+                                        type: 'evidence',
+                                        fileName: file.name,
+                                        content: fileLink || ""
+                                    }
+                                });
+                                if (window.syncAdminBackendData) await window.syncAdminBackendData({ silent: true, force: true });
+                            } else {
+                                newDoc.id = "#DOC-" + Math.floor(1000 + Math.random() * 8999);
+                                AdminData.documents.unshift(newDoc);
+                                saveAdminData();
+                            }
+                            logAdminActivity(`Uploaded: ${file.name}`);
+                            input.value = "";
+                            init();
+                        } catch (error) {
+                            window.showAppModal('Upload Failed', error && error.message ? error.message : 'We could not upload that document right now.', { type: 'danger' });
+                        }
+                    };
+                    uploadToBackend();
                 };
 
                 if (typeof FileReader === 'function') {
@@ -261,7 +301,10 @@
             window.URL.revokeObjectURL(url);
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            init();
+        });
     </script>
 </body>
 </html>

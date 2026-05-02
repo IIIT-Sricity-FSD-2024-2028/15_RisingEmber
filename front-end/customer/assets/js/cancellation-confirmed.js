@@ -1,7 +1,14 @@
 // customer/assets/js/cancellation-confirmed.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for cancellation confirmation:", error);
+    }
+  }
   const bookings = app && typeof app.getCustomerBookings === "function"
     ? app.getCustomerBookings()
     : (JSON.parse(localStorage.getItem("serviceHub_bookings")) || []);

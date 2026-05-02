@@ -8,6 +8,8 @@
     CONTACT_MESSAGES: 'sh_contact_messages',
     WAITLIST: 'sh_locations_waitlist'
   };
+  const API_BASE_URL_KEY = 'serviceHub_api_base_url';
+  const DEFAULT_API_BASE_URL = 'http://127.0.0.1:3002/api/v1';
 
   function readStorageJSON(key, fallback) {
     try {
@@ -26,6 +28,51 @@
 
   function removeStorageKey(key) {
     localStorage.removeItem(key);
+  }
+
+  function getLandingApiBaseUrl() {
+    return String(
+      (typeof window !== 'undefined' && window.SERVICE_HUB_API_BASE_URL)
+      || localStorage.getItem(API_BASE_URL_KEY)
+      || DEFAULT_API_BASE_URL
+    ).trim().replace(/\/+$/, '');
+  }
+
+  async function requestLandingApi(path, options = {}) {
+    const headers = { ...(options.headers || {}) };
+    let body = options.body;
+
+    if (body !== undefined && body !== null && !(body instanceof FormData)) {
+      headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+      body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+
+    let response;
+    try {
+      response = await fetch(`${getLandingApiBaseUrl()}${path}`, {
+        method: options.method || 'GET',
+        headers,
+        body
+      });
+    } catch (error) {
+      throw new Error('We could not reach the ServiceHub backend. Please make sure the NestJS server is running.');
+    }
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const message = payload && payload.message
+        ? (Array.isArray(payload.message) ? payload.message.join('\n') : payload.message)
+        : 'The backend request failed.';
+      throw new Error(message);
+    }
+
+    return payload && Object.prototype.hasOwnProperty.call(payload, 'data') ? payload.data : payload;
   }
 
   function normalizeEmail(email) {
@@ -328,7 +375,7 @@
       field.addEventListener('blur', () => clearFieldError(field));
     });
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearFieldErrors(form);
       clearFormStatus(statusId);
@@ -378,26 +425,38 @@
         return;
       }
 
-      const postedJobs = readStorageJSON(LANDING_STORAGE_KEYS.POSTED_JOBS, []);
-      const nextJobs = Array.isArray(postedJobs) ? postedJobs : [];
+      try {
+        const createdRequest = await requestLandingApi('/intake/job-requests', {
+          method: 'POST',
+          body: {
+            name: 'Landing Page Customer',
+            email: `lead+${Date.now()}@servicehub.local`,
+            serviceCategory,
+            description: `${projectDetails}\nPreferred date: ${serviceDate}\nPostal code: ${postalCode}`
+          }
+        });
 
-      nextJobs.unshift({
-        id: generateRecordId('JOB'),
-        serviceCategory,
-        postalCode,
-        projectDetails,
-        serviceDate,
-        submittedAt: new Date().toISOString(),
-        status: 'pending'
-      });
+        const postedJobs = readStorageJSON(LANDING_STORAGE_KEYS.POSTED_JOBS, []);
+        const nextJobs = Array.isArray(postedJobs) ? postedJobs : [];
+        nextJobs.unshift({
+          id: createdRequest && createdRequest.id ? createdRequest.id : generateRecordId('JOB'),
+          serviceCategory,
+          postalCode,
+          projectDetails,
+          serviceDate,
+          submittedAt: new Date().toISOString(),
+          status: 'submitted'
+        });
+        writeStorageJSON(LANDING_STORAGE_KEYS.POSTED_JOBS, nextJobs);
+        removeStorageKey(LANDING_STORAGE_KEYS.POST_JOB_DRAFT);
+        removeStorageKey(LANDING_STORAGE_KEYS.SERVICE_SELECTION);
 
-      writeStorageJSON(LANDING_STORAGE_KEYS.POSTED_JOBS, nextJobs);
-      removeStorageKey(LANDING_STORAGE_KEYS.POST_JOB_DRAFT);
-      removeStorageKey(LANDING_STORAGE_KEYS.SERVICE_SELECTION);
-
-      form.reset();
-      serviceDateField.min = todayISODate;
-      setFormStatus(form, statusId, 'Job request saved successfully. Providers can now be matched from this browser session flow.', 'success');
+        form.reset();
+        serviceDateField.min = todayISODate;
+        setFormStatus(form, statusId, 'Job request submitted successfully. It is now stored in the shared backend.', 'success');
+      } catch (error) {
+        setFormStatus(form, statusId, error && error.message ? error.message : 'We could not submit your job request right now.', 'error');
+      }
     });
   }
 
@@ -440,7 +499,7 @@
       field.addEventListener('blur', () => clearFieldError(field));
     });
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearFieldErrors(form);
       clearFormStatus(statusId);
@@ -492,24 +551,37 @@
         return;
       }
 
-      const messages = readStorageJSON(LANDING_STORAGE_KEYS.CONTACT_MESSAGES, []);
-      const nextMessages = Array.isArray(messages) ? messages : [];
+      try {
+        const createdMessage = await requestLandingApi('/intake/contact-messages', {
+          method: 'POST',
+          body: {
+            name: `${firstName} ${lastName}`.trim(),
+            email,
+            subject: topic,
+            message
+          }
+        });
 
-      nextMessages.unshift({
-        id: generateRecordId('MSG'),
-        firstName,
-        lastName,
-        email,
-        topic,
-        message,
-        submittedAt: new Date().toISOString()
-      });
+        const messages = readStorageJSON(LANDING_STORAGE_KEYS.CONTACT_MESSAGES, []);
+        const nextMessages = Array.isArray(messages) ? messages : [];
+        nextMessages.unshift({
+          id: createdMessage && createdMessage.id ? createdMessage.id : generateRecordId('MSG'),
+          firstName,
+          lastName,
+          email,
+          topic,
+          message,
+          submittedAt: new Date().toISOString()
+        });
 
-      writeStorageJSON(LANDING_STORAGE_KEYS.CONTACT_MESSAGES, nextMessages);
-      removeStorageKey(LANDING_STORAGE_KEYS.CONTACT_DRAFT);
+        writeStorageJSON(LANDING_STORAGE_KEYS.CONTACT_MESSAGES, nextMessages);
+        removeStorageKey(LANDING_STORAGE_KEYS.CONTACT_DRAFT);
 
-      form.reset();
-      setFormStatus(form, statusId, 'Message saved successfully. Our support team can now review it from this browser flow.', 'success');
+        form.reset();
+        setFormStatus(form, statusId, 'Message sent successfully. It is now stored in the shared backend inbox.', 'success');
+      } catch (error) {
+        setFormStatus(form, statusId, error && error.message ? error.message : 'We could not send your message right now.', 'error');
+      }
     });
   }
 
@@ -522,7 +594,7 @@
 
     emailField.addEventListener('blur', () => clearFieldError(emailField));
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
       event.preventDefault();
       clearFieldError(emailField);
       clearFormStatus(statusId);
@@ -550,15 +622,26 @@
         return;
       }
 
-      nextWaitlist.unshift({
-        id: generateRecordId('WAITLIST'),
-        email,
-        submittedAt: new Date().toISOString()
-      });
+      try {
+        const createdWaitlist = await requestLandingApi('/intake/waitlist', {
+          method: 'POST',
+          body: {
+            email
+          }
+        });
 
-      writeStorageJSON(LANDING_STORAGE_KEYS.WAITLIST, nextWaitlist);
-      form.reset();
-      setFormStatus(form, statusId, 'You have been added to the waitlist successfully.', 'success');
+        nextWaitlist.unshift({
+          id: createdWaitlist && createdWaitlist.id ? createdWaitlist.id : generateRecordId('WAITLIST'),
+          email,
+          submittedAt: new Date().toISOString()
+        });
+
+        writeStorageJSON(LANDING_STORAGE_KEYS.WAITLIST, nextWaitlist);
+        form.reset();
+        setFormStatus(form, statusId, 'You have been added to the waitlist successfully.', 'success');
+      } catch (error) {
+        setFormStatus(form, statusId, error && error.message ? error.message : 'We could not add you to the waitlist right now.', 'error');
+      }
     });
   }
 

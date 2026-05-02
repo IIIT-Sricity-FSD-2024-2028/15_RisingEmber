@@ -134,7 +134,7 @@
 
                 saveData();
                 loadProfile();
-                alert("Document '" + selectedFile.name + "' uploaded successfully!");
+                window.showAppToast("Document '" + selectedFile.name + "' uploaded successfully!", "success");
                 input.value = '';
             }
         }
@@ -222,7 +222,8 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             loadProfile();
         });
     </script>

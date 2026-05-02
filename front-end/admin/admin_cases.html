@@ -171,7 +171,7 @@
             if (s.includes('open')) return 'stat-pending';
             if (s.includes('review')) return 'stat-review';
             if (s.includes('hearing')) return 'badge-hearing';
-            if (s.includes('awarded')) return 'stat-approved';
+            if (s.includes('awarded') || s.includes('resolved')) return 'stat-approved';
             if (s.includes('closed')) return 'stat-rejected';
             return '';
         }
@@ -186,10 +186,11 @@
                 const custName = getCaseCustomerName(c).toLowerCase();
                 const provName = getCaseProviderName(c).toLowerCase();
                 const arbName = getCaseArbitratorName(c).toLowerCase();
+                const normalizedArbFilter = arbVal.toLowerCase();
 
                 const matchesSearch = c.id.toLowerCase().includes(searchTerm) || (c.title || "").toLowerCase().includes(searchTerm) || custName.includes(searchTerm) || provName.includes(searchTerm);
                 const matchesStatus = (statusVal === "All Status" || c.status === statusVal);
-                const matchesArb = (arbVal === "All Arbitrators" || arbName === arbVal.toLowerCase());
+                const matchesArb = (arbVal === "All Arbitrators" || arbName === normalizedArbFilter);
                 const matchesDate = (!dateVal || c.filedDateISO === dateVal);
 
                 return matchesSearch && matchesStatus && matchesArb && matchesDate;
@@ -200,38 +201,39 @@
 
         function viewCase(id) { window.location.href = `admin_case_details.html?id=${encodeURIComponent(id)}`; }
 
-        function deleteCase(caseId) {
-            if (confirm(`Delete case ${caseId}?`)) {
-                AdminData.cases = AdminData.cases.filter(c => c.id !== caseId);
-                saveAdminData();
-                logAdminActivity(`Deleted case ${caseId}`);
+        async function deleteCase(caseId) {
+            const confirmed = await showAppModal(
+                'Close Case',
+                `Case deletion is not available in the current backend. Would you like to close ${caseId} instead?`,
+                { confirm: true, okText: 'Close Case', type: 'warning' }
+            );
+
+            if (!confirmed) return;
+
+            try {
+                await requestAdminApi(`/cases/${encodeURIComponent(caseId)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        status: 'closed'
+                    }
+                });
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity(`Closed case ${caseId}`);
                 renderArbitratorFilter();
                 applyFilters();
+                window.showAppToast(`Case ${caseId} closed successfully.`, 'success');
+            } catch (error) {
+                window.showAppToast(error.message || `Unable to close case ${caseId}.`, 'error');
             }
         }
 
-        function createNewCase() {
-            const newCase = typeof window.createAdminCaseRecord === 'function'
-                ? window.createAdminCaseRecord({ title: "New Case Intake" })
-                : {
-                    id: "CS-2026-" + Math.floor(1000 + Math.random() * 9000),
-                    title: "New Case Intake",
-                    customer: { name: "New Applicant", email: "", phone: "" },
-                    provider: { company: "Pending Assignment", name: "", email: "", phone: "" },
-                    arbitrator: { name: "Unassigned" },
-                    type: "General",
-                    status: "Open",
-                    filedDateISO: new Date().toISOString().split('T')[0],
-                    filedDate: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-                    timeline: [{ event: "Case filed", date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), completed: true }],
-                    messages: [],
-                    notes: ""
-                };
-            AdminData.cases.unshift(newCase);
-            saveAdminData();
-            logAdminActivity(`Created case ${newCase.id}`);
-            renderArbitratorFilter();
-            applyFilters();
+        async function createNewCase() {
+            await showAppModal(
+                'Cases Come From Disputes',
+                'New cases are now created from real customer or provider disputes so they stay linked to bookings. Open a dispute through the operational portals to generate a new admin case.',
+                { okText: 'Got it', type: 'info' }
+            );
         }
 
         function exportCases() {
@@ -246,7 +248,10 @@
             link.click();
         }
 
-        document.addEventListener('DOMContentLoaded', initPage);
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            initPage();
+        });
     </script>
 </body>
 </html>

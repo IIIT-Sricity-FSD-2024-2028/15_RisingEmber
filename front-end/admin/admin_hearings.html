@@ -205,15 +205,13 @@
             window.location.href = `admin_hearing_details.html?id=${encodeURIComponent(id)}`;
         }
 
-        function scheduleNew() {
-            const newId = "H-2024-" + Math.floor(1000 + Math.random() * 8999);
-            const candidateCase = (AdminData.cases || []).find(c => c.status !== 'Closed') || {};
-            const caseId = candidateCase.id || ("CS-2024-" + Math.floor(100 + Math.random() * 899));
+        async function scheduleNew() {
+            const candidateCase = (AdminData.cases || []).find(c => c.status !== 'Closed' && c.arbitrator && c.arbitrator.name !== 'Unassigned') || {};
+            const caseId = candidateCase.id || "";
             const arbitratorName = candidateCase.arbitrator && candidateCase.arbitrator.name
                 ? candidateCase.arbitrator.name
                 : ((AdminData.arbitrators || []).find(a => a.status === 'Active') || {}).name || "Unassigned";
             const newH = {
-                id: newId,
                 caseId: caseId,
                 arbitrator: arbitratorName,
                 date: new Date().toISOString().split('T')[0],
@@ -221,26 +219,66 @@
                 type: "Virtual",
                 status: "Scheduled"
             };
-            AdminData.hearings.unshift(newH);
-            
-            // Record activity and save
-            logAdminActivity(`Scheduled new hearing ${newId}`);
-            
-            init(); // Refresh UI
-        }
+            if (!newH.caseId) {
+                window.showAppModal('No Assignable Case', 'Assign an arbitrator to a case first, then schedule the hearing.', { type: 'danger' });
+                return;
+            }
 
-        function deleteHearing(id) {
-            if(confirm(`Permanently delete hearing ${id}?`)) {
-                AdminData.hearings = AdminData.hearings.filter(h => h.id !== id);
-                
-                // Record activity and save
-                logAdminActivity(`Deleted hearing ${id}`);
-                
-                init(); // Refresh UI
+            try {
+                if (typeof window.requestAdminApi === 'function') {
+                    await window.requestAdminApi('/hearings', {
+                        method: 'POST',
+                        headers: window.getAdminRequestHeaders ? window.getAdminRequestHeaders() : {},
+                        body: {
+                            caseId: newH.caseId,
+                            scheduledAt: new Date(`${newH.date}T10:00:00`).toISOString(),
+                            type: 'video',
+                            agenda: `Admin-scheduled hearing for ${newH.caseId}`
+                        }
+                    });
+                    if (window.syncAdminBackendData) await window.syncAdminBackendData({ silent: true, force: true });
+                } else {
+                    newH.id = "H-2024-" + Math.floor(1000 + Math.random() * 8999);
+                    AdminData.hearings.unshift(newH);
+                }
+
+                logAdminActivity(`Scheduled new hearing for ${newH.caseId}`);
+                init();
+            } catch (error) {
+                window.showAppModal('Schedule Failed', error && error.message ? error.message : 'We could not schedule that hearing right now.', { type: 'danger' });
             }
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        async function deleteHearing(id) {
+            const confirmed = await window.showAppModal(`Delete Hearing ${id}`, "Permanently delete this hearing from the shared backend?", {
+                confirm: true,
+                type: "danger",
+                okText: "Delete"
+            });
+            if(confirmed) {
+                try {
+                    if (typeof window.requestAdminApi === 'function') {
+                        await window.requestAdminApi(`/hearings/${encodeURIComponent(id)}`, {
+                            method: 'DELETE',
+                            headers: window.getAdminRequestHeaders ? window.getAdminRequestHeaders() : {}
+                        });
+                        if (window.syncAdminBackendData) await window.syncAdminBackendData({ silent: true, force: true });
+                    } else {
+                        AdminData.hearings = AdminData.hearings.filter(h => h.id !== id);
+                    }
+
+                    logAdminActivity(`Deleted hearing ${id}`);
+                    init();
+                } catch (error) {
+                    window.showAppModal('Delete Failed', error && error.message ? error.message : 'We could not delete that hearing right now.', { type: 'danger' });
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            init();
+        });
     </script>
 </body>
 </html>

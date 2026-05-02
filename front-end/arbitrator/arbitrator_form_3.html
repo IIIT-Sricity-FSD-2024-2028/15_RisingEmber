@@ -135,7 +135,7 @@
             const hasLicense = uploadedFiles.license || savedData.fileName_license;
 
             if (!hasResume || !hasLicense) {
-                alert("Please upload the required documents marked with * (Resume and License)");
+                window.showAppToast("Please upload the required documents marked with * (Resume and License)", "warning");
                 return;
             }
 

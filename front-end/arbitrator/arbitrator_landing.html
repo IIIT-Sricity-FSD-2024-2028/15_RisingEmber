@@ -96,9 +96,13 @@
             const loginBtn = document.getElementById('landingLoginBtn');
             const draftProgress = getArbitratorDraftProgress();
 
-            const startFreshHandler = () => {
+            const startFreshHandler = async () => {
                 if (draftProgress.hasDraft) {
-                    const shouldResetDraft = window.confirm('A saved arbitrator application draft was found on this browser. Start a new application instead?');
+                    const shouldResetDraft = await window.showAppModal(
+                        'Start New Application',
+                        'A saved arbitrator application draft was found on this browser. Start a new application instead?',
+                        { confirm: true, type: 'warning', okText: 'Start New' }
+                    );
                     if (!shouldResetDraft) return;
                 }
 

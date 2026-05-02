@@ -1,7 +1,14 @@
 // customer/assets/js/disputes-page.js
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   const app = window.CustomerApp;
+  if (app && app.ready && typeof app.ready.then === "function") {
+    try {
+      await app.ready;
+    } catch (error) {
+      console.warn("Customer backend sync unavailable for disputes list:", error);
+    }
+  }
   const disputesList = document.getElementById("disputes-list");
   const paginationContainer = document.getElementById("pagination-container");
   const applyFiltersButton = document.getElementById("apply-filters-btn");

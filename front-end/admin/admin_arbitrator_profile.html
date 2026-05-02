@@ -136,7 +136,12 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const arbId = decodeURIComponent(urlParams.get('id') || "#ARB001");
-        let currentArb = AdminData.arbitrators.find(a => a.id === arbId);
+        let currentArb = null;
+
+        function refreshCurrentArbitrator() {
+            currentArb = (AdminData.arbitrators || []).find(a => a.id === arbId) || null;
+            return currentArb;
+        }
 
         function buildArbitratorDocumentHref(doc) {
             if (doc && doc.fileLink) {
@@ -153,6 +158,7 @@
         }
 
         async function initProfile() {
+            refreshCurrentArbitrator();
             if(!currentArb) {
                 await showAppModal("Arbitrator Not Found", "That arbitrator record is no longer available.", {
                     type: "danger",
@@ -213,58 +219,100 @@
         }
 
         async function saveProfileChanges() {
+            refreshCurrentArbitrator();
+            if (!currentArb) return;
             const name = document.getElementById('in-name').value.trim();
             const email = document.getElementById('in-email').value.trim();
             if (!name || !email) {
-                alert("Arbitrator name and email are required.");
+                window.showAppToast("Arbitrator name and email are required.", "warning");
                 return;
             }
             if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
-                alert("Please enter a valid full name using letters only.");
+                window.showAppToast("Please enter a valid full name using letters only.", "warning");
                 return;
             }
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                alert("Please enter a valid email address.");
+                window.showAppToast("Please enter a valid email address.", "warning");
                 return;
             }
             if (AdminData.arbitrators.some(a => a.id !== currentArb.id && String(a.email || '').toLowerCase() === email.toLowerCase())) {
-                alert("Another arbitrator is already using this email address.");
+                window.showAppToast("Another arbitrator is already using this email address.", "warning");
                 return;
             }
 
-            currentArb.name = name;
-            currentArb.email = email;
-            currentArb.phone = document.getElementById('in-phone').value.trim();
-            currentArb.organization = document.getElementById('in-org').value.trim();
-            currentArb.certification = document.getElementById('in-cert').value.trim();
-            currentArb.expertise = document.getElementById('in-exp').value.trim();
-            currentArb.experience = String(Math.max(0, Number(document.getElementById('in-years').value) || 0));
-            currentArb.casesHandled = Math.max(0, Number(document.getElementById('in-handled').value) || 0);
-            currentArb.adminNotes = document.getElementById('in-notes').value.trim();
+            try {
+                const phone = document.getElementById('in-phone').value.trim();
+                const organization = document.getElementById('in-org').value.trim();
+                const certification = document.getElementById('in-cert').value.trim();
+                const expertise = document.getElementById('in-exp').value.trim();
+                const experienceYears = Math.max(0, Number(document.getElementById('in-years').value) || 0);
+                const casesHandled = Math.max(0, Number(document.getElementById('in-handled').value) || 0);
+                const adminNotes = document.getElementById('in-notes').value.trim();
 
-            saveAdminData();
-            logAdminActivity(`Updated arbitrator ${currentArb.id}`);
-            await showAppModal("Arbitrator Updated", "Arbitrator profile updated successfully.", { okText: "Refresh Profile" });
-            location.reload();
-        }
+                await requestAdminApi(`/users/${encodeURIComponent(currentArb.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        name,
+                        email,
+                        phone,
+                        specialization: expertise || currentArb.specialization || 'General Arbitration',
+                        experienceYears
+                    }
+                });
 
-        function updateStatus(newStatus) {
-            currentArb.status = newStatus;
-            saveAdminData();
-            logAdminActivity(`Set arbitrator ${currentArb.id} status to ${newStatus}`);
-            location.reload();
-        }
+                await window.syncAdminBackendData({ silent: true });
+                refreshCurrentArbitrator();
+                if (currentArb) {
+                    currentArb.organization = organization;
+                    currentArb.certification = certification;
+                    currentArb.expertise = expertise;
+                    currentArb.experience = String(experienceYears);
+                    currentArb.casesHandled = casesHandled;
+                    currentArb.adminNotes = adminNotes;
+                    saveAdminData();
+                }
 
-        function deleteArbitrator() {
-            if(confirm("Are you sure? This will permanently delete this arbitrator.")) {
-                AdminData.arbitrators = AdminData.arbitrators.filter(a => a.id !== arbId);
-                saveAdminData();
-                logAdminActivity(`Deleted arbitrator ${arbId}`);
-                window.location.href = 'admin_arbitrators.html';
+                logAdminActivity(`Updated arbitrator ${arbId}`);
+                await showAppModal("Arbitrator Updated", "Arbitrator profile updated successfully.", { okText: "Refresh Profile" });
+                location.reload();
+            } catch (error) {
+                window.showAppToast(error.message || "Arbitrator update failed.", "error");
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => { initProfile(); });
+        async function updateStatus(newStatus) {
+            refreshCurrentArbitrator();
+            if (!currentArb) return;
+
+            try {
+                await requestAdminApi(`/users/${encodeURIComponent(currentArb.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        approvalStatus: newStatus === 'Active' ? 'approved' : 'rejected'
+                    }
+                });
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity(`Set arbitrator ${currentArb.id} status to ${newStatus}`);
+                location.reload();
+            } catch (error) {
+                window.showAppToast(error.message || "Unable to update arbitrator status.", "error");
+            }
+        }
+
+        async function deleteArbitrator() {
+            await showAppModal(
+                "Deletion Not Available",
+                "Permanent arbitrator deletion is not exposed by the current backend. Suspend the account instead if access should be removed.",
+                { type: "warning", okText: "Understood" }
+            );
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            initProfile();
+        });
     </script>
 </body>
 </html>

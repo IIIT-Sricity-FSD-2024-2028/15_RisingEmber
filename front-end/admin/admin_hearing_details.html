@@ -139,9 +139,41 @@
     <script>
         const urlParams = new URLSearchParams(window.location.search);
         const hId = decodeURIComponent(urlParams.get('id') || "H-2024-001");
-        let currentH = AdminData.hearings.find(h => h.id === hId);
+        let currentH = null;
+
+        function refreshCurrentHearing() {
+            currentH = (AdminData.hearings || []).find(h => h.id === hId) || null;
+            return currentH;
+        }
+
+        function mapAdminHearingTypeToBackend(value) {
+            return String(value || '').toLowerCase().includes('person') ? 'in_person' : 'video';
+        }
+
+        function mapAdminHearingStatusToBackend(value) {
+            const normalized = String(value || '').toLowerCase();
+            if (normalized === 'completed') return 'completed';
+            if (normalized === 'cancelled') return 'cancelled';
+            return 'scheduled';
+        }
+
+        function convertHearingDateTimeToIso(dateValue, timeValue) {
+            const trimmedTime = String(timeValue || '').trim();
+            const match = trimmedTime.match(/^(\d{1,2}):(\d{2})(?:\s*([APap][Mm]))?$/);
+            if (!dateValue || !match) return '';
+
+            let hours = Number(match[1]);
+            const minutes = match[2];
+            const meridiem = match[3] ? match[3].toUpperCase() : '';
+            if (meridiem === 'PM' && hours < 12) hours += 12;
+            if (meridiem === 'AM' && hours === 12) hours = 0;
+            const hourString = String(hours).padStart(2, '0');
+            const iso = new Date(`${dateValue}T${hourString}:${minutes}:00`);
+            return Number.isNaN(iso.getTime()) ? '' : iso.toISOString();
+        }
 
         async function init() {
+            refreshCurrentHearing();
             if(!currentH) {
                 await showAppModal("Hearing Not Found", "We couldn't find that hearing in the current admin database.", {
                     type: "danger",
@@ -219,6 +251,9 @@
         }
 
         async function saveChanges() {
+            refreshCurrentHearing();
+            if (!currentH) return;
+
             const oldId = currentH.id;
             const caseId = document.getElementById('e-case').value.trim();
             const arbitrator = document.getElementById('e-arb').value.trim();
@@ -226,29 +261,51 @@
             const time = document.getElementById('e-time').value.trim();
 
             if (!caseId || !arbitrator || !date || !time) {
-                alert("Case ID, arbitrator, date, and time are required.");
+                window.showAppToast("Case ID, arbitrator, date, and time are required.", "warning");
                 return;
             }
-            
-            // Update the data in memory
-            currentH.caseId = caseId;
-            currentH.arbitrator = arbitrator;
-            currentH.date = date;
-            currentH.time = time;
-            currentH.type = document.getElementById('e-type').value;
-            currentH.status = document.getElementById('e-status').value;
 
-            // Log activity
-            if(window.logAdminActivity) {
-                logAdminActivity(`Updated Hearing ${oldId} details`);
+            if (caseId !== currentH.caseId || arbitrator !== currentH.arbitrator) {
+                await showAppModal(
+                    "Immutable Hearing Links",
+                    "The linked case and arbitrator are managed by the shared case workflow. You can edit schedule, type, and status here, but not rewire the hearing to different records.",
+                    { type: "warning", okText: "Understood" }
+                );
+                init();
+                return;
             }
-            
-            saveAdminData();
-            await showAppModal("Hearing Updated", "Changes saved successfully.", { okText: "Reload Hearing" });
-            location.reload();
+
+            const scheduledAt = convertHearingDateTimeToIso(date, time);
+            if (!scheduledAt) {
+                window.showAppToast("Please enter a valid hearing time like 10:00 AM or 14:30.", "warning");
+                return;
+            }
+
+            try {
+                await requestAdminApi(`/hearings/${encodeURIComponent(currentH.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        scheduledAt,
+                        type: mapAdminHearingTypeToBackend(document.getElementById('e-type').value),
+                        status: mapAdminHearingStatusToBackend(document.getElementById('e-status').value),
+                        agenda: `Admin updated hearing for ${currentH.caseId}`
+                    }
+                });
+
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity(`Updated Hearing ${oldId} details`);
+                await showAppModal("Hearing Updated", "Changes saved successfully.", { okText: "Reload Hearing" });
+                location.reload();
+            } catch (error) {
+                window.showAppToast(error.message || "Hearing update failed.", "error");
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => { init(); });
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            init();
+        });
     </script>
 </body>
 </html>

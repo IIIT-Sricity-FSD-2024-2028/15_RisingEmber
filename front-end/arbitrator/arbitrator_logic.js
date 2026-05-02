@@ -7,6 +7,14 @@
  * but is not currently loaded by any page.
  */
 
+function showArbitratorValidationMessage(message, type = "warning") {
+    if (typeof window !== "undefined" && typeof window.showAppToast === "function") {
+        window.showAppToast(message, type);
+    } else {
+        console.warn(message);
+    }
+}
+
 /* ============================
    STAGE 1: Personal Information
    ============================ */
@@ -17,22 +25,22 @@ function next() {
     const country = document.getElementById('country').value.trim();
 
     if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) {
-        alert("Please enter a valid full name using letters only.");
+        showArbitratorValidationMessage("Please enter a valid full name using letters only.");
         return;
     }
 
     if (!email || !email.includes("@") || !email.includes(".")) {
-        alert("Please enter a valid email address.");
+        showArbitratorValidationMessage("Please enter a valid email address.");
         return;
     }
 
     if (!phone) {
-        alert("Please enter your phone number.");
+        showArbitratorValidationMessage("Please enter your phone number.");
         return;
     }
 
     if (!country) {
-        alert("Please select your country.");
+        showArbitratorValidationMessage("Please select your country.");
         return;
     }
 
@@ -59,7 +67,7 @@ function validateStage2() {
     const org = document.getElementById('organization')?.value.trim();
 
     if (!exp || !expertise || !org) {
-        alert("Please enter all Professional Background details.");
+        showArbitratorValidationMessage("Please enter all Professional Background details.");
         return;
     }
 
@@ -112,7 +120,7 @@ function loadReviewData() {
 function submitFinalApplication() {
     const isConfirmed = document.getElementById('finalConfirm')?.checked;
     if (!isConfirmed) {
-        alert("Please confirm the information is accurate.");
+        showArbitratorValidationMessage("Please confirm the information is accurate.");
         return;
     }
 

@@ -147,12 +147,10 @@
             }
 
             if(isValid) {
-                // Mock session update
                 AdminData.session.isLoggedIn = true;
                 AdminData.session.lastLogin = new Date().toLocaleString();
-                
-                // Update profile name if a new one is used (optional)
-                // AdminData.profile.email = email; 
+                AdminData.session.actorId = AdminData.session.actorId || 'user_1001';
+                AdminData.session.role = 'admin';
                 
                 saveAdminData();
                 window.location.href = 'admin_dashboard.html';

@@ -27,7 +27,10 @@
   const DEFAULT_PASSWORD = "Customer@123";
   const STYLE_ID = "customer-app-runtime-styles";
   const DEFAULT_MEMBER_SINCE = "January 2024";
+  const API_BASE_URL_KEY = "serviceHub_api_base_url";
+  const DEFAULT_API_BASE_URL = "http://127.0.0.1:3002/api/v1";
   let dropdownsBound = false;
+  let customerReadyPromise = Promise.resolve();
 
   function injectRuntimeStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -468,11 +471,11 @@
     ));
   }
 
-  function resetCustomerPassword(identifier, nextPassword) {
+  async function resetCustomerPassword(identifier, nextPassword) {
     const accounts = getCustomerAccounts();
     const accountIndex = findCustomerAccountIndex(identifier, accounts);
 
-    if (accountIndex === -1) {
+    if (accountIndex === -1 && !isValidEmail(identifier) && !isValidPhone(identifier)) {
       throw new Error("We couldn't find an account with that email or phone.");
     }
 
@@ -480,12 +483,35 @@
       throw new Error("Your new password must be at least 8 characters and include upper, lower, number, and symbol.");
     }
 
-    accounts[accountIndex] = sanitizeCustomerRecord({
-      ...accounts[accountIndex],
-      password: String(nextPassword || "")
+    const resetResult = await requestCustomerApi("/session/password-reset", {
+      method: "POST",
+      body: {
+        role: "customer",
+        identifier,
+        password: String(nextPassword || "")
+      }
     });
-    saveCustomerAccounts(accounts);
-    return accounts[accountIndex];
+
+    if (accountIndex !== -1) {
+      accounts[accountIndex] = sanitizeCustomerRecord({
+        ...accounts[accountIndex],
+        password: String(nextPassword || "")
+      });
+      saveCustomerAccounts(accounts);
+      return accounts[accountIndex];
+    }
+
+    return mergeCustomerAccount({
+      id: resetResult.profileSummary.id,
+      name: resetResult.profileSummary.name,
+      email: resetResult.profileSummary.email,
+      phone: resetResult.profileSummary.phone,
+      avatar: resetResult.profileSummary.avatarUrl || "",
+      location: resetResult.profileSummary.profile && (resetResult.profileSummary.profile.address || resetResult.profileSummary.profile.city) || "",
+      memberSince: getMonthYearLabel(resetResult.profileSummary.createdAt),
+      createdAt: resetResult.profileSummary.createdAt,
+      password: String(nextPassword || "")
+    }, nextPassword);
   }
 
   function saveCurrentCustomer(customer, persistSession) {
@@ -517,6 +543,410 @@
     if (!session || !session.email) return null;
 
     return getCustomerAccounts().find((account) => account.email === normalizeEmail(session.email)) || null;
+  }
+
+  function getCustomerApiBaseUrl() {
+    const explicitBaseUrl = String(
+      window.SERVICE_HUB_API_BASE_URL ||
+      window.localStorage.getItem(API_BASE_URL_KEY) ||
+      DEFAULT_API_BASE_URL
+    ).trim();
+
+    return explicitBaseUrl.replace(/\/+$/, "");
+  }
+
+  function getCustomerApiHeaders(customerOverride) {
+    const customer = customerOverride || getCurrentCustomer();
+    if (!customer || !customer.id) return {};
+
+    return {
+      "x-role": "customer",
+      "x-actor-id": customer.id
+    };
+  }
+
+  function buildApiErrorMessage(payload, fallbackMessage) {
+    if (!payload) return fallbackMessage;
+    if (typeof payload === "string") return payload;
+    if (Array.isArray(payload.message)) return payload.message.join("\n");
+    if (typeof payload.message === "string") return payload.message;
+    if (typeof payload.error === "string") return payload.error;
+    return fallbackMessage;
+  }
+
+  async function requestCustomerApi(path, options) {
+    const config = options && typeof options === "object" ? options : {};
+    const headers = { ...(config.headers || {}) };
+    let requestBody = config.body;
+
+    if (requestBody !== undefined && requestBody !== null && !(requestBody instanceof FormData)) {
+      headers["Content-Type"] = headers["Content-Type"] || "application/json";
+      requestBody = typeof requestBody === "string" ? requestBody : JSON.stringify(requestBody);
+    }
+
+    let response;
+    try {
+      response = await window.fetch(`${getCustomerApiBaseUrl()}${path}`, {
+        method: config.method || "GET",
+        headers,
+        body: requestBody
+      });
+    } catch (error) {
+      throw new Error("We couldn't reach the ServiceHub backend. Please make sure the NestJS server is running.");
+    }
+
+    let payload = null;
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      throw new Error(buildApiErrorMessage(payload, "The backend request could not be completed."));
+    }
+
+    if (payload && typeof payload === "object" && Object.prototype.hasOwnProperty.call(payload, "data")) {
+      return payload.data;
+    }
+
+    return payload;
+  }
+
+  function mapCaseStatusToDisputeStatus(status) {
+    const value = String(status || "").trim().toLowerCase();
+    if (value === "resolved" || value === "closed") return "resolved";
+    if (["under_review", "assigned", "hearing_scheduled", "evidence_review"].includes(value)) return "review";
+    return "pending";
+  }
+
+  function buildServiceImage(title, category) {
+    const label = String(title || category || "Service").trim() || "Service";
+    const hue = Math.abs(label.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0)) % 360;
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720">
+        <defs>
+          <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="hsl(${hue}, 72%, 60%)" />
+            <stop offset="100%" stop-color="hsl(${(hue + 38) % 360}, 78%, 42%)" />
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="720" fill="url(#g)" />
+        <circle cx="960" cy="160" r="180" fill="rgba(255,255,255,0.12)" />
+        <circle cx="180" cy="560" r="220" fill="rgba(255,255,255,0.10)" />
+        <text x="96" y="270" fill="#ffffff" font-family="Arial, sans-serif" font-size="76" font-weight="700">${escapeHTML(label).slice(0, 22)}</text>
+        <text x="96" y="350" fill="rgba(255,255,255,0.85)" font-family="Arial, sans-serif" font-size="34">${escapeHTML(String(category || "ServiceHub"))}</text>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+  }
+
+  function stripBackendWorkflowNote(note) {
+    return String(note || "").replace(/^\[stage:[a-z_]+\]\s*/i, "").trim();
+  }
+
+  function formatTimeFromIso(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "10:00 AM";
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit"
+    });
+  }
+
+  function buildScheduledIso(dateValue, timeValue) {
+    const safeDate = toIsoDate(dateValue, Date.now());
+    const match = String(timeValue || "10:00 AM").trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    let hours = 10;
+    let minutes = 0;
+
+    if (match) {
+      hours = Number(match[1]) % 12;
+      minutes = Number(match[2]) || 0;
+      if (String(match[3]).toUpperCase() === "PM") hours += 12;
+    }
+
+    const scheduled = new Date(`${safeDate}T00:00:00`);
+    scheduled.setHours(hours, minutes, 0, 0);
+    return scheduled.toISOString();
+  }
+
+  function mergeCustomerAccount(customer, passwordOverride) {
+    const account = sanitizeCustomerRecord({
+      ...customer,
+      password: passwordOverride || customer.password || DEFAULT_PASSWORD
+    });
+    const existingAccounts = getCustomerAccounts();
+    const nextAccounts = existingAccounts.slice();
+    const accountIndex = nextAccounts.findIndex((entry) => entry.email === account.email || entry.id === account.id);
+
+    if (accountIndex === -1) nextAccounts.unshift(account);
+    else nextAccounts[accountIndex] = account;
+
+    saveCustomerAccounts(nextAccounts);
+    return account;
+  }
+
+  function persistCustomerFromBackend(profileSummary, passwordOverride) {
+    const profile = profileSummary && profileSummary.profile ? profileSummary.profile : {};
+    const persistedAccount = mergeCustomerAccount({
+      id: profileSummary.id,
+      name: profileSummary.name,
+      email: profileSummary.email,
+      phone: profileSummary.phone,
+      avatar: profileSummary.avatarUrl || "",
+      location: profile.address || profile.city || "",
+      memberSince: profileSummary.createdAt ? getMonthYearLabel(profileSummary.createdAt) : DEFAULT_MEMBER_SINCE,
+      createdAt: profileSummary.createdAt || new Date().toISOString()
+    }, passwordOverride || (getSessionAccount() && getSessionAccount().password));
+
+    return saveCurrentCustomer(persistedAccount, true);
+  }
+
+  function mapBackendService(service) {
+    return {
+      id: service.id,
+      title: service.title,
+      providerName: service.providerName || service.businessName || "Service Professional",
+      provider: service.providerName || service.businessName || "Service Professional",
+      providerId: service.providerId,
+      providerImage: buildAvatarUrl(service.providerName || service.businessName || "Provider"),
+      price: toNumber(service.price, 0),
+      category: String(service.category || "General").trim(),
+      rating: toNumber(service.rating, 4.8),
+      reviews: toNumber(service.reviewCount, 0),
+      description: String(service.description || "").trim(),
+      image: service.image || buildServiceImage(service.title, service.category),
+      location: String(service.location || "").trim(),
+      durationMinutes: toNumber(service.durationMinutes, 120),
+      tags: Array.isArray(service.tags) ? service.tags.slice() : []
+    };
+  }
+
+  function mapBackendBooking(booking) {
+    return normalizeBookingRecord({
+      bookingId: booking.id,
+      serviceId: booking.serviceId,
+      title: booking.service && booking.service.title ? booking.service.title : booking.title,
+      provider: booking.provider && booking.provider.name ? booking.provider.name : booking.providerName,
+      providerImage: buildAvatarUrl(
+        booking.provider && booking.provider.name ? booking.provider.name : booking.providerName || "Provider"
+      ),
+      date: toIsoDate(booking.scheduledAt, booking.createdAt),
+      time: formatTimeFromIso(booking.scheduledAt),
+      address: booking.address || "",
+      durationHours: Math.max(1, Math.round(toNumber(
+        booking.service && booking.service.durationMinutes ? booking.service.durationMinutes / 60 : booking.durationHours,
+        2
+      ))),
+      unitPrice: toNumber(booking.service && booking.service.price, booking.totalAmount),
+      total: toNumber(booking.totalAmount, 0),
+      status: booking.status,
+      createdAt: booking.createdAt,
+      cancellationReason: booking.cancellationReason || "",
+      cancellationNotes: stripBackendWorkflowNote(booking.lastStatusNote || ""),
+      cancelledAt: booking.status === "cancelled" ? booking.updatedAt : "",
+      customerEmail: booking.customer && booking.customer.email ? booking.customer.email : "",
+      customerId: booking.customerId
+    });
+  }
+
+  function mapBackendCase(caseRecord) {
+    const booking = caseRecord.booking || {};
+    const messages = Array.isArray(caseRecord.messages) ? caseRecord.messages : [];
+    const firstMessage = messages[0] || null;
+
+    return normalizeDisputeRecord({
+      id: caseRecord.id,
+      bookingId: caseRecord.bookingId,
+      service: booking.service && booking.service.title ? booking.service.title : caseRecord.title,
+      provider: caseRecord.provider && caseRecord.provider.name ? caseRecord.provider.name : "",
+      category: caseRecord.priority || "other",
+      status: mapCaseStatusToDisputeStatus(caseRecord.status),
+      date: toIsoDate(caseRecord.createdAt, caseRecord.createdAt),
+      submittedAt: caseRecord.createdAt,
+      desc: caseRecord.description,
+      evidence: [],
+      timeline: [
+        {
+          title: "Dispute Submitted",
+          detail: caseRecord.description,
+          status: "completed",
+          at: caseRecord.createdAt
+        }
+      ].concat(messages.map((message, index) => ({
+        title: index === 0 ? "Initial Statement" : "Case Update",
+        detail: message.message,
+        status: index === 0 ? "completed" : "active",
+        at: message.createdAt || firstMessage && firstMessage.createdAt || caseRecord.updatedAt
+      })))
+    });
+  }
+
+  function mapBackendNotification(notification) {
+    const iconMap = {
+      booking: "fa-calendar-check",
+      case: "fa-shield-halved",
+      hearing: "fa-gavel",
+      award: "fa-scale-balanced",
+      service: "fa-briefcase",
+      profile: "fa-user-pen",
+      application: "fa-file-signature",
+      document: "fa-file-lines"
+    };
+    const toneMap = {
+      success: "green",
+      warning: "orange",
+      critical: "red",
+      info: "blue"
+    };
+    const hrefMap = {
+      booking: "my-bookings.html",
+      case: "disputes.html",
+      hearing: "disputes.html",
+      award: "dispute-status.html",
+      service: "browse-services.html",
+      profile: "profile.html",
+      application: "profile.html",
+      document: "dispute-status.html"
+    };
+
+    return {
+      id: notification.id,
+      title: notification.title,
+      message: notification.body,
+      href: hrefMap[notification.entityType] || "customer_dashboard.html",
+      icon: iconMap[notification.entityType] || "fa-bell",
+      tone: toneMap[notification.tone] || "blue",
+      unread: notification.read !== true,
+      createdAt: notification.createdAt
+    };
+  }
+
+  async function syncCustomerBackendData(options) {
+    const config = options && typeof options === "object" ? options : {};
+    const customer = getCurrentCustomer();
+
+    try {
+      const servicePromise = requestCustomerApi("/services");
+
+      if (!customer || !customer.id) {
+        const services = await servicePromise;
+        writeJSON("serviceHub_services", Array.isArray(services) ? services.map(mapBackendService) : []);
+        return { services };
+      }
+
+      const headers = getCustomerApiHeaders(customer);
+      const [services, me, bookings, cases, notifications] = await Promise.all([
+        servicePromise,
+        requestCustomerApi("/users/me", { headers }),
+        requestCustomerApi("/bookings", { headers }),
+        requestCustomerApi("/cases", { headers }),
+        requestCustomerApi("/notifications", { headers })
+      ]);
+
+      persistCustomerFromBackend(me);
+      writeJSON("serviceHub_services", Array.isArray(services) ? services.map(mapBackendService) : []);
+      saveCustomerBookings(Array.isArray(bookings) ? bookings.map(mapBackendBooking) : []);
+      saveCustomerDisputes(Array.isArray(cases) ? cases.map(mapBackendCase) : []);
+      saveNotifications(Array.isArray(notifications) ? notifications.map(mapBackendNotification) : []);
+      refreshShell();
+
+      return { services, me, bookings, cases, notifications };
+    } catch (error) {
+      const message = String(error && error.message || "");
+      if (
+        message.includes("Unknown actor context") ||
+        message.includes("x-role does not match actor") ||
+        message.includes("Missing x-actor-id")
+      ) {
+        logoutCustomer();
+        if (!AUTH_PAGES.has(getPageName())) {
+          window.location.replace("login.html");
+        }
+      } else if (!config.silent) {
+        console.warn("Customer backend sync failed:", error);
+      }
+      throw error;
+    }
+  }
+
+  async function createCustomerBooking(payload) {
+    const currentCustomer = getCurrentCustomer();
+    if (!currentCustomer || !currentCustomer.id) {
+      throw new Error("Please sign in again before creating a booking.");
+    }
+
+    const booking = await requestCustomerApi("/bookings", {
+      method: "POST",
+      headers: getCustomerApiHeaders(currentCustomer),
+      body: {
+        serviceId: payload.serviceId,
+        scheduledAt: buildScheduledIso(payload.date, payload.time),
+        notes: payload.notes || payload.title || "",
+        address: payload.address || ""
+      }
+    });
+
+    await syncCustomerBackendData({ silent: true });
+    return mapBackendBooking(booking);
+  }
+
+  async function cancelCustomerBooking(bookingId, reason, notes) {
+    const currentCustomer = getCurrentCustomer();
+    if (!currentCustomer || !currentCustomer.id) {
+      throw new Error("Please sign in again before cancelling this booking.");
+    }
+
+    const booking = await requestCustomerApi(`/bookings/${encodeURIComponent(bookingId)}`, {
+      method: "PATCH",
+      headers: getCustomerApiHeaders(currentCustomer),
+      body: {
+        status: "cancelled",
+        cancellationReason: reason,
+        note: notes || reason || "Booking cancelled by customer."
+      }
+    });
+
+    await syncCustomerBackendData({ silent: true });
+    return mapBackendBooking(booking);
+  }
+
+  async function createCustomerDispute(payload) {
+    const currentCustomer = getCurrentCustomer();
+    if (!currentCustomer || !currentCustomer.id) {
+      throw new Error("Please sign in again before submitting a dispute.");
+    }
+
+    const nextCase = await requestCustomerApi("/cases", {
+      method: "POST",
+      headers: getCustomerApiHeaders(currentCustomer),
+      body: {
+        bookingId: payload.bookingId,
+        title: payload.title,
+        description: payload.description,
+        priority: payload.priority || "medium"
+      }
+    });
+
+    const evidence = Array.isArray(payload.evidence) ? payload.evidence : [];
+    for (const file of evidence) {
+      await requestCustomerApi("/documents", {
+        method: "POST",
+        headers: getCustomerApiHeaders(currentCustomer),
+        body: {
+          caseId: nextCase.id,
+          title: file.name || "Evidence",
+          description: "Uploaded from the customer dispute form.",
+          type: "evidence",
+          fileName: file.name || "evidence.txt",
+          content: file.dataUrl || ""
+        }
+      });
+    }
+
+    await syncCustomerBackendData({ silent: true });
+    return mapBackendCase(nextCase);
   }
 
   function showAppModal(title, message, options) {
@@ -651,10 +1081,7 @@
       return Boolean(await window.showAppModal(title, message, options || {}));
     }
 
-    if (typeof window.confirm === "function") {
-      return window.confirm(message);
-    }
-
+    showToast(message, options && options.type === "danger" ? "warning" : "info");
     return true;
   }
 
@@ -663,11 +1090,7 @@
       return window.showAppPrompt(title, message, options || {});
     }
 
-    const placeholder = options && options.placeholder ? `\n\n${options.placeholder}` : "";
-    if (typeof window.prompt === "function") {
-      return window.prompt(`${message}${placeholder}`, "");
-    }
-
+    showToast(message, "info");
     return null;
   }
 
@@ -976,7 +1399,7 @@
     }) || null;
   }
 
-  function loginCustomer(identifier, password) {
+  async function loginCustomer(identifier, password) {
     const loginValue = String(identifier || "").trim();
     const passwordValue = String(password || "");
 
@@ -985,15 +1408,20 @@
     }
 
     const matchedAccount = findAccountByLogin(loginValue);
-    if (!matchedAccount) {
-      throw new Error("No customer account was found with that email or phone.");
-    }
+    const backendEmail = matchedAccount ? matchedAccount.email : normalizeEmail(loginValue);
 
-    if (matchedAccount.password !== passwordValue) {
-      throw new Error("That password does not match our records.");
-    }
+    const loginData = await requestCustomerApi("/session/login", {
+      method: "POST",
+      body: {
+        role: "customer",
+        email: backendEmail,
+        password: passwordValue
+      }
+    });
 
-    saveCurrentCustomer(matchedAccount, true);
+    const sessionCustomer = persistCustomerFromBackend(loginData.profileSummary, passwordValue);
+    await syncCustomerBackendData({ silent: true });
+
     addNotification("Signed in", "You are now logged in to your customer account.", {
       href: "customer_dashboard.html",
       icon: "fa-right-to-bracket",
@@ -1001,10 +1429,10 @@
       unread: false
     });
 
-    return toPublicCustomer(matchedAccount);
+    return sessionCustomer;
   }
 
-  function registerCustomer(payload) {
+  async function registerCustomer(payload) {
     const data = payload && typeof payload === "object" ? payload : {};
     const name = String(data.name || "").trim();
     const email = normalizeEmail(data.email);
@@ -1019,26 +1447,19 @@
       throw new Error("Password must be 8+ characters and include uppercase, lowercase, number, and symbol.");
     }
 
-    const accounts = getCustomerAccounts();
-    const emailExists = accounts.some((account) => account.email === email);
-    if (emailExists) throw new Error("An account with that email already exists.");
-
-    const phoneExists = accounts.some((account) => normalizePhone(account.phone) === normalizePhone(phone));
-    if (phoneExists) throw new Error("An account with that phone number already exists.");
-
-    const newAccount = sanitizeCustomerRecord({
-      id: `CUS-${Date.now()}`,
-      name,
-      email,
-      phone,
-      location,
-      memberSince: getMonthYearLabel(),
-      password
+    const registration = await requestCustomerApi("/customers/register", {
+      method: "POST",
+      body: {
+        name,
+        email,
+        phone,
+        password,
+        city: location
+      }
     });
 
-    accounts.unshift(newAccount);
-    saveCustomerAccounts(accounts);
-    saveCurrentCustomer(newAccount, true);
+    const publicCustomer = persistCustomerFromBackend(registration.profileSummary, password);
+    await syncCustomerBackendData({ silent: true });
 
     addNotification("Welcome to ServiceHub", "Your customer account is ready to use.", {
       href: "customer_dashboard.html",
@@ -1047,10 +1468,10 @@
       unread: false
     });
 
-    return toPublicCustomer(newAccount);
+    return publicCustomer;
   }
 
-  function updateCustomerProfile(payload) {
+  async function updateCustomerProfile(payload) {
     const sessionAccount = getSessionAccount();
     if (!sessionAccount) throw new Error("You need to log in again before updating your profile.");
 
@@ -1065,30 +1486,21 @@
     if (!isValidPhone(nextPhone)) throw new Error("Please enter a valid phone number.");
     if (nextLocation.length < 2) throw new Error("Please enter your city or service location.");
 
-    const accounts = getCustomerAccounts();
-    const emailTaken = accounts.some((account) => account.email === nextEmail && account.email !== sessionAccount.email);
-    if (emailTaken) throw new Error("That email is already being used by another customer account.");
-
-    const phoneTaken = accounts.some((account) => {
-      return normalizePhone(account.phone) === normalizePhone(nextPhone) && account.email !== sessionAccount.email;
-    });
-    if (phoneTaken) throw new Error("That phone number is already being used by another customer account.");
-
-    const updatedAccount = sanitizeCustomerRecord({
-      ...sessionAccount,
-      name: nextName,
-      email: nextEmail,
-      phone: nextPhone,
-      location: nextLocation,
-      avatar: updates.avatar || sessionAccount.avatar
+    const updatedProfile = await requestCustomerApi("/users/me", {
+      method: "PATCH",
+      headers: getCustomerApiHeaders(sessionAccount),
+      body: {
+        name: nextName,
+        email: nextEmail,
+        phone: nextPhone,
+        avatarUrl: updates.avatar || sessionAccount.avatar || "",
+        city: nextLocation,
+        address: nextLocation
+      }
     });
 
-    const nextAccounts = accounts.map((account) => {
-      return account.email === sessionAccount.email ? updatedAccount : account;
-    });
-
-    saveCustomerAccounts(nextAccounts);
-    saveCurrentCustomer(updatedAccount, true);
+    const updatedCustomer = persistCustomerFromBackend(updatedProfile, sessionAccount.password);
+    await syncCustomerBackendData({ silent: true });
 
     addNotification("Profile updated", "Your customer profile details were saved successfully.", {
       href: "profile.html",
@@ -1097,10 +1509,10 @@
       unread: false
     });
 
-    return toPublicCustomer(updatedAccount);
+    return updatedCustomer;
   }
 
-  function updateCustomerPassword(currentPassword, newPassword) {
+  async function updateCustomerPassword(currentPassword, newPassword) {
     const sessionAccount = getSessionAccount();
     if (!sessionAccount) throw new Error("You need to log in again before changing your password.");
 
@@ -1120,14 +1532,19 @@
       throw new Error("Password must be 8+ characters and include uppercase, lowercase, number, and symbol.");
     }
 
-    const accounts = getCustomerAccounts().map((account) => {
-      return account.email === sessionAccount.email
-        ? sanitizeCustomerRecord({ ...account, password: nextValue })
-        : account;
+    await requestCustomerApi("/users/me", {
+      method: "PATCH",
+      headers: getCustomerApiHeaders(sessionAccount),
+      body: {
+        password: nextValue
+      }
     });
 
-    saveCustomerAccounts(accounts);
-    saveCurrentCustomer(accounts.find((account) => account.email === sessionAccount.email), true);
+    const updatedAccount = mergeCustomerAccount({
+      ...sessionAccount,
+      password: nextValue
+    }, nextValue);
+    saveCurrentCustomer(updatedAccount, true);
 
     addNotification("Password updated", "Your account password was changed successfully.", {
       href: "profile.html",
@@ -1499,7 +1916,7 @@
         if (nextPassword === null || nextPassword === false) return;
 
         try {
-          resetCustomerPassword(identifier, nextPassword);
+          await resetCustomerPassword(identifier, nextPassword);
           showToast("Success! Your password has been updated. You can now log in.", "success");
         } catch (error) {
           showDialogMessage("Reset Failed", error.message, { type: "danger" });
@@ -1513,7 +1930,7 @@
       const loginFeedback = document.getElementById("loginMessage");
       const submitButton = loginForm.querySelector("button[type='submit']");
 
-      loginForm.addEventListener("submit", (event) => {
+      loginForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         setFormFeedback(loginFeedback, "", "info");
 
@@ -1522,7 +1939,7 @@
 
         try {
           if (submitButton) submitButton.disabled = true;
-          loginCustomer(identifier, password);
+          await loginCustomer(identifier, password);
           setFormFeedback(loginFeedback, "Login successful. Redirecting to your dashboard...", "success");
           window.setTimeout(() => {
             window.location.href = consumeRedirectTarget() || "customer_dashboard.html";
@@ -1550,7 +1967,7 @@
         updatePasswordStrengthBars(passwordInput.value);
       }
 
-      signupForm.addEventListener("submit", (event) => {
+      signupForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         setFormFeedback(feedback, "", "info");
 
@@ -1567,7 +1984,7 @@
 
         try {
           if (submitButton) submitButton.disabled = true;
-          registerCustomer({
+          await registerCustomer({
             name,
             email,
             phone,
@@ -1592,6 +2009,13 @@
     ensureCustomerStorage();
     if (!AUTH_PAGES.has(getPageName())) {
       protectCustomerPages();
+    }
+    customerReadyPromise = syncCustomerBackendData({ silent: true }).catch((error) => {
+      console.warn("Customer runtime backend sync failed:", error);
+      return null;
+    });
+    if (window.CustomerApp) {
+      window.CustomerApp.ready = customerReadyPromise;
     }
     initShell();
     initAuthForms();
@@ -1648,10 +2072,17 @@
     formatDisplayDate,
     formatRelativeTime,
     buildAvatarUrl,
+    requestCustomerApi,
+    getCustomerApiHeaders,
+    syncCustomerBackendData,
+    createCustomerBooking,
+    cancelCustomerBooking,
+    createCustomerDispute,
     saveCurrentCustomer,
     updatePasswordStrengthBars,
     normalizeBookingRecord,
-    normalizeDisputeRecord
+    normalizeDisputeRecord,
+    ready: customerReadyPromise
   };
 
   document.addEventListener("DOMContentLoaded", init);

@@ -1,6 +1,15 @@
 // assets/js/browse-services.js
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    const app = window.CustomerApp;
+    if (app && app.ready && typeof app.ready.then === 'function') {
+        try {
+            await app.ready;
+        } catch (error) {
+            console.warn('Customer backend sync unavailable for browse services:', error);
+        }
+    }
+
     const grid = document.getElementById('browse-services-grid');
     const searchInput = document.getElementById('browse-search');
     const categoryFilter = document.getElementById('browse-category');

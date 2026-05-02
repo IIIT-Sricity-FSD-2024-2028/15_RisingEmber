@@ -115,7 +115,7 @@
 
         function showError(inputId, message) {
             const input = document.getElementById(inputId);
-            alert(message); // Retaining simple UI without changing HTML structure extensively
+            window.showAppToast(message, 'warning');
             if (input) {
                 input.style.borderColor = '#EF4444';
                 setTimeout(() => input.style.borderColor = '', 3000);
@@ -179,7 +179,7 @@
                 window.location.href = 'arbitrator_form_2.html';
             } catch (error) {
                 console.error('Failed to save registration step:', error);
-                alert('An error occurred automatically saving your progress. Check browser local storage permissions.');
+                window.showAppToast('An error occurred automatically saving your progress. Check browser local storage permissions.', 'error');
             }
         }
     </script>

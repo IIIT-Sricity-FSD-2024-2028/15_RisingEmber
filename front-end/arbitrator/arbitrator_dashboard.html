@@ -83,7 +83,8 @@
     <script src="arbitrator_sidebar.js"></script>
     <script src="arbitrator_navbar.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
             const data = ArbitratorData;
 

@@ -46,25 +46,25 @@
             <div class="stats-row">
                 <div class="stat-card">
                     <div class="stat-icon" style="background:#eff6ff; color:#3b82f6;"><i class="fa-solid fa-briefcase"></i></div>
-                    <span class="stat-val">1,247</span>
+                    <span class="stat-val" id="report-total-cases">0</span>
                     <span class="stat-label">Total Cases</span>
                     <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 12%</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background:#f0fdf4; color:#10b981;"><i class="fa-solid fa-circle-check"></i></div>
-                    <span class="stat-val">1,158</span>
+                    <span class="stat-val" id="report-resolved-cases">0</span>
                     <span class="stat-label">Resolved Cases</span>
                     <div class="stat-trend trend-up"><i class="fa-solid fa-arrow-up"></i> 18%</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background:#f5f3ff; color:#8b5cf6;"><i class="fa-solid fa-user-tie"></i></div>
-                    <span class="stat-val">47</span>
+                    <span class="stat-val" id="report-arbitrators">0</span>
                     <span class="stat-label">Total Arbitrators</span>
                     <div class="stat-trend trend-up"><i class="fa-solid fa-plus"></i> 3 new</div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-icon" style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-bolt"></i></div>
-                    <span class="stat-val">45.2</span>
+                    <span class="stat-val" id="report-avg-days">0</span>
                     <span class="stat-label">Avg Res. Days</span>
                     <div class="stat-trend trend-up" style="color:#10b981;"><i class="fa-solid fa-arrow-down"></i> 8% faster</div>
                 </div>
@@ -101,12 +101,42 @@
     <script src="admin_sidebar.js"></script>
     <script src="admin_navbar.js"></script>
     <script>
-        function initCharts() {
+        function getReportData() {
+            const cases = Array.isArray(AdminData.cases) ? AdminData.cases : [];
+            const arbitrators = Array.isArray(AdminData.arbitrators) ? AdminData.arbitrators : [];
+            const resolvedCases = cases.filter((item) => ['Closed', 'Awarded'].includes(item.status));
+            const activeCases = cases.filter((item) => !['Closed', 'Awarded'].includes(item.status));
+            const statusLabels = ['Open', 'Under Review', 'Hearing Scheduled', 'Awarded', 'Closed'];
+            const statusCounts = statusLabels.map((label) => cases.filter((item) => item.status === label).length);
+            const typeCounts = cases.reduce((acc, item) => {
+                const key = item.type || 'General';
+                acc[key] = (acc[key] || 0) + 1;
+                return acc;
+            }, {});
+            const monthCounts = Array.from({ length: 12 }, () => 0);
+            cases.forEach((item) => {
+                const date = new Date(item.filedDateISO || item.filedDate || item.createdAt || Date.now());
+                if (!Number.isNaN(date.getTime())) monthCounts[date.getMonth()] += 1;
+            });
+
+            return { cases, arbitrators, resolvedCases, activeCases, statusLabels, statusCounts, typeCounts, monthCounts };
+        }
+
+        function renderSummaryCards(report) {
+            document.getElementById('report-total-cases').textContent = report.cases.length;
+            document.getElementById('report-resolved-cases').textContent = report.resolvedCases.length;
+            document.getElementById('report-arbitrators').textContent = report.arbitrators.length;
+            document.getElementById('report-avg-days').textContent = AdminData.settings && AdminData.settings.arbitration
+                ? AdminData.settings.arbitration.maxResolutionTime
+                : '0';
+        }
+
+        function initCharts(report) {
             new Chart(document.getElementById('lineChart'), {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [{ label: 'Cases', data: [85, 92, 78, 105, 118, 125, 132, 128, 145, 140, 155, 160], borderColor: '#3b82f6', tension: 0.4, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.05)' }]
+                    datasets: [{ label: 'Cases', data: report.monthCounts, borderColor: '#3b82f6', tension: 0.4, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.05)' }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Cases Filed Per Month' } } }
             });
@@ -114,8 +144,8 @@
             new Chart(document.getElementById('pieChart'), {
                 type: 'doughnut',
                 data: {
-                    labels: ['Consumer', 'Service', 'Contract', 'Other'],
-                    datasets: [{ data: [33.7, 25.5, 22.2, 18.6], backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6'] }]
+                    labels: Object.keys(report.typeCounts),
+                    datasets: [{ data: Object.values(report.typeCounts), backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'] }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Dispute Distribution' } } }
             });
@@ -123,26 +153,26 @@
             new Chart(document.getElementById('barChart'), {
                 type: 'bar',
                 data: {
-                    labels: ['Open', 'Under Review', 'Hearing Scheduled', 'Award Issued', 'Closed'],
-                    datasets: [{ label: 'Cases', data: [120, 210, 105, 310, 680], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'] }]
+                    labels: report.statusLabels,
+                    datasets: [{ label: 'Cases', data: report.statusCounts, backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'] }]
                 },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { title: { display: true, text: 'Status Volume' } } }
             });
         }
 
-        function loadTopArbitrators() {
-            const data = [
-                { name: "John Mitchell", img: "https://i.pravatar.cc/150?u=1", handled: 156, resolved: 148, rating: "4.8", time: "38 days" },
-                { name: "Sarah Chen", img: "https://i.pravatar.cc/150?u=2", handled: 142, resolved: 139, rating: "4.7", time: "42 days" }
-            ];
+        function loadTopArbitrators(report) {
+            const data = report.arbitrators
+                .slice()
+                .sort((left, right) => (right.casesHandled || 0) - (left.casesHandled || 0))
+                .slice(0, 5);
             document.getElementById('arb-table').innerHTML = data.map(a => `
                 <tr>
-                    <td><div class="arb-row"><img src="${a.img}" class="arb-img"><strong>${a.name}</strong></div></td>
-                    <td>${a.handled}</td><td>${a.resolved}</td>
-                    <td><div class="star-rating">${a.rating} <i class="fa-solid fa-star"></i></div></td>
-                    <td>${a.time}</td>
+                    <td><div class="arb-row"><img src="${a.avatar}" class="arb-img"><strong>${a.name}</strong></div></td>
+                    <td>${a.casesHandled || 0}</td><td>${a.metrics ? a.metrics.closedCases : 0}</td>
+                    <td><div class="star-rating">${a.metrics ? a.metrics.rating : 0} <i class="fa-solid fa-star"></i></div></td>
+                    <td>${a.metrics ? a.metrics.avgResolution : 'N/A'}</td>
                 </tr>
-            `).join('');
+            `).join('') || `<tr><td colspan="5" style="color:#94a3b8; font-weight:600;">No arbitrator data available yet.</td></tr>`;
         }
 
         /**
@@ -174,12 +204,13 @@
          * Generates a CSV file based on the summary data.
          */
         function downloadCSV() {
+            const report = getReportData();
             const rows = [
                 ["Metric", "Value", "Trend"],
-                ["Total Cases", "1247", "+12%"],
-                ["Active Cases", "89", "+5%"],
-                ["Resolved Cases", "1158", "+18%"],
-                ["Avg Resolution Time", "45.2 Days", "-8% Faster"]
+                ["Total Cases", String(report.cases.length), "Backend synced"],
+                ["Active Cases", String(report.activeCases.length), "Backend synced"],
+                ["Resolved Cases", String(report.resolvedCases.length), "Backend synced"],
+                ["Arbitrators", String(report.arbitrators.length), "Backend synced"]
             ];
 
             let csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
@@ -192,9 +223,12 @@
             document.body.removeChild(link);
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            initCharts();
-            loadTopArbitrators();
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            const report = getReportData();
+            renderSummaryCards(report);
+            initCharts(report);
+            loadTopArbitrators(report);
         });
     </script>
 </body>

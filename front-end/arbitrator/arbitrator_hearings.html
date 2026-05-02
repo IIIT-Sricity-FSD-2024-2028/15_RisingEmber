@@ -205,61 +205,67 @@
             renderCalendar();
         }
 
-        function saveHearing() {
+        async function saveHearing() {
             const idInput = document.getElementById('schedule-id');
             const dateInput = document.getElementById('schedule-date');
             const timeInput = document.getElementById('schedule-time');
             const typeInput = document.getElementById('schedule-type');
 
             if (!idInput.value || !dateInput.value || !timeInput.value) {
-                alert("Please fill in Case ID, Date, and Time");
+                window.showAppToast("Please fill in Case ID, Date, and Time.", "warning");
                 return;
             }
 
             const caseInfo = ArbitratorData.allCases.find(c => c.id.toUpperCase() === idInput.value.toUpperCase());
             if (!caseInfo) {
-                alert("Please enter a valid assigned case ID.");
+                window.showAppToast("Please enter a valid assigned case ID.", "warning");
                 return;
             }
 
-            const formattedDate = createArbitratorDisplayDate(new Date(dateInput.value));
-            const formattedTime = formatHearingTime(timeInput.value);
-            const hearingRecord = {
-                id: idInput.value.toUpperCase(),
-                parties: `${caseInfo.claimant} vs ${caseInfo.respondent}`,
-                date: formattedDate,
-                time: formattedTime,
-                type: typeInput.value || "General Hearing",
-                status: "Scheduled",
-                statusClass: "arb-badge-blue"
-            };
+            try {
+                const scheduledAt = createArbitratorScheduledAt(dateInput.value, timeInput.value);
+                if (!scheduledAt) {
+                    throw new Error("Please choose a valid hearing date and time.");
+                }
 
-            const existingIndex = ArbitratorData.hearingsList.findIndex((item) => item.id === hearingRecord.id);
-            if (existingIndex !== -1) {
-                ArbitratorData.hearingsList.splice(existingIndex, 1, hearingRecord);
-            } else {
-                ArbitratorData.hearingsList.unshift(hearingRecord);
+                const hearingTypeLabel = typeInput.value.trim() || "Virtual Hearing";
+                const existingHearing = ArbitratorData.hearingsList.find((item) => item.id === caseInfo.id);
+                const payload = {
+                    scheduledAt,
+                    type: mapArbitratorHearingTypeToBackend(hearingTypeLabel),
+                    agenda: `${hearingTypeLabel} for ${caseInfo.id}`,
+                    notes: `Scheduled from arbitrator portal for ${caseInfo.id}.`
+                };
+
+                if (existingHearing && existingHearing.hearingId) {
+                    await requestArbitratorApi(`/hearings/${encodeURIComponent(existingHearing.hearingId)}`, {
+                        method: "PATCH",
+                        headers: getArbitratorRequestHeaders(),
+                        body: payload
+                    });
+                } else {
+                    await requestArbitratorApi("/hearings", {
+                        method: "POST",
+                        headers: getArbitratorRequestHeaders(),
+                        body: {
+                            caseId: caseInfo.id,
+                            ...payload
+                        }
+                    });
+                }
+
+                await window.syncArbitratorBackendData({ silent: true });
+
+                idInput.value = '';
+                dateInput.value = '';
+                timeInput.value = '';
+                typeInput.value = '';
+
+                renderHearingsTable();
+                window.showAppToast("Hearing schedule saved successfully.", "success");
+            } catch (error) {
+                window.showAppToast(error.message || "The hearing could not be saved.", "error");
             }
-
-            caseInfo.next = formattedDate;
-            caseInfo.hearingDate = formattedDate;
-            caseInfo.hearingTime = formattedTime;
-            caseInfo.hearingType = hearingRecord.type;
-            if (caseInfo.status !== 'Closed') {
-                caseInfo.status = 'Hearing Scheduled';
-                caseInfo.statusColor = '#065F46';
-                caseInfo.statusClass = 'arb-badge-green';
-            }
-
-            saveData();
-
-            idInput.value = '';
-            dateInput.value = '';
-            timeInput.value = '';
-            typeInput.value = '';
-
-            alert("Hearing saved to schedule!");
-            renderHearingsTable();
         }
 
         async function deleteHearing(caseId) {
@@ -269,28 +275,39 @@
                 okText: "Remove"
             });
             if (confirmed) {
-                const deletedHearing = ArbitratorData.hearingsList.find((item) => item.id === caseId);
-                ArbitratorData.hearingsList = ArbitratorData.hearingsList.filter((item) => item.id !== caseId);
-
-                const caseInfo = ArbitratorData.allCases.find((item) => item.id === caseId);
-                if (caseInfo && deletedHearing && caseInfo.hearingDate === deletedHearing.date) {
-                    caseInfo.next = '—';
-                    caseInfo.hearingDate = '';
-                    caseInfo.hearingTime = '';
-                    caseInfo.hearingType = '';
-                    if (caseInfo.status === 'Hearing Scheduled') {
-                        caseInfo.status = 'Under Review';
-                        caseInfo.statusColor = '#1E40AF';
-                        caseInfo.statusClass = 'arb-badge-blue';
+                try {
+                    const deletedHearing = ArbitratorData.hearingsList.find((item) => item.id === caseId);
+                    if (!deletedHearing || !deletedHearing.hearingId) {
+                        throw new Error("This hearing is no longer available.");
                     }
-                }
 
-                saveData();
-                renderHearingsTable();
+                    await requestArbitratorApi(`/hearings/${encodeURIComponent(deletedHearing.hearingId)}`, {
+                        method: "DELETE",
+                        headers: getArbitratorRequestHeaders()
+                    });
+
+                    const caseInfo = ArbitratorData.allCases.find((item) => item.id === caseId);
+                    if (caseInfo && caseInfo.status !== 'Closed') {
+                        await requestArbitratorApi(`/cases/${encodeURIComponent(caseId)}`, {
+                            method: "PATCH",
+                            headers: getArbitratorRequestHeaders(),
+                            body: {
+                                status: "under_review"
+                            }
+                        });
+                    }
+
+                    await window.syncArbitratorBackendData({ silent: true });
+                    renderHearingsTable();
+                    window.showAppToast("Hearing removed from the schedule.", "success");
+                } catch (error) {
+                    window.showAppToast(error.message || "The hearing could not be removed.", "error");
+                }
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
             if (!guardArbitratorPage()) return;
             const requestedCaseId = getArbitratorCaseIdFromUrl();
             if (requestedCaseId && getArbitratorCaseById(requestedCaseId)) {
