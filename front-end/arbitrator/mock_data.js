@@ -817,7 +817,7 @@ function getArbitratorApiBaseUrl() {
     return String(
         (typeof window !== "undefined" && window.SERVICE_HUB_API_BASE_URL)
         || localStorage.getItem("serviceHub_api_base_url")
-        || "http://127.0.0.1:3002/api/v1"
+        || "http://127.0.0.1:3000/api/v1"
     ).trim().replace(/\/+$/, "");
 }
 
