@@ -4,7 +4,33 @@
     "/session/login": {
       "post": {
         "operationId": "SessionController_login",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -17,7 +43,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -28,7 +70,33 @@
     "/session/password-reset": {
       "post": {
         "operationId": "SessionController_resetPassword",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -41,7 +109,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -52,7 +136,33 @@
     "/customers/register": {
       "post": {
         "operationId": "CustomersController_register",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -65,7 +175,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -76,7 +202,33 @@
     "/providers/register": {
       "post": {
         "operationId": "ProvidersController_register",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -89,7 +241,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -100,7 +268,33 @@
     "/arbitrators/applications": {
       "post": {
         "operationId": "ArbitratorsController_apply",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -113,7 +307,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -124,10 +334,52 @@
     "/users/me": {
       "get": {
         "operationId": "UsersController_getMe",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -136,7 +388,33 @@
       },
       "patch": {
         "operationId": "UsersController_updateMe",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -149,7 +427,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -176,11 +470,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -199,6 +534,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -213,7 +573,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -256,11 +632,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -269,7 +686,33 @@
       },
       "post": {
         "operationId": "ServicesController_createService",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -282,7 +725,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -301,11 +760,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -322,6 +822,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -336,7 +861,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -353,11 +894,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -392,11 +974,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -405,7 +1028,33 @@
       },
       "post": {
         "operationId": "BookingsController_createBooking",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -418,7 +1067,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -437,11 +1102,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -458,6 +1164,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -472,7 +1203,85 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
+          }
+        },
+        "tags": [
+          "Bookings"
+        ]
+      },
+      "delete": {
+        "operationId": "BookingsController_deleteBooking",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -483,10 +1292,52 @@
     "/bookings/workflow-cleanup": {
       "post": {
         "operationId": "BookingsController_runWorkflowCleanup",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -521,11 +1372,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -534,7 +1426,33 @@
       },
       "post": {
         "operationId": "CasesController_createCase",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -547,7 +1465,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -566,11 +1500,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -587,6 +1562,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -601,7 +1601,85 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
+          }
+        },
+        "tags": [
+          "Cases"
+        ]
+      },
+      "delete": {
+        "operationId": "CasesController_deleteCase",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -628,6 +1706,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -642,7 +1745,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -667,11 +1786,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -698,11 +1858,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -711,7 +1912,33 @@
       },
       "post": {
         "operationId": "HearingsController_createHearing",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -724,7 +1951,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -743,6 +1986,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -757,7 +2025,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -774,11 +2058,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -813,11 +2138,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -826,7 +2192,33 @@
       },
       "post": {
         "operationId": "DocumentsController_createDocument",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -839,7 +2231,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -858,6 +2266,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -872,7 +2305,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -889,11 +2338,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -920,11 +2410,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -933,7 +2464,33 @@
       },
       "post": {
         "operationId": "AwardsController_createAward",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -946,7 +2503,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -965,6 +2538,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -979,7 +2577,85 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
+          }
+        },
+        "tags": [
+          "Awards"
+        ]
+      },
+      "delete": {
+        "operationId": "AwardsController_deleteAward",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1014,11 +2690,52 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1027,7 +2744,33 @@
       },
       "post": {
         "operationId": "ReviewsController_createReview",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1040,7 +2783,87 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
+          }
+        },
+        "tags": [
+          "Reviews"
+        ]
+      }
+    },
+    "/reviews/{id}": {
+      "delete": {
+        "operationId": "ReviewsController_deleteReview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1051,10 +2874,52 @@
     "/notifications": {
       "get": {
         "operationId": "NotificationsController_listNotifications",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1063,7 +2928,33 @@
       },
       "patch": {
         "operationId": "NotificationsController_bulkUpdateNotifications",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1076,7 +2967,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1095,6 +3002,31 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
           }
         ],
         "requestBody": {
@@ -1109,7 +3041,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1120,10 +3068,52 @@
     "/dashboard/customer": {
       "get": {
         "operationId": "DashboardController_customer",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1134,10 +3124,52 @@
     "/dashboard/provider": {
       "get": {
         "operationId": "DashboardController_provider",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1148,10 +3180,52 @@
     "/dashboard/admin": {
       "get": {
         "operationId": "DashboardController_admin",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1162,10 +3236,52 @@
     "/dashboard/arbitrator": {
       "get": {
         "operationId": "DashboardController_arbitrator",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1176,7 +3292,33 @@
     "/intake/job-requests": {
       "post": {
         "operationId": "IntakeController_createJobRequest",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1189,7 +3331,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1200,7 +3358,33 @@
     "/intake/contact-messages": {
       "post": {
         "operationId": "IntakeController_createContactMessage",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1213,7 +3397,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1224,7 +3424,33 @@
     "/intake/waitlist": {
       "post": {
         "operationId": "IntakeController_createWaitlistEntry",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1237,7 +3463,23 @@
         },
         "responses": {
           "201": {
-            "description": ""
+            "description": "Created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1248,10 +3490,52 @@
     "/settings": {
       "get": {
         "operationId": "SettingsController_getSettings",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1260,7 +3544,33 @@
       },
       "patch": {
         "operationId": "SettingsController_updateSettings",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "x-role",
+            "in": "header",
+            "required": false,
+            "description": "Role for RBAC. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "customer",
+                "provider",
+                "admin",
+                "arbitrator"
+              ]
+            }
+          },
+          {
+            "name": "x-actor-id",
+            "in": "header",
+            "required": false,
+            "description": "Actor user id matching x-role. Required for protected endpoints.",
+            "schema": {
+              "type": "string",
+              "example": "user_1001"
+            }
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -1273,7 +3583,23 @@
         },
         "responses": {
           "200": {
-            "description": ""
+            "description": "Successful response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input or missing required header."
+          },
+          "403": {
+            "description": "Role is not authorized for this operation."
+          },
+          "404": {
+            "description": "Requested record was not found."
           }
         },
         "tags": [
@@ -1284,121 +3610,1079 @@
   },
   "info": {
     "title": "ServiceHub API",
-    "description": "ServiceHub unified API documentation",
+    "description": "Review-4 REST API documentation for ServiceHub.",
     "version": "1.0",
     "contact": {}
   },
   "tags": [],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "RoleHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-role",
+        "description": "Role used for RBAC. Allowed values: customer, provider, admin, arbitrator."
+      },
+      "ActorHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-actor-id",
+        "description": "In-memory actor user id for the selected role. Required for protected APIs."
+      }
+    },
     "schemas": {
       "LoginDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "role",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "provider",
+              "admin",
+              "arbitrator"
+            ],
+            "example": "customer"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Email address for the selected role."
+          },
+          "password": {
+            "type": "string",
+            "example": "password123",
+            "description": "Account password."
+          }
+        }
       },
       "ResetPasswordDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "role",
+          "identifier",
+          "nextPassword"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "customer",
+              "provider",
+              "admin",
+              "arbitrator"
+            ],
+            "example": "customer"
+          },
+          "identifier": {
+            "type": "string",
+            "example": "user@example.com",
+            "description": "Account email or phone number."
+          },
+          "nextPassword": {
+            "type": "string",
+            "example": "newPassword123",
+            "description": "Replacement password."
+          }
+        }
       },
       "RegisterCustomerDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Priya Shah"
+          },
+          "email": {
+            "type": "string",
+            "example": "priya@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919999999999"
+          },
+          "city": {
+            "type": "string",
+            "example": "Chennai"
+          },
+          "address": {
+            "type": "string",
+            "example": "12 Anna Nagar, Chennai"
+          },
+          "preferredCategories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "Home Cleaning"
+            }
+          },
+          "bio": {
+            "type": "string",
+            "example": "Customer profile notes."
+          }
+        }
       },
       "RegisterProviderDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "name",
+          "email",
+          "password",
+          "businessName",
+          "category"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Paul Services"
+          },
+          "email": {
+            "type": "string",
+            "example": "paul@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919999999998"
+          },
+          "businessName": {
+            "type": "string",
+            "example": "Paul Home Care"
+          },
+          "category": {
+            "type": "string",
+            "example": "Home Cleaning"
+          },
+          "city": {
+            "type": "string",
+            "example": "Chennai"
+          },
+          "serviceArea": {
+            "type": "string",
+            "example": "Chennai"
+          },
+          "experienceLevel": {
+            "type": "string",
+            "example": "5 years"
+          },
+          "bio": {
+            "type": "string",
+            "example": "Provider profile notes."
+          }
+        }
       },
       "ApplyArbitratorDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "name",
+          "email",
+          "password",
+          "specialization",
+          "experienceYears"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Ananya Rao"
+          },
+          "email": {
+            "type": "string",
+            "example": "ananya@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "password123"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919999999997"
+          },
+          "specialization": {
+            "type": "string",
+            "example": "Service disputes"
+          },
+          "experienceYears": {
+            "type": "number",
+            "example": 7
+          },
+          "bio": {
+            "type": "string",
+            "example": "Arbitrator profile notes."
+          }
+        }
       },
       "UpdateMeDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Updated Name"
+          },
+          "email": {
+            "type": "string",
+            "example": "updated@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919999999996"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "https://example.com/avatar.png"
+          },
+          "city": {
+            "type": "string",
+            "example": "Bengaluru"
+          },
+          "address": {
+            "type": "string",
+            "example": "MG Road, Bengaluru"
+          },
+          "preferredCategories": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "Repairs"
+            }
+          },
+          "bio": {
+            "type": "string",
+            "example": "Updated profile notes."
+          },
+          "businessName": {
+            "type": "string",
+            "example": "Updated Business"
+          },
+          "category": {
+            "type": "string",
+            "example": "Repairs"
+          },
+          "serviceArea": {
+            "type": "string",
+            "example": "Bengaluru"
+          },
+          "experienceLevel": {
+            "type": "string",
+            "example": "Expert"
+          },
+          "specialization": {
+            "type": "string",
+            "example": "Marketplace disputes"
+          },
+          "experienceYears": {
+            "type": "number",
+            "example": 8
+          },
+          "title": {
+            "type": "string",
+            "example": "Platform Admin"
+          }
+        }
       },
       "UpdateUserDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "isActive": {
+            "type": "boolean",
+            "example": true
+          },
+          "approvalStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "rejected"
+            ],
+            "example": "pending"
+          }
+        }
       },
       "CreateServiceDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "title",
+          "description",
+          "category",
+          "price",
+          "durationMinutes",
+          "location"
+        ],
+        "properties": {
+          "providerId": {
+            "type": "string",
+            "example": "user_1002"
+          },
+          "title": {
+            "type": "string",
+            "example": "Deep Home Cleaning"
+          },
+          "description": {
+            "type": "string",
+            "example": "Complete home cleaning service with verified staff."
+          },
+          "category": {
+            "type": "string",
+            "example": "Home Cleaning"
+          },
+          "price": {
+            "type": "number",
+            "example": 2500
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 180
+          },
+          "location": {
+            "type": "string",
+            "example": "Chennai"
+          },
+          "image": {
+            "type": "string",
+            "example": "https://example.com/service.jpg"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "verified"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "archived"
+            ],
+            "example": "active"
+          }
+        }
       },
       "UpdateServiceDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Updated Service"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated service description."
+          },
+          "category": {
+            "type": "string",
+            "example": "Repairs"
+          },
+          "price": {
+            "type": "number",
+            "example": 3000
+          },
+          "durationMinutes": {
+            "type": "number",
+            "example": 120
+          },
+          "location": {
+            "type": "string",
+            "example": "Bengaluru"
+          },
+          "image": {
+            "type": "string",
+            "example": "https://example.com/service.jpg"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "premium"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "paused",
+              "archived"
+            ],
+            "example": "active"
+          }
+        }
       },
       "CreateBookingDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "serviceId",
+          "scheduledAt"
+        ],
+        "properties": {
+          "serviceId": {
+            "type": "string",
+            "example": "service_7001"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-05-10T10:00:00.000Z",
+            "description": "ISO datetime."
+          },
+          "notes": {
+            "type": "string",
+            "example": "Please arrive on time."
+          },
+          "address": {
+            "type": "string",
+            "example": "12 Anna Nagar, Chennai"
+          }
+        }
       },
       "UpdateBookingDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "requested",
+              "confirmed",
+              "in_progress",
+              "completed",
+              "cancelled",
+              "disputed"
+            ],
+            "example": "requested"
+          },
+          "note": {
+            "type": "string",
+            "example": "Status update note."
+          },
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-05-11T10:00:00.000Z"
+          },
+          "cancellationReason": {
+            "type": "string",
+            "example": "Customer unavailable."
+          }
+        }
       },
       "CreateCaseDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "bookingId",
+          "title",
+          "description"
+        ],
+        "properties": {
+          "bookingId": {
+            "type": "string",
+            "example": "booking_8001"
+          },
+          "title": {
+            "type": "string",
+            "example": "Service quality dispute"
+          },
+          "description": {
+            "type": "string",
+            "example": "The delivered service did not match the agreed scope."
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "example": "low"
+          }
+        }
       },
       "UpdateCaseDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "under_review",
+              "assigned",
+              "hearing_scheduled",
+              "evidence_review",
+              "resolved",
+              "closed"
+            ],
+            "example": "open"
+          },
+          "arbitratorId": {
+            "type": "string",
+            "example": "user_1004"
+          },
+          "message": {
+            "type": "string",
+            "example": "Case note or message."
+          },
+          "resolutionSummary": {
+            "type": "string",
+            "example": "Resolution summary."
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "example": "low"
+          }
+        }
       },
       "UpdateCaseMessageDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "flagged": {
+            "type": "boolean",
+            "example": false
+          },
+          "reviewed": {
+            "type": "boolean",
+            "example": true
+          }
+        }
       },
       "CreateHearingDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "caseId",
+          "scheduledAt",
+          "type",
+          "agenda"
+        ],
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "example": "case_10001"
+          },
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-05-12T11:00:00.000Z"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "video",
+              "phone",
+              "in_person"
+            ],
+            "example": "video"
+          },
+          "agenda": {
+            "type": "string",
+            "example": "Review submitted evidence."
+          },
+          "notes": {
+            "type": "string",
+            "example": "Internal hearing notes."
+          }
+        }
       },
       "UpdateHearingDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "scheduledAt": {
+            "type": "string",
+            "example": "2026-05-13T11:00:00.000Z"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "video",
+              "phone",
+              "in_person"
+            ],
+            "example": "video"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "scheduled",
+              "completed",
+              "cancelled"
+            ],
+            "example": "scheduled"
+          },
+          "agenda": {
+            "type": "string",
+            "example": "Updated agenda."
+          },
+          "notes": {
+            "type": "string",
+            "example": "Updated notes."
+          }
+        }
       },
       "CreateDocumentDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "caseId",
+          "title",
+          "type",
+          "fileName"
+        ],
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "example": "case_10001"
+          },
+          "title": {
+            "type": "string",
+            "example": "Evidence Photo"
+          },
+          "description": {
+            "type": "string",
+            "example": "Photo showing incomplete work."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "evidence",
+              "invoice",
+              "identity",
+              "contract",
+              "award_attachment",
+              "other"
+            ],
+            "example": "evidence"
+          },
+          "fileName": {
+            "type": "string",
+            "example": "evidence.jpg"
+          },
+          "content": {
+            "type": "string",
+            "example": "Base64 or textual file content."
+          }
+        }
       },
       "UpdateDocumentDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Updated Document"
+          },
+          "description": {
+            "type": "string",
+            "example": "Updated description."
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "evidence",
+              "invoice",
+              "identity",
+              "contract",
+              "award_attachment",
+              "other"
+            ],
+            "example": "evidence"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "uploaded",
+              "accepted",
+              "rejected"
+            ],
+            "example": "uploaded"
+          },
+          "fileName": {
+            "type": "string",
+            "example": "updated.pdf"
+          },
+          "content": {
+            "type": "string",
+            "example": "Updated content."
+          }
+        }
       },
       "CreateAwardDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "caseId",
+          "title",
+          "summary"
+        ],
+        "properties": {
+          "caseId": {
+            "type": "string",
+            "example": "case_10001"
+          },
+          "title": {
+            "type": "string",
+            "example": "Final award"
+          },
+          "summary": {
+            "type": "string",
+            "example": "The customer is entitled to a refund."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "issued",
+              "amended"
+            ],
+            "example": "draft"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "release_to_provider",
+              "refund_to_customer"
+            ],
+            "example": "release_to_provider"
+          }
+        }
       },
       "UpdateAwardDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "title": {
+            "type": "string",
+            "example": "Updated award"
+          },
+          "summary": {
+            "type": "string",
+            "example": "Updated award summary."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "issued",
+              "amended"
+            ],
+            "example": "draft"
+          },
+          "decision": {
+            "type": "string",
+            "enum": [
+              "release_to_provider",
+              "refund_to_customer"
+            ],
+            "example": "release_to_provider"
+          }
+        }
       },
       "CreateReviewDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "bookingId",
+          "rating"
+        ],
+        "properties": {
+          "bookingId": {
+            "type": "string",
+            "example": "booking_8001"
+          },
+          "rating": {
+            "type": "number",
+            "example": 5
+          },
+          "comment": {
+            "type": "string",
+            "example": "Great service."
+          }
+        }
       },
       "UpdateNotificationDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "read"
+        ],
+        "properties": {
+          "read": {
+            "type": "boolean",
+            "example": true
+          }
+        }
       },
       "BulkUpdateNotificationsDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "read"
+        ],
+        "properties": {
+          "read": {
+            "type": "boolean",
+            "example": true
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "notification_15001"
+            }
+          }
+        }
       },
       "CreateJobRequestDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "name",
+          "email",
+          "serviceCategory",
+          "description"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Priya Shah"
+          },
+          "email": {
+            "type": "string",
+            "example": "priya@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919999999999"
+          },
+          "serviceCategory": {
+            "type": "string",
+            "example": "Home Cleaning"
+          },
+          "description": {
+            "type": "string",
+            "example": "Need home cleaning this weekend."
+          },
+          "budget": {
+            "type": "number",
+            "example": 2500
+          }
+        }
       },
       "CreateContactMessageDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "name",
+          "email",
+          "subject",
+          "message"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Priya Shah"
+          },
+          "email": {
+            "type": "string",
+            "example": "priya@example.com"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+919999999999"
+          },
+          "subject": {
+            "type": "string",
+            "example": "Support request"
+          },
+          "message": {
+            "type": "string",
+            "example": "Please contact me about my booking."
+          }
+        }
       },
       "CreateWaitlistEntryDto": {
         "type": "object",
-        "properties": {}
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Priya Shah"
+          },
+          "email": {
+            "type": "string",
+            "example": "priya@example.com"
+          },
+          "city": {
+            "type": "string",
+            "example": "Chennai"
+          },
+          "serviceCategory": {
+            "type": "string",
+            "example": "Home Cleaning"
+          }
+        }
       },
       "UpdateSettingsDto": {
         "type": "object",
-        "properties": {}
+        "required": [],
+        "properties": {
+          "general": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "ServiceHub"
+              },
+              "email": {
+                "type": "string",
+                "example": "admin@servicehub.local"
+              },
+              "phone": {
+                "type": "string",
+                "example": "+919999999999"
+              },
+              "timezone": {
+                "type": "string",
+                "example": "Asia/Kolkata"
+              }
+            }
+          },
+          "arbitration": {
+            "type": "object",
+            "properties": {
+              "maxResolutionTime": {
+                "type": "number",
+                "example": 72
+              },
+              "defaultHearingDuration": {
+                "type": "number",
+                "example": 60
+              },
+              "maxFileSize": {
+                "type": "number",
+                "example": 10
+              },
+              "allowedFileTypes": {
+                "type": "string",
+                "example": "pdf,jpg,png"
+              }
+            }
+          },
+          "userManagement": {
+            "type": "object",
+            "properties": {
+              "allowNewUserRegistrations": {
+                "type": "boolean",
+                "example": true
+              },
+              "requireEmailVerification": {
+                "type": "boolean",
+                "example": false
+              },
+              "allowArbitratorApplications": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          },
+          "notifications": {
+            "type": "object",
+            "properties": {
+              "emailNewCases": {
+                "type": "boolean",
+                "example": true
+              },
+              "hearingReminders": {
+                "type": "boolean",
+                "example": true
+              },
+              "awardIssued": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          },
+          "security": {
+            "type": "object",
+            "properties": {
+              "minPasswordLength": {
+                "type": "number",
+                "example": 8
+              },
+              "twoFactorAuth": {
+                "type": "string",
+                "enum": [
+                  "Enabled",
+                  "Disabled"
+                ],
+                "example": "Enabled"
+              },
+              "sessionTimeout": {
+                "type": "number",
+                "example": 30
+              }
+            }
+          }
+        }
+      },
+      "ApiResponse": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {}
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed successfully."
+          }
+        }
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "required": [
+          "data",
+          "message"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "record_id"
+              },
+              "deleted": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          },
+          "message": {
+            "type": "string",
+            "example": "Record deleted successfully."
+          }
+        }
       }
     }
   }

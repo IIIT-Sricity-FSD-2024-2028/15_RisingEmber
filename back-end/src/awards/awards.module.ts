@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Injectable,
   Module,
   Param,
@@ -73,6 +76,10 @@ class AwardsService {
   updateAward(actor: RequestActor, awardId: string, payload: UpdateAwardDto) {
     return this.storeService.updateAward(actor, awardId, payload);
   }
+
+  deleteAward(actor: RequestActor, awardId: string) {
+    return this.storeService.deleteAward(actor, awardId);
+  }
 }
 
 @Controller('awards')
@@ -103,6 +110,15 @@ class AwardsController {
     return {
       data: this.awardsService.updateAward(req.actor, id, payload),
       message: 'Award updated successfully.',
+    };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id')
+  deleteAward(@Req() req: { actor: RequestActor }, @Param('id') id: string) {
+    return {
+      data: this.awardsService.deleteAward(req.actor, id),
+      message: 'Award deleted successfully.',
     };
   }
 }

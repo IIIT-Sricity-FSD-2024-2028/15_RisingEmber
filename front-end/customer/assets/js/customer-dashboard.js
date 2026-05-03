@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const bannerSearch = document.getElementById('banner-search');
     const sectionTitle = document.getElementById('services-section-title');
 
-    // Fetch the mock database initialized in mockData.js
+    // Fetch the backend database initialized in backendData.js
     const allServices = JSON.parse(localStorage.getItem('serviceHub_services')) || [];
 
     // ==========================================

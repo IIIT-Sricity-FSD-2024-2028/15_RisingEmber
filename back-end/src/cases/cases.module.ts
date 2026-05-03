@@ -91,6 +91,10 @@ class CasesService {
     return this.storeService.updateCase(actor, caseId, payload);
   }
 
+  deleteCase(actor: RequestActor, caseId: string) {
+    return this.storeService.deleteCase(actor, caseId);
+  }
+
   updateCaseMessage(actor: RequestActor, caseId: string, messageId: string, payload: UpdateCaseMessageDto) {
     return this.storeService.updateCaseMessage(actor, caseId, messageId, payload);
   }
@@ -136,6 +140,15 @@ class CasesController {
     return {
       data: this.casesService.updateCase(req.actor, id, payload),
       message: 'Case updated successfully.',
+    };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id')
+  deleteCase(@Req() req: { actor: RequestActor }, @Param('id') id: string) {
+    return {
+      data: this.casesService.deleteCase(req.actor, id),
+      message: 'Case deleted successfully.',
     };
   }
 

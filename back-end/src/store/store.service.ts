@@ -678,6 +678,30 @@ export class StoreService {
     return this.serializeBooking(booking);
   }
 
+  deleteBooking(actor: RequestActor, bookingId: string) {
+    const booking = this.requireBooking(bookingId);
+    if (!this.canSeeBooking(actor, booking)) {
+      throw new ForbiddenException('You cannot delete this booking.');
+    }
+
+    const hasCase = this.state.cases.some((caseRecord) => caseRecord.bookingId === booking.id);
+    if (hasCase) {
+      throw new ConflictException('Bookings linked to dispute cases cannot be deleted.');
+    }
+
+    if (actor.role !== Role.ADMIN && booking.status !== BookingStatus.CANCELLED) {
+      throw new ConflictException('Only cancelled bookings can be deleted by booking parties.');
+    }
+
+    this.state.bookingEvents = this.state.bookingEvents.filter((event) => event.bookingId !== booking.id);
+    this.state.notifications = this.state.notifications.filter(
+      (notification) => !(notification.entityType === 'booking' && notification.entityId === booking.id),
+    );
+    this.state.bookings = this.state.bookings.filter((entry) => entry.id !== booking.id);
+
+    return { id: booking.id, deleted: true };
+  }
+
   listCases(actor: RequestActor, filters: CaseFilters = {}) {
     return this.state.cases
       .filter((caseRecord) => this.canSeeCase(actor, caseRecord))
@@ -849,6 +873,27 @@ export class StoreService {
     });
 
     return this.serializeCase(caseRecord);
+  }
+
+  deleteCase(actor: RequestActor, caseId: string) {
+    const caseRecord = this.requireCase(caseId);
+    this.assertCaseManagementAccess(actor, caseRecord);
+
+    const awards = this.state.awards.filter((award) => award.caseId === caseRecord.id);
+    if (awards.some((award) => award.status === AwardStatus.ISSUED)) {
+      throw new ConflictException('Cases with issued awards cannot be deleted.');
+    }
+
+    this.state.hearings = this.state.hearings.filter((hearing) => hearing.caseId !== caseRecord.id);
+    this.state.documents = this.state.documents.filter((document) => document.caseId !== caseRecord.id);
+    this.state.awards = this.state.awards.filter((award) => award.caseId !== caseRecord.id);
+    this.state.caseMessages = this.state.caseMessages.filter((message) => message.caseId !== caseRecord.id);
+    this.state.notifications = this.state.notifications.filter(
+      (notification) => !(notification.entityType === 'case' && notification.entityId === caseRecord.id),
+    );
+    this.state.cases = this.state.cases.filter((entry) => entry.id !== caseRecord.id);
+
+    return { id: caseRecord.id, deleted: true };
   }
 
   updateCaseMessage(
@@ -1188,12 +1233,30 @@ export class StoreService {
     return this.serializeAward(award);
   }
 
-  listReviews(actor: RequestActor, filters: ReviewFilters = {}) {
+  deleteAward(actor: RequestActor, awardId: string) {
+    const award = this.requireAward(awardId);
+    const caseRecord = this.requireCase(award.caseId);
+    this.assertCaseManagementAccess(actor, caseRecord);
+
+    if (award.status === AwardStatus.ISSUED || award.decisionDate) {
+      throw new ConflictException('Issued awards cannot be deleted after escrow is finalized.');
+    }
+
+    this.state.notifications = this.state.notifications.filter(
+      (notification) => !(notification.entityType === 'award' && notification.entityId === award.id),
+    );
+    this.state.awards = this.state.awards.filter((entry) => entry.id !== award.id);
+
+    return { id: award.id, deleted: true };
+  }
+
+  listReviews(actor: RequestActor | undefined, filters: ReviewFilters = {}) {
     return this.state.reviews
       .filter((review) => !filters.serviceId || review.serviceId === filters.serviceId)
       .filter((review) => !filters.providerId || review.providerId === filters.providerId)
       .filter((review) => !filters.customerId || review.customerId === filters.customerId)
       .filter((review) => {
+        if (!actor) return true;
         if (actor.role === Role.ADMIN) return true;
         if (actor.role === Role.CUSTOMER) return review.customerId === actor.id;
         if (actor.role === Role.PROVIDER) return review.providerId === actor.id;
@@ -1247,6 +1310,23 @@ export class StoreService {
     );
 
     return this.serializeReview(review);
+  }
+
+  deleteReview(actor: RequestActor, reviewId: string) {
+    const review = this.state.reviews.find((entry) => entry.id === reviewId);
+    if (!review) {
+      throw new NotFoundException(`Review ${reviewId} was not found.`);
+    }
+
+    if (actor.role !== Role.ADMIN && review.customerId !== actor.id) {
+      throw new ForbiddenException('You can only delete your own reviews.');
+    }
+
+    this.state.reviews = this.state.reviews.filter((entry) => entry.id !== review.id);
+    this.recalculateServiceRating(review.serviceId);
+    this.recalculateProviderRating(review.providerId);
+
+    return { id: review.id, deleted: true };
   }
 
   runWorkflowCleanup(actor: RequestActor) {
