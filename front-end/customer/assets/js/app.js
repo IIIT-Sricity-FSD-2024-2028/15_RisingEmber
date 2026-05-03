@@ -28,7 +28,7 @@
   const STYLE_ID = "customer-app-runtime-styles";
   const DEFAULT_MEMBER_SINCE = "January 2024";
   const API_BASE_URL_KEY = "serviceHub_api_base_url";
-  const DEFAULT_API_BASE_URL = "http://127.0.0.1:3002/api/v1";
+  const DEFAULT_API_BASE_URL = "http://127.0.0.1:3000/api/v1";
   let dropdownsBound = false;
   let customerReadyPromise = Promise.resolve();
 

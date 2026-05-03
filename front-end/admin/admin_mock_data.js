@@ -7,7 +7,7 @@
     const ADMIN_PUBLIC_PAGES = new Set(['admin_landing.html']);
     const ADMIN_FEEDBACK_STYLE_ID = 'admin-app-feedback-styles';
     const ADMIN_API_BASE_URL_KEY = 'serviceHub_api_base_url';
-    const ADMIN_DEFAULT_API_BASE_URL = 'http://127.0.0.1:3002/api/v1';
+    const ADMIN_DEFAULT_API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
 
     function ensureAdminFeedbackStyles() {
         if (typeof document === 'undefined' || document.getElementById(ADMIN_FEEDBACK_STYLE_ID)) return;
