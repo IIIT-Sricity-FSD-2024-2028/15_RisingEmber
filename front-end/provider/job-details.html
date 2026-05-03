@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Job Details</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link active"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" id="logoutBtn" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Job Details</h1>
+        <p>View complete information about the selected service request</p>
+      </div>
+
+      <div class="details-grid">
+        
+        <div class="info-card">
+          <div class="info-card__header">
+            <i class="fa-solid fa-briefcase text-primary"></i>
+            <h2>Job Information</h2>
+          </div>
+          <div class="info-card__body">
+            <div class="info-row">
+              <div class="info-label">Job ID</div>
+              <div class="info-value d-flex-between">
+                <span id="detailJobId">#JB-2024-0847</span>
+                <span class="status-text-active" id="detailJobStatus" style="font-size: 0.75rem;">Active</span>
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Service Type</div>
+              <div class="info-value" id="detailServiceType">Plumbing Repair</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Date</div>
+              <div class="info-value" id="detailJobDate">March 15, 2024</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Time</div>
+              <div class="info-value" id="detailJobTime">2:00 PM - 4:00 PM</div>
+            </div>
+            <div class="info-row border-none">
+              <div class="info-label">Location</div>
+              <div class="info-value" id="detailJobLocation">Downtown District</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card info-card--highlight">
+          <div class="info-card__header">
+            <i class="fa-solid fa-user text-primary"></i>
+            <h2>Customer Information</h2>
+          </div>
+          <div class="info-card__body">
+            <div class="info-row customer-profile-row">
+              <img src="https://ui-avatars.com/api/?name=Michael+Anderson&background=E5E7EB&color=374151" alt="Michael Anderson" class="customer-avatar-lg" id="detailCustomerAvatar" />
+              <div>
+                <div class="info-label">Customer Name</div>
+                <div class="info-value" id="detailCustomerName">Michael Anderson</div>
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Phone Number</div>
+              <div class="info-value" id="detailCustomerPhone"><i class="fa-solid fa-phone text-primary"></i> +1 (555) 234-5678</div>
+            </div>
+            <div class="info-row border-none">
+              <div class="info-label">Address</div>
+              <div class="info-value" id="detailCustomerAddress" style="display: flex; gap: 8px; align-items: flex-start;">
+                <i class="fa-solid fa-location-dot text-primary" style="margin-top: 4px;"></i>
+                <span>4521 Oak Street, Apartment 3B<br>Downtown District, CA 94102</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="info-card mt-24">
+        <div class="info-card__header">
+          <i class="fa-solid fa-file-lines text-primary"></i>
+          <h2>Job Description</h2>
+        </div>
+        <div class="info-card__body">
+          <div class="grey-text-block" id="detailJobDescription">
+            The kitchen sink has been leaking continuously for the past two days. Water is dripping from underneath the basin and pooling on the cabinet floor. I've tried tightening the connections but the leak persists. It appears to be coming from the P-trap area. The situation is getting worse and I need this fixed as soon as possible to prevent water damage to the cabinet and flooring. Please bring necessary replacement parts as the pipes may need to be replaced.
+          </div>
+        </div>
+      </div>
+
+      <div class="details-action-bar">
+        <button class="btn btn--primary" id="acceptJobBtn"><i class="fa-solid fa-check"></i> Accept Job</button>
+        <button class="btn btn--success" id="startJobBtn"><i class="fa-solid fa-play"></i> Start Job</button>
+        <button class="btn btn--dark" id="completeJobBtn"><i class="fa-solid fa-circle-check"></i> Mark as Completed</button>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

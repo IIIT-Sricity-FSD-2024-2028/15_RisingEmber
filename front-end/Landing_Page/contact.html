@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contact Us – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand">
+        <div class="logo-icon"><i class="fa-solid fa-wrench"></i></div>
+        <span class="logo-text">ServiceHub</span>
+      </a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="locations.html">Locations</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a href="contact.html" style="color: var(--primary); font-weight: 700;">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full text-center mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full text-center mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="role-selection.html?action=login" class="btn btn-text">Login</a>
+        <a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Get in Touch</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Have questions about our arbitration process, a recent booking, or becoming a provider? We're here to help.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container trust-grid" style="align-items: flex-start;">
+      
+      <div style="display: flex; flex-direction: column; gap: 32px;">
+        <div class="trust-card text-left">
+          <div class="trust-icon bg-blue-light text-blue" style="width: 48px; height: 48px; font-size: 20px;"><i class="fa-solid fa-envelope"></i></div>
+          <h3>Email Support</h3>
+          <p style="margin-bottom: 0;">support@servicehub.com<br>Available 24/7</p>
+        </div>
+
+        <div class="trust-card text-left">
+          <div class="trust-icon bg-green-light text-green" style="width: 48px; height: 48px; font-size: 20px;"><i class="fa-solid fa-phone"></i></div>
+          <h3>Phone</h3>
+          <p style="margin-bottom: 0;">+1 (800) 123-4567<br>Mon-Fri, 9am - 6pm PST</p>
+        </div>
+      </div>
+
+      <div class="trust-card text-left" style="padding: 40px;">
+        <h3 style="margin-bottom: 24px;">Send us a message</h3>
+        <form id="contactForm" style="display: flex; flex-direction: column; gap: 16px;" novalidate>
+          
+          <div style="display: flex; gap: 16px;">
+            <div style="flex: 1;">
+              <label class="landing-label" for="contactFirstName">First Name</label>
+              <input type="text" class="landing-input" id="contactFirstName" name="firstName" placeholder="Jane" autocomplete="given-name" maxlength="50" required />
+            </div>
+            <div style="flex: 1;">
+              <label class="landing-label" for="contactLastName">Last Name</label>
+              <input type="text" class="landing-input" id="contactLastName" name="lastName" placeholder="Doe" autocomplete="family-name" maxlength="50" required />
+            </div>
+          </div>
+
+          <div>
+            <label class="landing-label" for="contactEmail">Email Address</label>
+            <input type="email" class="landing-input" id="contactEmail" name="email" placeholder="jane@example.com" autocomplete="email" required />
+          </div>
+
+          <div>
+            <label class="landing-label" for="contactTopic">How can we help?</label>
+            <select class="landing-input" id="contactTopic" name="topic" required>
+              <option value="">Select a topic</option>
+              <option value="I have a question about a booking">I have a question about a booking</option>
+              <option value="I need help with a dispute">I need help with a dispute</option>
+              <option value="I want to become a provider">I want to become a provider</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="landing-label" for="contactMessage">Message</label>
+            <textarea class="landing-input" id="contactMessage" name="message" placeholder="Type your message here..." style="min-height: 120px; resize: vertical;" minlength="15" maxlength="1500" required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary mt-16">Send Message</button>
+          <div id="contactFormStatus" class="landing-form-status"></div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-bottom" style="border-top: none; justify-content: center;">
+      <p>&copy; 2024 ServiceHub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/landing.js"></script>
+</body>
+</html>

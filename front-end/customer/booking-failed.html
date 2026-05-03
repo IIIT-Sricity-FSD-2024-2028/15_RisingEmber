@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Booking Failed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .status-container { max-width: 600px; margin: 60px auto; text-align: center; }
+    .status-icon { width: 64px; height: 64px; border-radius: 50%; background: #FEE2E2; color: var(--red); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 24px; }
+    .status-title { font-size: 1.5rem; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+    .status-subtitle { font-size: 0.95rem; color: var(--text-mid); margin-bottom: 32px; }
+
+    .error-card { background: #F9FAFB; border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; text-align: left; margin-bottom: 32px; }
+    .error-card h3 { font-size: 1rem; color: var(--text-dark); margin-bottom: 16px; }
+    .error-card ul { list-style: none; display: flex; flex-direction: column; gap: 12px; margin-left: 8px; }
+    .error-card li { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-mid); }
+    .error-card li i { color: var(--text-soft); font-size: 0.6rem; }
+
+    .action-buttons { display: flex; justify-content: center; gap: 16px; margin-bottom: 32px; }
+    .support-link { font-size: 0.85rem; color: var(--text-soft); }
+    .support-link a { color: var(--primary); font-weight: 600; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Ashwin&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link active"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="border-bottom: 1px solid var(--border); padding-bottom: 16px; margin-bottom: 0;">
+        <h1>Booking Failed</h1>
+        <p>There was an issue processing your booking</p>
+      </div>
+
+      <div class="status-container">
+        <div class="status-icon"><i class="fa-solid fa-xmark"></i></div>
+        <h2 class="status-title">Booking Failed</h2>
+        <p class="status-subtitle">We couldn't complete your booking due to a technical issue.</p>
+
+        <div class="error-card">
+          <h3>Possible Reasons:</h3>
+          <ul>
+            <li><i class="fa-solid fa-circle"></i> Payment could not be processed</li>
+            <li><i class="fa-solid fa-circle"></i> Selected time slot is no longer available</li>
+            <li><i class="fa-solid fa-circle"></i> Network error occurred</li>
+          </ul>
+        </div>
+
+        <div class="action-buttons">
+          <a href="book-service.html" class="btn btn--primary" style="padding: 12px 24px; min-width: 160px;"><i class="fa-solid fa-rotate-right"></i> Retry Booking</a>
+          <a href="browse-services.html" class="btn btn--outline" style="padding: 12px 24px; min-width: 160px;"><i class="fa-solid fa-arrow-left"></i> Back to Services</a>
+        </div>
+
+        <div class="support-link">
+          Need help? <br>
+          <a href="../Landing_Page/contact.html">Contact Support</a>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Submitted</title>
+    <link rel="stylesheet" href="arbitrator_styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <a href="arbitrator_landing.html" class="logo">ServiceHub</a>
+            <button class="btn btn-white" id="successActionBtn" onclick="window.location.href='arbitrator_landing.html'">Return Home</button>
+            <button class="btn btn-blue">Contact : ABC@gmail.com</button>
+        </div>
+    </nav>
+    <div class="container" style="text-align: center; margin-top: 60px;">
+        <h1>Application Submitted Successfully</h1>
+        <div style="width: 100px; height: 100px; background: #228B22; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 50px; margin: 40px auto;">✓</div>
+        <div style="background: var(--primary-blue); color: white; padding: 40px; border-radius: 20px; max-width: 800px; margin: 0 auto; border: 1px solid #000;">
+            <p>Thank you for applying. Your application is under review. You will receive an update within 5-7 business days.</p>
+        </div>
+    </div>
+
+    <script src="mock_data.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="arbitrator_app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!ArbitratorData || !ArbitratorData.registration || !ArbitratorData.registration.isComplete) {
+                window.location.replace('arbitrator_landing.html');
+                return;
+            }
+
+            const successActionBtn = document.getElementById('successActionBtn');
+            if (successActionBtn && getLoggedInArbitrator()) {
+                successActionBtn.textContent = 'Go to Dashboard';
+                successActionBtn.onclick = () => window.location.href = 'arbitrator_dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Award Details | Admin Hub</title>
+    <link rel="stylesheet" href="admin_styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .details-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; }
+        .content-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 25px; margin-bottom: 25px; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .info-item label { display: block; font-size: 0.7rem; color: #64748b; font-weight: 700; margin-bottom: 5px; text-transform: uppercase; }
+        .edit-input { width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; box-sizing: border-box; font-size: 0.9rem; }
+        .edit-input:focus { border-color: #2563eb; }
+        .party-box { background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .btn-save { background: #22c55e; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; cursor: pointer; width: 100%; }
+        .restricted-msg { background: #fff1f2; color: #be123c; padding: 15px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; border: 1px solid #fecdd3; margin-top: 15px; }
+    </style>
+</head>
+<body class="admin-dashboard-layout">
+    <div id="admin-sidebar-placeholder"></div>
+    <main class="admin-main-content">
+        <div id="admin-navbar-placeholder"></div>
+        <div class="admin-view-padding">
+            <div class="view-header">
+                <h1>Ruling Record Details</h1>
+                <p id="sub-header">Award Reference: ---</p>
+            </div>
+
+            <div class="details-grid">
+                <div class="main-col">
+                    <div class="content-card">
+                        <div class="card-title" style="margin-bottom:20px; font-weight:700;">Award Metadata</div>
+                        <div class="info-grid">
+                            <div class="info-item"><label>Award ID</label><input type="text" id="in-id" class="edit-input" disabled></div>
+                            <div class="info-item"><label>Decision Date</label><input type="date" id="in-date" class="edit-input" disabled></div>
+                            <div class="info-item" style="grid-column: span 2;"><label>Case Title</label><input type="text" id="in-title" class="edit-input"></div>
+                            <div class="info-item"><label>Case ID Ref</label><input type="text" id="in-case" class="edit-input" disabled></div>
+                            <div class="info-item"><label>Presiding Arbitrator</label><input type="text" id="in-arb" class="edit-input" disabled></div>
+                            <div class="info-item" style="grid-column: span 2;"><label>Award Summary</label><textarea id="in-summary" class="edit-input" style="min-height:120px; resize:vertical;"></textarea></div>
+                        </div>
+                    </div>
+
+                    <div class="content-card">
+                        <div class="card-title" style="margin-bottom:20px; font-weight:700;">Involved Parties</div>
+                        <div class="info-grid">
+                            <div class="party-box"><label style="font-size:0.6rem; color:#64748b;">CUSTOMER</label><div id="p-cust" style="font-weight:700; color:#2563eb;">---</div></div>
+                            <div class="party-box"><label style="font-size:0.6rem; color:#64748b;">SERVICE PROVIDER</label><div id="p-prov" style="font-weight:700; color:#1e293b;">---</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-col">
+                    <div class="content-card">
+                        <label style="font-size:0.7rem; color:#64748b; font-weight:700;">RULING STATUS</label>
+                        <select id="in-status" class="edit-input" style="margin: 10px 0 20px 0;">
+                            <option value="Issued">Issued</option>
+                            <option value="Draft">Draft</option>
+                            <option value="Amended">Amended</option>
+                        </select>
+                        <button class="btn-save" onclick="saveAward()">Save Changes</button>
+                        <button class="action-btn" style="width:100%; margin-top:10px; background:#f1f5f9; color:#64748b; border:none; padding:12px; border-radius:8px; cursor:pointer;" onclick="window.location.href='admin_awards.html'">Cancel</button>
+                        
+                        <div class="restricted-msg">
+                            <i class="fa-solid fa-shield-halved"></i> Security Protocol: Direct document downloading is restricted for Administrative roles.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="admin_mock_data.js"></script>
+    <script src="admin_sidebar.js"></script>
+    <script src="admin_navbar.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const awdId = decodeURIComponent(urlParams.get('id') || "");
+        let currentAwd = null;
+
+        function refreshCurrentAward() {
+            currentAwd = (AdminData.awards || []).find(a => a.id === awdId) || null;
+            return currentAwd;
+        }
+
+        async function init() {
+            if (window.AdminDataReady) await window.AdminDataReady;
+            refreshCurrentAward();
+            if(!currentAwd) return window.location.href='admin_awards.html';
+            document.getElementById('sub-header').innerText = `Managing Ruling: ${currentAwd.id}`;
+            
+            document.getElementById('in-id').value = currentAwd.id;
+            document.getElementById('in-date').value = currentAwd.date;
+            document.getElementById('in-title').value = currentAwd.title;
+            document.getElementById('in-case').value = currentAwd.caseId;
+            document.getElementById('in-arb').value = currentAwd.arbitrator;
+            document.getElementById('in-summary').value = currentAwd.summary || currentAwd.title || "";
+            document.getElementById('in-status').value = currentAwd.status;
+
+            // Lookup Parties from Case DB
+            const linkedCase = AdminData.cases.find(c => c.id === currentAwd.caseId);
+            if(linkedCase) {
+                document.getElementById('p-cust').innerText = linkedCase.customer.name || linkedCase.customer;
+                document.getElementById('p-prov').innerText = linkedCase.provider.company || linkedCase.provider;
+            }
+        }
+
+        async function saveAward() {
+            const nextTitle = document.getElementById('in-title').value.trim();
+            const nextSummary = document.getElementById('in-summary').value.trim();
+            const nextStatus = document.getElementById('in-status').value;
+
+            if (!nextTitle || !nextSummary) {
+                window.showAppToast("Award title and summary are required.", "warning");
+                return;
+            }
+
+            if (nextSummary.length < 10) {
+                window.showAppToast("Award summary must be at least 10 characters long.", "warning");
+                return;
+            }
+
+            try {
+                await requestAdminApi(`/awards/${encodeURIComponent(currentAwd.id)}`, {
+                    method: 'PATCH',
+                    headers: getAdminRequestHeaders(),
+                    body: {
+                        title: nextTitle,
+                        summary: nextSummary,
+                        status: mapAwardStatusToBackend(nextStatus)
+                    }
+                });
+                await window.syncAdminBackendData({ silent: true });
+                logAdminActivity(`Modified award record: ${currentAwd.id}`);
+                await showAppModal("Award Updated", "Record synchronized with the backend successfully.", { okText: "Back to Awards" });
+                window.location.href = 'admin_awards.html';
+            } catch (error) {
+                window.showAppToast(error.message || "Award update failed.", "error");
+            }
+        }
+
+        function mapAwardStatusToBackend(statusLabel) {
+            const value = String(statusLabel || '').toLowerCase();
+            if (value.includes('issued')) return 'issued';
+            if (value.includes('amended')) return 'amended';
+            return 'draft';
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

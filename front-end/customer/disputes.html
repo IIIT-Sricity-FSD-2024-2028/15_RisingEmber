@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Disputes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .filter-bar { display: flex; gap: 16px; background: var(--surface); padding: 20px; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 24px; flex-wrap: wrap; align-items: flex-end; }
+    .filter-col { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 180px; }
+    .filter-col label { font-size: 0.8rem; font-weight: 600; color: var(--text-dark); }
+    .filter-col select { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none; font-family: var(--font); background: var(--surface); transition: 0.2s; }
+    .filter-col select:focus { border-color: var(--primary); }
+    
+    /* Pagination Styles */
+    .pagination-wrapper { display: flex; justify-content: center; gap: 8px; margin-top: 32px; }
+    .page-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); font-weight: 600; color: var(--text-mid); cursor: pointer; transition: 0.2s; font-family: var(--font); }
+    .page-btn:hover:not(.active) { background: var(--bg); color: var(--text-dark); }
+    .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Ashwin&background=2F54EB&color=fff" alt="User" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link active"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+          <h1>Dispute Center</h1>
+          <p>Track and manage your service issues</p>
+        </div>
+        <button class="btn btn--primary" id="raiseDisputeBtn"><i class="fa-solid fa-plus" style="margin-right: 8px;"></i> Raise New Dispute</button>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-col">
+          <label>Status</label>
+          <select id="filter-status">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="review">Under Review</option>
+            <option value="resolved">Resolved</option>
+          </select>
+        </div>
+        <div class="filter-col">
+          <label>Category</label>
+          <select id="filter-category">
+            <option value="all">All Categories</option>
+            <option value="quality">Quality of Service</option>
+            <option value="noshow">No Show</option>
+            <option value="billing">Billing Issue</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="filter-col">
+          <label>Date Filed</label>
+          <select id="filter-date">
+            <option value="all">All Time</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 90 Days</option>
+          </select>
+        </div>
+        <div>
+          <button id="apply-filters-btn" class="btn btn--primary" style="height: 42px; padding: 0 24px;">Apply Filters</button>
+        </div>
+      </div>
+
+      <div id="disputes-empty-state" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);">
+        <i class="fa-solid fa-clipboard-check" style="font-size: 48px; color: var(--green); margin-bottom: 16px;"></i>
+        <h3 style="font-size: 1.2rem; color: var(--text-dark); margin-bottom: 8px;">No Disputes Found</h3>
+        <p style="color: var(--text-mid); text-align: center;">There are no disputes matching your selected filters.</p>
+      </div>
+
+      <div id="disputes-list" style="display: flex; flex-direction: column;">
+        </div>
+
+      <div id="pagination-container" class="pagination-wrapper">
+        </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script src="assets/js/disputes.js"></script>
+  <script src="assets/js/disputes-page.js"></script>
+</body>
+</html>

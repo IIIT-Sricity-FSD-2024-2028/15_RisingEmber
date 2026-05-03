@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Blog – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand"><div class="logo-icon"><i class="fa-solid fa-wrench"></i></div><span class="logo-text">ServiceHub</span></a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full mt-16">Login</a></li><li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions"><a href="role-selection.html?action=login" class="btn btn-text">Login</a><a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a></div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">The ServiceHub Blog</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">Insights, tips, and industry news for homeowners and service pros.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container services-grid">
+      <div class="service-card">
+        <img src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&q=80&w=400" class="service-img"/>
+        <div class="service-body">
+          <span class="badge" style="background: var(--blue-light); color: var(--blue);">Homeowners</span>
+          <h3 style="margin: 12px 0 8px;">5 Signs Your HVAC Needs Maintenance</h3>
+          <p>Don't wait for your AC to break down in the middle of summer. Here are the early warning signs to look out for.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <img src="https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&q=80&w=400" class="service-img"/>
+        <div class="service-body">
+          <span class="badge" style="background: var(--purple-light); color: var(--purple);">For Providers</span>
+          <h3 style="margin: 12px 0 8px;">How to Win More Bids on ServiceHub</h3>
+          <p>Top-rated providers share their secrets on crafting the perfect response to secure high-paying jobs.</p>
+        </div>
+      </div>
+      <div class="service-card">
+        <img src="https://images.unsplash.com/photo-1585704032915-c3400ca199e7?auto=format&fit=crop&q=80&w=400" class="service-img"/>
+        <div class="service-body">
+          <span class="badge" style="background: var(--orange-light); color: var(--orange);">Platform News</span>
+          <h3 style="margin: 12px 0 8px;">Understanding the Arbitration Process</h3>
+          <p>A transparent look into how our neutral arbitrators resolve disputes fairly and securely.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer"><div class="container footer-bottom" style="border-top: none; justify-content: center;"><p>&copy; 2024 ServiceHub. All rights reserved.</p></div></footer>
+  <script>document.getElementById('mobileMenuBtn').addEventListener('click', () => { document.getElementById('navLinks').classList.toggle('active'); });</script>
+</body>
+</html>

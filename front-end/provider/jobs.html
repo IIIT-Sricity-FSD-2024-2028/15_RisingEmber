@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Active Jobs</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge" style="display: flex;">3</span>
+      </button>
+      <img src="https://ui-avatars.com/api/?name=John+Carter&background=2F54EB&color=fff&size=80" alt="Provider Avatar" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link active"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <div class="page-header" style="margin-bottom: 24px;">
+        <h1>Active Jobs</h1>
+        <p>Track and manage your ongoing service requests</p>
+      </div>
+
+      <div class="jobs-tabs">
+        <div class="job-tab active">All Jobs (12)</div>
+        <div class="job-tab">Pending (3)</div>
+        <div class="job-tab">In Progress (6)</div>
+        <div class="job-tab">Completed (3)</div>
+      </div>
+
+      <div class="jobs-grid">
+        
+        <div class="job-card">
+          <div class="job-card__header">
+            <div class="job-customer">
+              <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=FECDD3&color=9F1239" alt="Customer" />
+              <div class="job-customer-info">
+                <h3>Sarah Johnson</h3>
+                <span>Customer</span>
+              </div>
+            </div>
+            <span class="job-status job-status--pending">Pending</span>
+          </div>
+          <div class="job-details-list">
+            <div class="job-detail-item">
+              <i class="fa-solid fa-wrench"></i> Plumbing Repair
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-regular fa-calendar"></i> Jan 15, 2024 - 10:00 AM
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-solid fa-location-dot"></i> 123 Oak Street, Downtown
+            </div>
+          </div>
+          <div class="job-actions">
+            <button class="btn btn--primary btn--job-action">Accept Job</button>
+            <a href="job-details.html" class="btn btn--outline">View Details</a>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-card__header">
+            <div class="job-customer">
+              <img src="https://ui-avatars.com/api/?name=Michael+Chen&background=D1FAE5&color=065F46" alt="Customer" />
+              <div class="job-customer-info">
+                <h3>Michael Chen</h3>
+                <span>Customer</span>
+              </div>
+            </div>
+            <span class="job-status job-status--progress">In Progress</span>
+          </div>
+          <div class="job-details-list">
+            <div class="job-detail-item">
+              <i class="fa-solid fa-bolt"></i> Electrical Installation
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-regular fa-calendar"></i> Jan 14, 2024 - 2:00 PM
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-solid fa-location-dot"></i> 456 Pine Avenue, Eastside
+            </div>
+          </div>
+          <div class="job-actions">
+            <button class="btn btn--primary btn--job-action">Update Status</button>
+            <a href="job-details.html" class="btn btn--outline">View Details</a>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-card__header">
+            <div class="job-customer">
+              <img src="https://ui-avatars.com/api/?name=Emily+Rodriguez&background=FEF3C7&color=92400E" alt="Customer" />
+              <div class="job-customer-info">
+                <h3>Emily Rodriguez</h3>
+                <span>Customer</span>
+              </div>
+            </div>
+            <span class="job-status job-status--completed">Completed</span>
+          </div>
+          <div class="job-details-list">
+            <div class="job-detail-item">
+              <i class="fa-solid fa-paint-roller"></i> House Painting
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-regular fa-calendar"></i> Jan 12, 2024 - 9:00 AM
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-solid fa-location-dot"></i> 789 Maple Drive, Westend
+            </div>
+          </div>
+          <div class="job-actions">
+            <button class="btn btn--readonly btn--job-action" disabled>Completed</button>
+            <a href="job-details.html" class="btn btn--outline">View Details</a>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-card__header">
+            <div class="job-customer">
+              <img src="https://ui-avatars.com/api/?name=David+Thompson&background=E0E7FF&color=3730A3" alt="Customer" />
+              <div class="job-customer-info">
+                <h3>David Thompson</h3>
+                <span>Customer</span>
+              </div>
+            </div>
+            <span class="job-status job-status--progress">In Progress</span>
+          </div>
+          <div class="job-details-list">
+            <div class="job-detail-item">
+              <i class="fa-regular fa-snowflake"></i> HVAC Maintenance
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-regular fa-calendar"></i> Jan 16, 2024 - 11:30 AM
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-solid fa-location-dot"></i> 321 Elm Boulevard, Northside
+            </div>
+          </div>
+          <div class="job-actions">
+            <button class="btn btn--primary btn--job-action">Update Status</button>
+            <a href="job-details.html" class="btn btn--outline">View Details</a>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-card__header">
+            <div class="job-customer">
+              <img src="https://ui-avatars.com/api/?name=Jessica+Martinez&background=FCE7F3&color=9D174D" alt="Customer" />
+              <div class="job-customer-info">
+                <h3>Jessica Martinez</h3>
+                <span>Customer</span>
+              </div>
+            </div>
+            <span class="job-status job-status--pending">Pending</span>
+          </div>
+          <div class="job-details-list">
+            <div class="job-detail-item">
+              <i class="fa-solid fa-broom"></i> Deep Cleaning Service
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-regular fa-calendar"></i> Jan 17, 2024 - 8:00 AM
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-solid fa-location-dot"></i> 654 Cedar Lane, Southpark
+            </div>
+          </div>
+          <div class="job-actions">
+            <button class="btn btn--primary btn--job-action">Accept Job</button>
+            <a href="job-details.html" class="btn btn--outline">View Details</a>
+          </div>
+        </div>
+
+        <div class="job-card">
+          <div class="job-card__header">
+            <div class="job-customer">
+              <img src="https://ui-avatars.com/api/?name=Robert+Williams&background=FFEDD5&color=C2410C" alt="Customer" />
+              <div class="job-customer-info">
+                <h3>Robert Williams</h3>
+                <span>Customer</span>
+              </div>
+            </div>
+            <span class="job-status job-status--progress">In Progress</span>
+          </div>
+          <div class="job-details-list">
+            <div class="job-detail-item">
+              <i class="fa-solid fa-hammer"></i> Furniture Assembly
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-regular fa-calendar"></i> Jan 13, 2024 - 3:30 PM
+            </div>
+            <div class="job-detail-item">
+              <i class="fa-solid fa-location-dot"></i> 987 Birch Street, Central
+            </div>
+          </div>
+          <div class="job-actions">
+            <button class="btn btn--primary btn--job-action">Update Status</button>
+            <a href="job-details.html" class="btn btn--outline">View Details</a>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="table-footer">
+        <span class="table-showing-text" id="jobsShowingText">Showing 0 of 0 jobs</span>
+        <div class="pagination" id="jobsPagination">
+          <button class="page-btn"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => { protectPage('provider'); });
+  </script>
+</body>
+</html>

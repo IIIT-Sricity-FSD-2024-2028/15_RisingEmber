@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Provider Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__search">
+      <i class="fa-solid fa-magnifying-glass"></i>
+      <input type="text" placeholder="Search jobs, customers, or services…" />
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif" aria-label="Notifications">
+        <i class="fa-regular fa-bell"></i>
+        <span class="badge">3</span>
+      </button>
+      <img
+        src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff&size=80"
+        alt="Provider Avatar" class="navbar__avatar" id="navbarAvatar"
+      />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html"    class="sidebar__link active"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"  class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html" class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"     class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html" class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html" class="sidebar__link"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout" id="logoutBtn" onclick="event.preventDefault(); logoutProvider();">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span>
+      </a>
+    </aside>
+
+    <main class="main">
+
+      <section class="welcome-banner">
+        <div class="welcome-banner__text">
+          <h1 id="welcomeTitle">Welcome back</h1>
+          <p>Manage your services and track active jobs</p>
+        </div>
+        <div class="welcome-banner__illustration">
+          <div class="welcome-banner__fallback-icon">
+            <i class="fa-solid fa-user-gear"></i>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--green"><i class="fa-regular fa-circle-question"></i></div>
+          <span class="stat-card__label">Profile Status</span>
+          <span class="stat-card__badge verified">Verified</span>
+          <span class="stat-card__value">Verified</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--blue"><i class="fa-regular fa-calendar-check"></i></div>
+          <span class="stat-card__label">Active Jobs</span>
+          <span class="stat-card__value" id="statActiveJobs" data-dynamic="true">0</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--purple"><i class="fa-solid fa-briefcase"></i></div>
+          <span class="stat-card__label">Total Services</span>
+          <span class="stat-card__value" id="statTotalServices" data-dynamic="true">0</span>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon stat-card__icon--orange"><i class="fa-solid fa-wallet"></i></div>
+          <span class="stat-card__label">Wallet Balance</span>
+          <span class="stat-card__value" id="statWalletBalance" data-dynamic="true">$0</span>
+        </div>
+      </section>
+
+      <section class="card job-requests">
+        <div class="card__header">
+          <div>
+            <h2>Recent Job Requests</h2>
+            <p>Manage and track your incoming job requests</p>
+          </div>
+        </div>
+        <div class="job-list" id="recentJobsList">
+          <div class="job-item">
+            <div class="job-item__customer">
+              <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=FECDD3&color=9F1239&size=80" alt="Sarah Johnson"/>
+              <div><span class="job-item__name">Sarah Johnson</span><span class="job-item__service">Plumbing Service</span></div>
+            </div>
+            <div class="job-item__meta">
+              <div class="job-item__date"><span class="meta-label">Date</span><span>Dec 15, 2024</span></div>
+              <span class="status status--pending">Pending</span>
+              <a href="job-details.html" class="btn btn--primary btn--sm">View</a>
+            </div>
+          </div>
+          <div class="job-item">
+            <div class="job-item__customer">
+              <img src="https://ui-avatars.com/api/?name=Michael+Chen&background=D1FAE5&color=065F46&size=80" alt="Michael Chen"/>
+              <div><span class="job-item__name">Michael Chen</span><span class="job-item__service">Electrical Repair</span></div>
+            </div>
+            <div class="job-item__meta">
+              <div class="job-item__date"><span class="meta-label">Date</span><span>Dec 14, 2024</span></div>
+              <span class="status status--active">Active</span>
+              <a href="track-status.html" class="btn btn--primary btn--sm">Track</a>
+            </div>
+          </div>
+          <div class="job-item">
+            <div class="job-item__customer">
+              <img src="https://ui-avatars.com/api/?name=Emily+Rodriguez&background=FEF3C7&color=92400E&size=80" alt="Emily Rodriguez"/>
+              <div><span class="job-item__name">Emily Rodriguez</span><span class="job-item__service">HVAC Maintenance</span></div>
+            </div>
+            <div class="job-item__meta">
+              <div class="job-item__date"><span class="meta-label">Date</span><span>Dec 12, 2024</span></div>
+              <span class="status status--completed">Completed</span>
+              <a href="job-details.html" class="btn btn--primary btn--sm">View</a>
+            </div>
+          </div>
+          <div class="job-item">
+            <div class="job-item__customer">
+              <img src="https://ui-avatars.com/api/?name=David+Thompson&background=E0E7FF&color=3730A3&size=80" alt="David Thompson"/>
+              <div><span class="job-item__name">David Thompson</span><span class="job-item__service">Carpentry Work</span></div>
+            </div>
+            <div class="job-item__meta">
+              <div class="job-item__date"><span class="meta-label">Date</span><span>Dec 13, 2024</span></div>
+              <span class="status status--active">Active</span>
+              <a href="track-status.html" class="btn btn--primary btn--sm">Track</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <div class="card quick-actions">
+          <h2>Quick Actions</h2>
+          <a href="add-service.html" class="btn btn--primary btn--full"><i class="fa-solid fa-plus"></i> Add Service</a>
+          <a href="jobs.html" class="btn btn--outline btn--full"><i class="fa-solid fa-briefcase"></i> View Active Jobs</a>
+          <a href="profile.html" class="btn btn--outline btn--full"><i class="fa-regular fa-user"></i> Update Profile</a>
+        </div>
+
+        <div class="card dispute-center">
+          <h2>Dispute Center</h2>
+          <div class="dispute-alert">
+            <div class="dispute-alert__header">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <strong>Dispute #1247</strong>
+              <span class="dispute-badge">Under Review</span>
+            </div>
+            <p>Payment dispute with customer regarding completed job</p>
+            <a href="disputes.html" class="dispute-link">View Details</a>
+          </div>
+          <div class="dispute-empty">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>No other active disputes</span>
+          </div>
+        </div>
+
+        <div class="card earnings-summary">
+          <h2>Earnings Summary</h2>
+          <div>
+            <span class="earnings-summary__sublabel">This Week Earnings</span>
+            <span class="earnings-summary__amount">$850</span>
+            <span class="earnings-summary__change positive"><i class="fa-solid fa-arrow-up"></i> 12% vs last week</span>
+          </div>
+          <div class="earnings-summary__divider"></div>
+          <div>
+            <span class="earnings-summary__sublabel">Total Earnings</span>
+            <span class="earnings-summary__amount">$24,580</span>
+          </div>
+          <a href="earnings.html" class="btn btn--outline btn--full">View Full Report</a>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="assets/js/mockData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script>
+    const providerDashboardSession = getActiveSession();
+    const providerDashboardUser = getActiveUser();
+
+    if (
+      !providerDashboardSession ||
+      !providerDashboardUser ||
+      !providerDashboardSession.isLoggedIn ||
+      providerDashboardSession.role !== 'provider' ||
+      providerDashboardUser.role !== 'provider'
+    ) {
+      window.location.replace('login.html');
+    }
+  </script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!protectPage('provider')) return;
+
+      const activeProvider = getActiveUser();
+      const providerProfile = getDB('sh_provider');
+      const currentProvider = activeProvider && activeProvider.role === 'provider'
+        ? activeProvider
+        : providerProfile;
+      const welcomeEl = document.getElementById('welcomeTitle');
+      const avatarEl = document.getElementById('navbarAvatar');
+
+      if (activeProvider && activeProvider.role === 'provider') {
+        updateDB('sh_provider', {
+          ...providerProfile,
+          name: activeProvider.name,
+          email: activeProvider.email,
+          phone: activeProvider.phone || providerProfile.phone || '',
+          walletBalance: activeProvider.walletBalance ?? providerProfile.walletBalance ?? 0,
+          category: activeProvider.category || providerProfile.category || '',
+          experience: activeProvider.experience || providerProfile.experience || '',
+          location: activeProvider.location || providerProfile.location || '',
+          bio: activeProvider.bio || providerProfile.bio || '',
+          avatar: activeProvider.avatar || providerProfile.avatar || ''
+        });
+      }
+
+      if (currentProvider) {
+        const firstNameSource = currentProvider.name || currentProvider.email || 'Provider';
+        const firstName = firstNameSource.includes('@')
+          ? firstNameSource.split('@')[0]
+          : firstNameSource.split(' ')[0];
+
+        if (welcomeEl) welcomeEl.textContent = 'Welcome back, ' + firstName;
+        if (avatarEl) {
+          avatarEl.src = currentProvider.avatar || ('https://ui-avatars.com/api/?name=' + encodeURIComponent(firstName) + '&background=2F54EB&color=fff&size=80');
+        }
+      }
+    });
+  </script>
+</body>
+</html>

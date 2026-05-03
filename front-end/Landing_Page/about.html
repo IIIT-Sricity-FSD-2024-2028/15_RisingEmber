@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>About Us – ServiceHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="css/landing.css" />
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="container navbar-container">
+      <a href="index.html" class="brand">
+        <div class="logo-icon"><i class="fa-solid fa-wrench"></i></div>
+        <span class="logo-text">ServiceHub</span>
+      </a>
+      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#services">Services</a></li>
+        <li><a href="locations.html">Locations</a></li>
+        <li><a href="about.html" style="color: var(--primary); font-weight: 700;">About</a></li>
+        <li><a href="contact.html">Contact</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full text-center mt-16">Login</a></li>
+        <li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full text-center mt-16">Sign Up</a></li>
+      </ul>
+      <div class="nav-actions">
+        <a href="role-selection.html?action=login" class="btn btn-text">Login</a>
+        <a href="role-selection.html?action=signup" class="btn btn-primary">Sign Up</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-header-simple bg-light section-padding text-center">
+    <div class="container">
+      <span class="badge">Our Mission</span>
+      <h1 style="font-size: 3rem; font-weight: 800; margin-bottom: 16px;">Bringing Trust Back to Home Services</h1>
+      <p style="font-size: 1.1rem; max-width: 600px; margin: 0 auto;">We built ServiceHub to eliminate the friction, anxiety, and unfairness that traditionally comes with hiring independent contractors.</p>
+    </div>
+  </header>
+
+  <section class="section-padding">
+    <div class="container benefits-container">
+      <div class="benefits-content">
+        <h2>The ServiceHub Story</h2>
+        <p style="margin-bottom: 16px;">For decades, the home service industry has been plagued by a lack of trust. Customers worried about being overcharged or left with incomplete work, while service providers struggled with delayed payments and unfair disputes.</p>
+        <p style="margin-bottom: 24px;">ServiceHub was founded in 2024 to fix this broken system. By introducing secure escrow payments and a dedicated, neutral arbitration team, we ensure that every job is completed fairly, transparently, and securely.</p>
+        <div class="cta-stats" style="border: none; padding-top: 0; justify-content: flex-start; gap: 40px;">
+          <div class="stat"><strong style="color: var(--primary);">50k+</strong><span style="color: var(--text-mid);">Happy Customers</span></div>
+          <div class="stat"><strong style="color: var(--primary);">$10M+</strong><span style="color: var(--text-mid);">Payments Secured</span></div>
+        </div>
+      </div>
+      <div class="benefits-image">
+        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&q=80&w=800" alt="Our Team" style="border-radius: 24px; box-shadow: var(--shadow-md);" />
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-bottom" style="border-top: none; justify-content: center;">
+      <p>&copy; 2024 ServiceHub. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="js/landing.js"></script>
+</body>
+</html>
