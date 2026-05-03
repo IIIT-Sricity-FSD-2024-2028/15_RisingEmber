@@ -1,7 +1,7 @@
 /**
- * MOCK DATA STORE - ARBITRATOR MODULE
- * Centralized data store with realistic mock data.
- * Data persists in localStorage under key 'arbitrator_db'.
+ * BACKEND DATA CACHE - ARBITRATOR MODULE
+ * Centralized API cache synchronized from the NestJS backend.
+ * Data persists in localStorage under key 'arbitrator_db' for page-to-page continuity.
  */
 
 /* ============================
@@ -1144,7 +1144,18 @@ const activeArbitratorAccount = getArbitratorAccountById(activeArbitratorId);
 const initialWorkspace = activeArbitratorAccount || (
     savedWorkspace && savedWorkspace.registration && savedWorkspace.registration.isComplete !== true
         ? savedWorkspace
-        : initialData
+        : {
+            ...initialData,
+            allCases: [],
+            recentCases: [],
+            upcomingHearings: [],
+            hearingsList: [],
+            decisionsList: [],
+            caseDocuments: [],
+            profileDocuments: [],
+            chatData: {},
+            notifications: []
+        }
 );
 
 window.ArbitratorData = persistArbitratorData(initialWorkspace);

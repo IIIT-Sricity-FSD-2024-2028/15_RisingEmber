@@ -57,14 +57,24 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  const mockReviews = [
-    { name: "Emily R.", stars: 5, text: "Absolutely fantastic service. Arrived on time and fixed the issue quickly.", date: "2 days ago" },
-    { name: "Michael T.", stars: 4, text: "Very professional. The price was exactly as quoted and the work was clean.", date: "1 week ago" },
-    { name: "Sarah J.", stars: 5, text: "Highly recommend. Left the place spotless after finishing.", date: "2 weeks ago" },
-    { name: "David L.", stars: 5, text: "Great communication throughout the process. Very satisfied with the repair.", date: "3 weeks ago" },
-    { name: "Jessica M.", stars: 4, text: "Good work overall. Took a bit longer than expected, but the quality is strong.", date: "1 month ago" },
-    { name: "Robert P.", stars: 5, text: "Will definitely use this provider again. Top-notch service.", date: "1 month ago" }
-  ];
+  let backendReviews = [];
+  if (app && typeof app.requestCustomerApi === "function") {
+    try {
+      const reviews = await app.requestCustomerApi(`/reviews?serviceId=${encodeURIComponent(service.id)}`);
+      backendReviews = Array.isArray(reviews) ? reviews.map((review) => ({
+        name: review.customer && review.customer.name ? review.customer.name : "Customer",
+        stars: Number(review.rating) || 0,
+        text: review.comment || "No written review provided.",
+        date: review.createdAt ? new Date(review.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        }) : ""
+      })) : [];
+    } catch (error) {
+      console.warn("Unable to load service reviews from backend:", error);
+    }
+  }
 
   const reviewsContainer = document.getElementById("reviews-container");
   const loadMoreButton = document.getElementById("load-more-reviews-btn");
@@ -74,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   function renderReviews() {
     if (!reviewsContainer) return;
 
-    const nextBatch = mockReviews.slice(currentReviewIndex, currentReviewIndex + reviewsPerLoad);
+    const nextBatch = backendReviews.slice(currentReviewIndex, currentReviewIndex + reviewsPerLoad);
     nextBatch.forEach((review) => {
       const reviewCard = document.createElement("div");
       reviewCard.className = "review-card";
@@ -95,7 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 
     currentReviewIndex += reviewsPerLoad;
-    if (loadMoreButton && currentReviewIndex >= mockReviews.length) {
+    if (loadMoreButton && currentReviewIndex >= backendReviews.length) {
       loadMoreButton.style.display = "none";
     }
   }

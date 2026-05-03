@@ -1,6 +1,6 @@
 /**
  * ADMIN MODULE - PERSISTENT DATA ENGINE
- * Keeps the admin panel stable by normalizing localStorage data and enforcing session access.
+     * Keeps the admin panel stable while synchronizing records from the NestJS backend.
  */
 (function initAdminDataStore() {
     const ADMIN_DB_KEY = 'admin_db';
@@ -1580,6 +1580,18 @@
     const savedAdminDb = localStorage.getItem(ADMIN_DB_KEY);
     const parsedAdminDb = safeParseAdminDb(savedAdminDb);
     window.AdminData = normalizeAdminData(parsedAdminDb || initialAdminData);
+    if (!parsedAdminDb) {
+        window.AdminData.users = [];
+        window.AdminData.arbitrators = [];
+        window.AdminData.cases = [];
+        window.AdminData.conversations = [];
+        window.AdminData.hearings = [];
+        window.AdminData.documents = [];
+        window.AdminData.awards = [];
+        window.AdminData.applications = [];
+        window.AdminData.activities = [];
+        window.AdminData = syncDerivedData(window.AdminData);
+    }
 
     const normalizedSnapshot = JSON.stringify(window.AdminData);
     if (normalizedSnapshot !== savedAdminDb) {

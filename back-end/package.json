@@ -16,6 +16,7 @@
   "dependencies": {
     "@nestjs/common": "^11.1.19",
     "@nestjs/core": "^11.1.19",
+    "@nestjs/mapped-types": "^2.1.0",
     "@nestjs/platform-express": "^11.1.19",
     "@nestjs/swagger": "^11.4.2",
     "class-transformer": "^0.5.1",
@@ -23,6 +24,11 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "swagger-ui-express": "^5.0.1"
+  },
+  "overrides": {
+    "@nestjs/swagger": {
+      "@nestjs/mapped-types": "2.1.0"
+    }
   },
   "devDependencies": {
     "@types/node": "^25.6.0",

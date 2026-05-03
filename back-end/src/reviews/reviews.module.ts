@@ -1,9 +1,13 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Injectable,
   Module,
+  Param,
   Post,
   Query,
   Req,
@@ -11,6 +15,7 @@ import {
 import { Type } from 'class-transformer';
 import { IsNumber, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import { RequestActor } from '../common/interfaces/request-actor.interface';
 import { Role } from '../store/entities';
 import { StoreService } from '../store/store.service';
@@ -35,12 +40,16 @@ class CreateReviewDto {
 class ReviewsService {
   constructor(private readonly storeService: StoreService) {}
 
-  listReviews(actor: RequestActor, filters: { serviceId?: string; providerId?: string; customerId?: string }) {
+  listReviews(actor: RequestActor | undefined, filters: { serviceId?: string; providerId?: string; customerId?: string }) {
     return this.storeService.listReviews(actor, filters);
   }
 
   createReview(actor: RequestActor, payload: CreateReviewDto) {
     return this.storeService.createReview(actor, payload);
+  }
+
+  deleteReview(actor: RequestActor, reviewId: string) {
+    return this.storeService.deleteReview(actor, reviewId);
   }
 }
 
@@ -48,9 +57,10 @@ class ReviewsService {
 class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
+  @Public()
   @Get()
   listReviews(
-    @Req() req: { actor: RequestActor },
+    @Req() req: { actor?: RequestActor },
     @Query('serviceId') serviceId?: string,
     @Query('providerId') providerId?: string,
     @Query('customerId') customerId?: string,
@@ -66,6 +76,15 @@ class ReviewsController {
     return {
       data: this.reviewsService.createReview(req.actor, payload),
       message: 'Review submitted successfully.',
+    };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id')
+  deleteReview(@Req() req: { actor: RequestActor }, @Param('id') id: string) {
+    return {
+      data: this.reviewsService.deleteReview(req.actor, id),
+      message: 'Review deleted successfully.',
     };
   }
 }

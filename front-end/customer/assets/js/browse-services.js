@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const categoryFilter = document.getElementById('browse-category');
     const sortFilter = document.getElementById('browse-sort');
 
-    // Pull from our single source of truth (simulated backend)
+    // Pull from our single source of truth (backend API cache)
     const allServices = JSON.parse(localStorage.getItem('serviceHub_services')) || [];
 
     // Check if the user was redirected here from the Dashboard search
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (sortBy === 'price-low') return a.price - b.price;
             if (sortBy === 'price-high') return b.price - a.price;
             if (sortBy === 'rating') return b.rating - a.rating; // Highest rating first
-            return 0; // 'recommended' leaves it in default mock database order
+            return 0; // 'recommended' leaves it in default backend database order
         });
 
         grid.innerHTML = ''; // Clear current grid

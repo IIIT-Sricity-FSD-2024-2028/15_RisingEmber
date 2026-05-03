@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Injectable,
   Module,
   Param,
@@ -74,6 +77,10 @@ class BookingsService {
     return this.storeService.updateBooking(actor, bookingId, payload);
   }
 
+  deleteBooking(actor: RequestActor, bookingId: string) {
+    return this.storeService.deleteBooking(actor, bookingId);
+  }
+
   runWorkflowCleanup(actor: RequestActor) {
     return this.storeService.runWorkflowCleanup(actor);
   }
@@ -133,6 +140,15 @@ class BookingsController {
     return {
       data: this.bookingsService.updateBooking(req.actor, id, payload),
       message: 'Booking updated successfully.',
+    };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Delete(':id')
+  deleteBooking(@Req() req: { actor: RequestActor }, @Param('id') id: string) {
+    return {
+      data: this.bookingsService.deleteBooking(req.actor, id),
+      message: 'Booking deleted successfully.',
     };
   }
 }
