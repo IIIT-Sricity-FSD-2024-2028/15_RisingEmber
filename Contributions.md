@@ -23,44 +23,50 @@
 | :--- | :--- | :--- |
 | **System Use Case Diagram** | **Entire Team** | Defined all system actors, boundaries, and primary use cases. |
 | **Problem Statement** | **Entire Team** | Formulated the core business problem and solution scope. |
+| **UI/UX Prototypes** | **Entire Team** | Initial system wireframes and Figma designs. |
 
 ---
 
 ## 👤 Individual Contributions
 
 ### **Ashwin**
+* **🖥️ Front-end:** Developed the **Provider Portal** (`front-end/provider`), including service management interfaces.
+* **⚙️ Back-end:** Implemented the **Service Catalog** APIs and related endpoints (`back-end/src/services`).
 * **📄 Documentation:** Compiled the *Domain Expert Interaction* file.
-* **📊 Activity Diagram:** Designed the workflow for the **Service Provider**.
-* **🔄 Sequence Diagram:** Designed the interaction logic for the **Customer Booking Service**.
+* **📊 Diagrams:** Designed the activity workflow for the **Service Provider** and **Customer Booking Service** sequence.
 
 <br>
 
 ### **Ayush**
-* **⚙️ Infrastructure:** Initialized and managed the **GitHub Repository**.
-* **📚 Documentation:** Handled the final compilation and structure of all project files (`README`, `CONTRIBUTIONS`).
-* **📊 Activity Diagram:** Designed the workflow for the **Arbitrator**.
-* **🔄 Sequence Diagram:** Designed the interaction logic for **Providing Feedback**.
+* **🖥️ Front-end:** Developed the **Arbitrator Portal** (`front-end/arbitrator`) for dispute resolution and evidence tracking.
+* **⚙️ Back-end:** Built the **Dispute Resolution & Arbitration Engine** (`cases`, `hearings`, `awards`, `intake`).
+* **🏗️ Infrastructure:** Initialized and managed the **GitHub Repository** and project architecture.
+* **📚 Documentation:** Handled final compilation of `README` and `CONTRIBUTIONS`.
+* **📊 Diagrams:** Designed the workflow for the **Arbitrator** and **Providing Feedback** sequence.
 
 <br>
 
 ### **Durga**
-* **📊 Activity Diagram:** Designed the workflow for the **Banking Server**.
-* **💰 System Logic:** Defined transaction states and banking verification flows.
+* **🖥️ Front-end:** Developed the **Admin Portal** (`front-end/admin`) for system-wide user and service oversight.
+* **⚙️ Back-end:** Engineered the **Core Infrastructure & Data Store** (`store`, `documents`, `common`, `server.js`).
+* **💰 System Logic:** Defined transaction states, backend verification logic, and database state management.
+* **📊 Diagrams:** Designed the workflow for the **Banking Server**.
 
 <br>
 
 ### **Jayanth**
-* **📊 Activity Diagram:** Designed the workflow for **Customer Booking**.
-* **🔄 Sequence Diagrams:**
-    * **Customer Booking Service** (Collaborative logic).
-    * **Accessing Chat Window**.
-    * **Dispute Ruling**.
+* **🖥️ Front-end:** Developed the **Customer Portal** (`front-end/customer`) for service discovery, booking, and chat.
+* **⚙️ Back-end:** Built the **Booking Engine & Feedback System** (`bookings`, `reviews`, `dashboard`).
+* **🔄 System Logic:** Designed logic for **Accessing Chat Window** and **Dispute Ruling**.
+* **📊 Diagrams:** Designed the workflow and sequences for **Customer Booking**.
 
 <br>
 
 ### **Kenneth**
-* **🔄 Sequence Diagram:** Designed the interaction logic for **Create & Manage Profile**.
-* **👤 User Flow:** Mapped the lifecycle of user profile updates and validation.
+* **🖥️ Front-end:** Developed the **Landing Page** (`front-end/Landing_Page`) and integrated core shared CSS/assets.
+* **⚙️ Back-end:** Implemented **Identity & Access Management (IAM)** (`users`, `session`, `settings`).
+* **👤 System Logic:** Mapped the lifecycle of user profile updates, authentication, and validation.
+* **📊 Diagrams:** Designed the interaction logic for **Create & Manage Profile**.
 
 ---
 
