@@ -4,6 +4,12 @@
   "private": true,
   "description": "Static frontend for the ServiceHub RisingEmber project",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "check:js": "node ../scripts/check-frontend-js.mjs",
+    "check:assets": "node ../scripts/check-local-assets.mjs",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
   }
 }
