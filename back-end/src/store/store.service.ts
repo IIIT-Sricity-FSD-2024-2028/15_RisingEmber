@@ -43,6 +43,7 @@ import {
   WaitlistEntryRecord,
 } from './entities';
 import { RequestActor } from '../common/interfaces/request-actor.interface';
+import { isDataUrlContent, validateDocumentPayload } from '../documents/document-validation';
 import { createDemoState, DEMO_SEED_NOW } from './demo-seed';
 
 type ServiceFilters = {
@@ -1095,6 +1096,14 @@ export class StoreService {
     const document = this.requireDocument(documentId);
     const caseRecord = this.requireCase(document.caseId);
     this.assertDocumentEditable(actor, caseRecord, document);
+
+    if (payload.fileName !== undefined || payload.content !== undefined) {
+      const nextContent = payload.content !== undefined ? payload.content : document.content;
+      validateDocumentPayload({
+        fileName: payload.fileName ?? document.fileName,
+        content: payload.content !== undefined || isDataUrlContent(document.content) ? nextContent : undefined,
+      });
+    }
 
     Object.assign(document, this.compactObject(payload));
     document.updatedAt = this.now();

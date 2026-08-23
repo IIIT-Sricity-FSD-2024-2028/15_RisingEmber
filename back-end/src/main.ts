@@ -6,7 +6,7 @@ import { configureApp } from './configure-app';
 import { enhanceSwaggerDocument } from './swagger-document';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, { bodyParser: false });
   configureApp(app, { enableCors: true });
 
   const swaggerConfig = new DocumentBuilder()

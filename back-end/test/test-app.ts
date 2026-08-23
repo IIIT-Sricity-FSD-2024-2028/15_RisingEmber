@@ -5,7 +5,7 @@ import { configureApp } from '../src/configure-app';
 
 export async function createTestApp(): Promise<INestApplication> {
   const testingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
-  const app = testingModule.createNestApplication({ logger: false });
+  const app = testingModule.createNestApplication({ logger: false, bodyParser: false });
 
   configureApp(app);
 
