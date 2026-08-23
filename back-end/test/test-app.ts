@@ -13,6 +13,7 @@ export async function createTestApp(): Promise<INestApplication> {
   return app;
 }
 
-export async function closeTestApp(app: INestApplication): Promise<void> {
+export async function closeTestApp(app?: INestApplication): Promise<void> {
+  if (!app) return;
   await app.close();
 }

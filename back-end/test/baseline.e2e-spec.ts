@@ -3,7 +3,7 @@ import request from 'supertest';
 import { closeTestApp, createTestApp } from './test-app';
 
 describe('ServiceHub baseline request contract', () => {
-  let app: INestApplication;
+  let app: INestApplication | undefined;
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -14,19 +14,19 @@ describe('ServiceHub baseline request contract', () => {
   });
 
   it('keeps the public service catalogue reachable without actor headers', async () => {
-    const response = await request(app.getHttpServer()).get('/api/v1/services').expect(200);
+    const response = await request(app!.getHttpServer()).get('/api/v1/services').expect(200);
 
     expect(response.body).toEqual(expect.objectContaining({ data: expect.any(Array) }));
   });
 
   it('rejects a protected request when actor headers are missing', async () => {
-    const response = await request(app.getHttpServer()).get('/api/v1/bookings').expect(403);
+    const response = await request(app!.getHttpServer()).get('/api/v1/bookings').expect(403);
 
     expect(response.body.message).toMatch(/x-role/i);
   });
 
   it('rejects an actor whose role does not match the seeded account', async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(app!.getHttpServer())
       .get('/api/v1/bookings')
       .set('x-role', 'provider')
       .set('x-actor-id', 'user_2001')
@@ -36,7 +36,7 @@ describe('ServiceHub baseline request contract', () => {
   });
 
   it('rejects non-whitelisted service fields before the controller runs', async () => {
-    const response = await request(app.getHttpServer())
+    const response = await request(app!.getHttpServer())
       .post('/api/v1/services')
       .set('x-role', 'provider')
       .set('x-actor-id', 'user_3001')
