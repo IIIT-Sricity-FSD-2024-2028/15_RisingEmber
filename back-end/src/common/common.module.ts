@@ -18,7 +18,12 @@ import { StoreModule } from '../store/store.module';
           ttl: Number(process.env.THROTTLE_TTL_MS || 60_000),
           setHeaders: true,
         }],
-        getTracker: (request: Record<string, any>) => String(request.ip || 'unknown-client'),
+        // Keep abuse counters independent per public route so a burst of bad
+        // logins cannot starve unrelated public intake forms for the same
+        // client. The path is query-free and therefore safe to use as a key.
+        getTracker: (request: Record<string, any>) => (
+          `${String(request.ip || 'unknown-client')}:${String(request.path || request.url || 'unknown-route')}`
+        ),
         errorMessage: 'Too many requests. Please retry shortly.',
       }),
     }),

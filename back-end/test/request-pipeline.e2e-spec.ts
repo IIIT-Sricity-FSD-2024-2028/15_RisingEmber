@@ -160,6 +160,10 @@ describe('ServiceHub request pipeline', () => {
     await request(app!.getHttpServer()).post('/api/v1/session/login').send(payload).expect(401);
     await request(app!.getHttpServer()).post('/api/v1/session/login').send(payload).expect(401);
     await request(app!.getHttpServer()).post('/api/v1/session/login').send(payload).expect(429);
+    await request(app!.getHttpServer())
+      .post('/api/v1/intake/waitlist')
+      .send({ email: 'route-isolated-throttle@example.test' })
+      .expect(201);
     await request(app!.getHttpServer()).get('/api/v1/services').expect(200);
     await request(app!.getHttpServer()).get('/api/v1/services').set(adminHeaders).expect(200);
   });

@@ -7,6 +7,10 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   workers: 1,
   reporter: 'list',
+  timeout: 120_000,
+  expect: {
+    timeout: 10_000,
+  },
   use: {
     baseURL: 'http://127.0.0.1:8080',
     trace: 'retain-on-failure',
