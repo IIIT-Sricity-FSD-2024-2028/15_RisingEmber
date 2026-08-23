@@ -65,4 +65,29 @@ describe('ServiceHub authentication and actor guard', () => {
       .set('x-actor-id', 'user_2001')
       .expect(403);
   });
+
+  it('enforces each protected dashboard role boundary', async () => {
+    const dashboardCases = [
+      ['customer', 'user_2001', 'provider', 'user_3001'],
+      ['provider', 'user_3001', 'customer', 'user_2001'],
+      ['arbitrator', 'user_4001', 'customer', 'user_2001'],
+      ['admin', 'user_1001', 'customer', 'user_2001'],
+    ] as const;
+
+    for (const [role, actorId, deniedRole, deniedActorId] of dashboardCases) {
+      await request(app!.getHttpServer())
+        .get(`/api/v1/dashboard/${role}`)
+        .set('x-role', role)
+        .set('x-actor-id', actorId)
+        .expect(200);
+
+      const denied = await request(app!.getHttpServer())
+        .get(`/api/v1/dashboard/${role}`)
+        .set('x-role', deniedRole)
+        .set('x-actor-id', deniedActorId)
+        .expect(403);
+
+      expect(denied.body.message).toMatch(/permission/i);
+    }
+  });
 });
