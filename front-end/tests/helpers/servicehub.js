@@ -1,5 +1,13 @@
 export function collectRuntimeFailures(page) {
   const failures = [];
+  const monitoredOrigins = [
+    { prefix: 'http://127.0.0.1:8080', label: 'frontend' },
+    { prefix: 'http://localhost:8080', label: 'frontend' },
+    { prefix: 'http://127.0.0.1:3000', label: 'api' },
+    { prefix: 'http://localhost:3000', label: 'api' },
+  ];
+
+  const monitoredRequest = (url) => monitoredOrigins.find(({ prefix }) => url.startsWith(prefix));
 
   page.on('pageerror', (error) => {
     failures.push(`pageerror: ${error.stack || error.message}`);
@@ -13,14 +21,16 @@ export function collectRuntimeFailures(page) {
 
   page.on('response', (response) => {
     const requestUrl = response.url();
-    if (requestUrl.startsWith('http://127.0.0.1:8080') && response.status() >= 400) {
-      failures.push(`same-origin ${response.status()}: ${requestUrl}`);
+    const origin = monitoredRequest(requestUrl);
+    if (origin && response.status() >= 400) {
+      failures.push(`${origin.label} ${response.status()}: ${requestUrl}`);
     }
   });
 
   page.on('requestfailed', (request) => {
-    if (request.url().startsWith('http://127.0.0.1:8080')) {
-      failures.push(`same-origin request failed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
+    const origin = monitoredRequest(request.url());
+    if (origin) {
+      failures.push(`${origin.label} request failed: ${request.url()} (${request.failure()?.errorText || 'unknown'})`);
     }
   });
 

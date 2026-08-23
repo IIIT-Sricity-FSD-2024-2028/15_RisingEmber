@@ -1,21 +1,13 @@
-import { INestApplication, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
+import { configureApp } from '../src/configure-app';
 
 export async function createTestApp(): Promise<INestApplication> {
-  const app = await NestFactory.create(AppModule, { logger: false });
+  const testingModule = await Test.createTestingModule({ imports: [AppModule] }).compile();
+  const app = testingModule.createNestApplication({ logger: false });
 
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  configureApp(app);
 
   await app.listen(0, '127.0.0.1');
   return app;

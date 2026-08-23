@@ -1,29 +1,13 @@
 import 'reflect-metadata';
-import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { configureApp } from './configure-app';
 import { enhanceSwaggerDocument } from './swagger-document';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    cors: {
-      origin: true,
-      credentials: false,
-    },
-  });
-
-  app.setGlobalPrefix('api/v1');
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      forbidNonWhitelisted: true,
-      transformOptions: {
-        enableImplicitConversion: true,
-      },
-    }),
-  );
+  const app = await NestFactory.create(AppModule);
+  configureApp(app, { enableCors: true });
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('ServiceHub API')
