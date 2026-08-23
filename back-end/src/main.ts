@@ -11,7 +11,10 @@ async function bootstrap() {
 
   const swaggerConfig = new DocumentBuilder()
     .setTitle('ServiceHub API')
-    .setDescription('Review-4 REST API documentation for ServiceHub.')
+    .setDescription(
+      'ServiceHub evaluation API. Use x-role and x-actor-id as evaluation-only identity context headers; '
+      + 'they are not production authentication. Errors return statusCode, code, message, timestamp, path, and requestId.',
+    )
     .setVersion('1.0')
     .addApiKey(
       {

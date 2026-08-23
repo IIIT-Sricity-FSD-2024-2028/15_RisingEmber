@@ -14,6 +14,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { IntakeModule } from './intake/intake.module';
 import { SettingsModule } from './settings/settings.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SettingsModule } from './settings/settings.module';
     DashboardModule,
     IntakeModule,
     SettingsModule,
+    HealthModule,
   ],
 })
 export class AppModule {}
