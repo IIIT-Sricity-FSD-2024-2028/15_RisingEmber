@@ -14,9 +14,12 @@ export function collectRuntimeFailures(page) {
   });
 
   page.on('console', (message) => {
-    if (message.type() === 'error') {
-      failures.push(`console.error: ${message.text()}`);
-    }
+    if (message.type() !== 'error') return;
+    const text = message.text();
+    // Third-party fonts/images are optional presentation assets. A blocked CDN
+    // must not hide application/runtime failures from the local test harness.
+    if (/Failed to load resource: net::ERR_(INTERNET_DISCONNECTED|NAME_NOT_RESOLVED|CONNECTION_REFUSED)/i.test(text)) return;
+    failures.push(`console.error: ${text}`);
   });
 
   page.on('response', (response) => {
