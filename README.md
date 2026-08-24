@@ -70,6 +70,14 @@ Our solution enforces fairness through three non-negotiable mechanisms:
 * **Escrow Management:** Maintains funds in a "Locked/Holding" state until an explicit release signal is received.
 * **Refund Execution:** Processes partial or full refunds instantly upon receiving a verdict trigger from the Arbitrator.
 
+## 🧪 Evaluation readiness
+
+The current build has a repeatable local walkthrough, deterministic seed data, an automated preflight, and a separate explanation of the request pipeline. Start with [the evaluation demo runbook](docs/evaluation-demo-runbook.md), then use [the middleware/request-pipeline guide](docs/middleware-request-pipeline.md) when presenting the backend controls.
+
+From the repository root, `node scripts/demo-preflight.mjs` checks the runtime, dependencies, pinned offline assets, backend health, Swagger, frontend delivery, seeded login, and an authorized read. The full regression gates are `cd back-end && npm run test:e2e` and `cd front-end && npm run test:e2e`.
+
+The evaluation build is intentionally honest about its scope: it uses an in-memory store, simulated escrow/refund transitions, and evaluation-only `x-role`/`x-actor-id` identity headers. It does not represent production JWT/session security, persistent storage, KYC, or a real bank/payment integration.
+
 ---
 
 ## 👥 Team: 15_RisingEmber

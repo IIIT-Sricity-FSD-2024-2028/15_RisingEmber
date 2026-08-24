@@ -232,7 +232,7 @@ function redirectAuthenticatedArbitrator() {
 function getArbitratorCaseIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const caseId = params.get("case");
-    return caseId ? caseId.trim().toUpperCase() : "";
+    return caseId ? caseId.trim() : "";
 }
 
 function getArbitratorCaseById(caseId) {
@@ -389,12 +389,24 @@ async function upsertArbitratorAward({
     caseId,
     title,
     summary,
-    status = "issued"
+    status = "issued",
+    decision = ""
 }) {
     const headers = getArbitratorRequestHeaders();
     const existingAwards = await requestArbitratorApi(`/awards?caseId=${encodeURIComponent(caseId)}`, { headers });
     const existingAward = Array.isArray(existingAwards) && existingAwards.length ? existingAwards[0] : null;
-    const payload = { title, summary, status };
+    const awardDecision = decision || (existingAward && existingAward.decision) || "";
+
+    if (status === "issued" && !awardDecision) {
+        throw new Error("A valid award decision is required before issuing an award.");
+    }
+
+    const payload = {
+        title,
+        summary,
+        status,
+        ...(awardDecision ? { decision: awardDecision } : {})
+    };
 
     if (existingAward && existingAward.id) {
         return requestArbitratorApi(`/awards/${existingAward.id}`, {
@@ -418,14 +430,16 @@ async function issueArbitratorAwardWithAttachment({
     caseId,
     file,
     title,
-    summary
+    summary,
+    decision = ""
 }) {
     const headers = getArbitratorRequestHeaders();
     const award = await upsertArbitratorAward({
         caseId,
         title,
         summary,
-        status: "issued"
+        status: "issued",
+        decision
     });
 
     if (file) {

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Hub | ServiceHub</title>
     <link rel="stylesheet" href="admin_styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/vendor/fontawesome-6.4.0/css/all.min.css">
     <style>
         .fade-in { animation: fadeIn 0.3s ease-in; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -120,7 +120,7 @@
                 .match(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/);
         }
 
-        function handleAdminLogin(event) {
+        async function handleAdminLogin(event) {
             event.preventDefault();
             const email = document.getElementById('adminEmail').value.trim();
             const pass = document.getElementById('adminPass').value.trim();
@@ -146,14 +146,45 @@
                 passErr.style.display = 'none';
             }
 
-            if(isValid) {
-                AdminData.session.isLoggedIn = true;
-                AdminData.session.lastLogin = new Date().toLocaleString();
-                AdminData.session.actorId = AdminData.session.actorId || 'user_1001';
-                AdminData.session.role = 'admin';
-                
-                saveAdminData();
-                window.location.href = 'admin_dashboard.html';
+            if (isValid) {
+                try {
+                    const loginData = await window.requestAdminApi('/session/login', {
+                        method: 'POST',
+                        body: {
+                            role: 'admin',
+                            email,
+                            password: pass
+                        }
+                    });
+                    const profileSummary = loginData && loginData.profileSummary ? loginData.profileSummary : null;
+                    const actorId = loginData && loginData.actorId
+                        ? loginData.actorId
+                        : (profileSummary && profileSummary.id ? profileSummary.id : '');
+
+                    if (!actorId) throw new Error('The backend did not return an administrator identity.');
+
+                    AdminData.session = {
+                        ...AdminData.session,
+                        isLoggedIn: true,
+                        lastLogin: new Date().toLocaleString(),
+                        actorId,
+                        role: 'admin'
+                    };
+                    if (profileSummary) {
+                        AdminData.profile = {
+                            ...AdminData.profile,
+                            name: profileSummary.name || AdminData.profile.name,
+                            email: profileSummary.email || email,
+                            phone: profileSummary.phone || AdminData.profile.phone
+                        };
+                    }
+
+                    saveAdminData();
+                    window.location.href = 'admin_dashboard.html';
+                } catch (error) {
+                    passErr.textContent = error && error.message ? error.message : 'The backend rejected this login.';
+                    passErr.style.display = 'block';
+                }
             }
         }
 

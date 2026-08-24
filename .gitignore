@@ -66,3 +66,7 @@ Thumbs.db
 
 # dist
 dist/
+
+# Playwright artifacts
+test-results/
+playwright-report/

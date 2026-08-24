@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { RequestActor } from '../common/interfaces/request-actor.interface';
+import { validateDocumentPayload } from './document-validation';
 import { DocumentStatus, DocumentType } from '../store/entities';
 import { StoreService } from '../store/store.service';
 
@@ -84,6 +85,7 @@ class DocumentsService {
   }
 
   createDocument(actor: RequestActor, payload: CreateDocumentDto) {
+    validateDocumentPayload(payload);
     return this.storeService.createDocument(actor, payload);
   }
 

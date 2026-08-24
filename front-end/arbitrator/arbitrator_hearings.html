@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Hearings & Schedule | ServiceHub</title>
     <link rel="stylesheet" href="arbitrator_styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/assets/vendor/fontawesome-6.4.0/css/all.min.css">
     <style>
         .schedule-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; align-items: stretch; }
         
@@ -107,11 +107,19 @@
         function parseDateString(dateStr) {
             // Parse "28 Mar 2026" format
             const months = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
-            const parts = dateStr.split(' ');
-            if (parts.length === 3) {
-                return new Date(parseInt(parts[2]), months[parts[1]], parseInt(parts[0]));
+            const parts = String(dateStr || '').trim().split(/\s+/);
+            const day = Number.parseInt(parts[0], 10);
+            const year = Number.parseInt(parts[2], 10);
+            const month = months[parts[1]];
+            if (parts.length !== 3 || !Number.isInteger(day) || !Number.isInteger(year) || month === undefined) {
+                return null;
             }
-            return null;
+
+            const parsed = new Date(year, month, day);
+            if (Number.isNaN(parsed.getTime()) || parsed.getFullYear() !== year || parsed.getMonth() !== month || parsed.getDate() !== day) {
+                return null;
+            }
+            return parsed;
         }
 
         function formatHearingTime(timeValue) {

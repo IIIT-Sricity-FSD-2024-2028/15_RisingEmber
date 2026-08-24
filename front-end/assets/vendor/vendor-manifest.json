@@ -1,0 +1,198 @@
+{
+  "generatedBy": "front-end/scripts/sync-vendor-assets.mjs",
+  "policy": "Critical third-party styles, fonts, and scripts are served locally for evaluation/offline runs.",
+  "assets": [
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/css/all.min.css",
+      "local": "assets/vendor/fontawesome-6.4.0/css/all.min.css",
+      "bytes": 102025,
+      "sha256": "1edb1725a9ea8ca4dcf2f5508cee183218aa1685e47c1b23056717f754f58ebf"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-brands-400.ttf",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-brands-400.ttf",
+      "bytes": 187208,
+      "sha256": "20c4a58bc9d1d69e935d06f1528923646a715be5e218665655cade8f5f1b8c00"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-brands-400.woff2",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-brands-400.woff2",
+      "bytes": 108020,
+      "sha256": "748332090c4b8e20f95d0ff59f0be20fa9c889359d3b36d4b886d73376054207"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-regular-400.ttf",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-regular-400.ttf",
+      "bytes": 63952,
+      "sha256": "528d022dce6725f8a0811fd91d8e6513445c81ef33353a5c3234eab932551abf"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-regular-400.woff2",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-regular-400.woff2",
+      "bytes": 24948,
+      "sha256": "8e7e5ea1b15f62ab14dbd41768e8fbcd21cc859a4ea5da812457ee714299fb35"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-solid-900.ttf",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-solid-900.ttf",
+      "bytes": 394628,
+      "sha256": "67a65763c7f80903d81603bbeb9049fc2bf28508479b83ed011fe24c71fa950a"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-solid-900.woff2",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-solid-900.woff2",
+      "bytes": 150124,
+      "sha256": "7152a6933ee3d690ec2af3d09da9d701723d16aa3410a6d80f28ff8866f3b880"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-v4compatibility.ttf",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-v4compatibility.ttf",
+      "bytes": 10172,
+      "sha256": "0515a423f828ce4e6accf92a2ea0b03d19d31cc86d9af0373291e1fd4db5f348"
+    },
+    {
+      "source": "npm:fontawesome-free-6-4@6.4.0/webfonts/fa-v4compatibility.woff2",
+      "local": "assets/vendor/fontawesome-6.4.0/webfonts/fa-v4compatibility.woff2",
+      "bytes": 4564,
+      "sha256": "694a17c3d9d6c05f8aac63c544615552a4b220e9a4de863d87341a6bcfc1bc8d"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/css/all.min.css",
+      "local": "assets/vendor/fontawesome-6.5.0/css/all.min.css",
+      "bytes": 102526,
+      "sha256": "c880eb3d25c765d399840aa204fec22b3230310991089f14781f09a35ed80b8a"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-brands-400.ttf",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-brands-400.ttf",
+      "bytes": 206480,
+      "sha256": "5afff0a4df2650e9e2689c6021eb968f983eae2b388c2ce32ad853c0dd7f3788"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-brands-400.woff2",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-brands-400.woff2",
+      "bytes": 116672,
+      "sha256": "b66b3da5ff7b2db79b6cb5a22c3e762e2bf16958a11987e69eeb1980bbbcdfb0"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-regular-400.ttf",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-regular-400.ttf",
+      "bytes": 68060,
+      "sha256": "69ec55d72001a374fe40cd26ab4325e6312d0459b22372527bf539d28e2e2e47"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-regular-400.woff2",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-regular-400.woff2",
+      "bytes": 25480,
+      "sha256": "3a74c08d486310c03731b458616f0172375fe3780e96165f8a1adc02d1355eaa"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-solid-900.ttf",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-solid-900.ttf",
+      "bytes": 419780,
+      "sha256": "4ea5c3ff563052c2bc6534767c009dea4e2801b7a848bafeae87e9790eb0fc64"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-solid-900.woff2",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-solid-900.woff2",
+      "bytes": 156532,
+      "sha256": "f4c5a5b297e623bc159679563a4d1eb16e409ca3b57698fbc00fd2c907dadae0"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-v4compatibility.ttf",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-v4compatibility.ttf",
+      "bytes": 10832,
+      "sha256": "4694ef58b99d135ec4a4e7cf4b60681dff2cccf06604817a47a53c6ab41d3d2d"
+    },
+    {
+      "source": "npm:@fortawesome/fontawesome-free@6.5.0/webfonts/fa-v4compatibility.woff2",
+      "local": "assets/vendor/fontawesome-6.5.0/webfonts/fa-v4compatibility.woff2",
+      "bytes": 4796,
+      "sha256": "33e73fb0656f23945b0d160507dba4dbcd315c3c18eedd0c1fd128ba88272b41"
+    },
+    {
+      "source": "npm:chart.js@4.5.1/dist/chart.umd.min.js",
+      "local": "assets/vendor/chart/chart.umd.min.js",
+      "bytes": 208522,
+      "sha256": "48444a82d4edcb5bec0f1965faacdde18d9c17db3063d042abada2f705c9f54a"
+    },
+    {
+      "source": "npm:html2canvas@1.4.1/dist/html2canvas.min.js",
+      "local": "assets/vendor/html2canvas/html2canvas.min.js",
+      "bytes": 198689,
+      "sha256": "e87e550794322e574a1fda0c1549a3c70dae5a93d9113417a429016838eab8cb"
+    },
+    {
+      "source": "npm:jspdf@2.5.1/dist/jspdf.umd.min.js",
+      "local": "assets/vendor/jspdf/jspdf.umd.min.js",
+      "bytes": 364463,
+      "sha256": "98ccf17aa10c20bb1301762618fcc9b6ab3a4e7f26b6071d64d0b41154df3875"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-400-normal.woff2",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-400-normal.woff2",
+      "bytes": 11816,
+      "sha256": "221a4135d06a4b33abbd535e9a0da4e565d19545ddd9267c4e678a916d54d9b6"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-400-normal.woff",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-400-normal.woff",
+      "bytes": 15728,
+      "sha256": "9709167175cee7dcd331a7ed95be1182a5d5f00715b67a02107ecc80a55f490d"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-500-normal.woff2",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-500-normal.woff2",
+      "bytes": 12312,
+      "sha256": "bad081c8dbc15aed6c5e4cde5461914f7b3bdc295b7a7aed177e4beddb79bffa"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-500-normal.woff",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-500-normal.woff",
+      "bytes": 16124,
+      "sha256": "a1b54d9fda75d8de13e283ef09668395160e23cbb7dd9ae1aec91d6199da85bb"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-600-normal.woff2",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-600-normal.woff2",
+      "bytes": 12188,
+      "sha256": "8872bb5c9111df9bd3162c2394aee6354d782b13408a4dd5bbf65c48207206e6"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-600-normal.woff",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-600-normal.woff",
+      "bytes": 16084,
+      "sha256": "d9569c0aacc16c33c52e57e1e48c1b94f3b0a6be99e75479edc6438cc44c48e0"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-700-normal.woff2",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-700-normal.woff2",
+      "bytes": 12244,
+      "sha256": "2050755bf475817c96ac7d914c7f07cc3c2d11ff4b3fb4747b8d41de584aad17"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-700-normal.woff",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-700-normal.woff",
+      "bytes": 16136,
+      "sha256": "6188f593f250aa25137865e8d07373fd0f585f5920a496c73ede84dbbdff7a92"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-800-normal.woff2",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-800-normal.woff2",
+      "bytes": 11896,
+      "sha256": "5f301a8ef9c266c8b596e6793d3cc826daeff9849c5af035f5386439137955ad"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/files/plus-jakarta-sans-latin-800-normal.woff",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans-latin-800-normal.woff",
+      "bytes": 15784,
+      "sha256": "ba83c17d4fbe400449af7b6d7cc6fe5ea25e97bf64c9e77010101520ca83f0a5"
+    },
+    {
+      "source": "npm:@fontsource/plus-jakarta-sans@5.3.0/latin-{400,500,600,700,800}.css",
+      "local": "assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css",
+      "bytes": 1459,
+      "sha256": "36310f3476ee67b4217252e3bb44574a67a1a5f24f12f01cc78b2ea9d86a90c9"
+    }
+  ]
+}
