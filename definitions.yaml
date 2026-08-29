@@ -1,0 +1,151 @@
+# Domain: Digital Marketplace for Services (non-retail)
+# Problem Statement: Service Quality, Rating & Dispute Management Platform
+# Last Updated: 2026-01-30
+
+Customer:
+  definition: >
+    An individual or entity seeking to hire a professional to perform a specific 
+    task or job.
+  examples:
+    - "The Customer browse the catalog for a plumber."
+    - "A Customer initiated a booking request for next Tuesday."
+  aliases:
+    - Client
+    - Homeowner
+    - Buyer
+
+Service Provider:
+  definition: >
+    A professional, skilled worker, or agency offering their labor and expertise 
+    for hire to complete tasks.
+  examples:
+    - "The Service Provider accepted the cleaning job."
+    - "A Service Provider updated their portfolio with recent work photos."
+  aliases:
+    - Professional
+    - Vendor
+    - Freelancer
+
+Service Listing:
+  definition: >
+    A catalog entry created by a Service Provider that describes a specific 
+    skill, package, or task they are willing to perform, including its price and duration.
+  examples:
+    - "The electrician published a new Service Listing for 'Fan Installation'."
+    - "The price in the Service Listing includes material costs."
+  aliases:
+    - Gig
+    - Service Package
+    - Offer
+
+Booking:
+  definition: >
+    A mutual agreement where a Customer reserves a Service Provider's time 
+    for a specific job in exchange for payment.
+  examples:
+    - "The Booking was confirmed for Friday morning."
+    - "The Service Provider cancelled the Booking due to an emergency."
+  aliases:
+    - Appointment
+    - Reservation
+    - Job Order
+
+Feedback:
+  definition: >
+    A qualitative and quantitative assessment given by a Customer regarding 
+    the quality of work delivered by a Service Provider.
+  examples:
+    - "Positive Feedback helps a provider get more jobs."
+    - "The Feedback mentioned that the provider was punctual."
+  aliases:
+    - Review
+    - Rating
+    - Testimonial
+
+Dispute:
+  definition: >
+    A formal disagreement raised when the delivered work fails to meet the 
+    agreed standards or expectations set during the booking.
+  examples:
+    - "The Customer filed a Dispute claiming the appliance is still broken."
+    - "The Dispute was resolved after the provider agreed to redo the work."
+  aliases:
+    - Complaint
+    - Conflict
+    - Grievance
+
+Refund:
+  definition: >
+    The return of monetary funds to a Customer due to service cancellation 
+    or a successful dispute claim.
+  examples:
+    - "The bank processed the Refund within 24 hours."
+    - "A partial Refund was issued for the unfinished portion of the job."
+  aliases:
+    - Reimbursement
+    - Money Back
+    - Reversal
+
+TicketingSystem: Ticketing System
+definition:
+  A centralized system used to log, track, manage, and resolve customer complaints, feedback, service issues, and disputes throughout their lifecycle.
+examples:
+  - A customer raises a service complaint which is assigned a ticket ID and tracked until resolution.
+aliases:
+  - Case Management System
+  - Issue Tracking System
+
+IVR: Interactive Voice Response
+definition:
+  An automated phone-based system that interacts with customers using voice or keypad inputs to provide information or route calls to the appropriate support channel.
+examples:
+  - A customer calling support hears menu options and is routed to dispute resolution.
+aliases:
+  - Automated Call Routing
+  - Voice Menu System
+
+ServiceLevelExpectation: Service-Level Expectation
+definition:
+  The agreed-upon response or resolution time promised to a customer for handling service requests, complaints, or disputes.
+examples:
+  - Commitment to resolve high-priority disputes within 48 hours.
+aliases:
+  - SLA Expectation
+  - Service Commitment
+
+EscalationMatrix: Escalation Matrix
+definition:
+  A predefined hierarchy that specifies how and when unresolved, complex, or high-severity issues are escalated to higher authorities or specialized roles.
+examples:
+  - Escalating unresolved disputes from support staff to an arbitrator.
+aliases:
+  - Escalation Path
+  - Issue Escalation Framework
+
+MakerChecker: Maker-Checker
+definition:
+  A control mechanism where one role initiates or processes a request (maker) and another independent role reviews and validates it (checker) to ensure accuracy and compliance.
+examples:
+  - One staff member processes a refund request while another validates it before execution.
+aliases:
+  - Four-Eyes Principle
+  - Dual Control Mechanism
+
+ProcessOwner: Process Owner
+definition:
+  A designated subject matter expert responsible for governance, decisions, and accountability of a specific business or system process.
+examples:
+  - An arbitrator acting as the process owner for dispute resolution workflows.
+aliases:
+  - Process Lead
+  - Business Owner
+
+TransactionLogs: Transaction Logs
+definition:
+  Backend system records that capture detailed transaction activities used to verify claims, audit actions, and validate evidence during disputes.
+examples:
+  - Payment logs used to confirm whether a service payment was successfully processed.
+aliases:
+  - Audit Logs
+  - System Logs
+  
