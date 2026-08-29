@@ -4,6 +4,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { configureApp } from './configure-app';
 import { enhanceSwaggerDocument } from './swagger-document';
+import { appLogger } from './common/logger/winston-logger.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bodyParser: false });
@@ -41,10 +42,26 @@ async function bootstrap() {
   const port = Number(process.env.PORT || 3000);
   const host = process.env.HOST || '127.0.0.1';
   await app.listen(port, host);
+
+  const backendUrl = `http://${host}:${port}/api/v1`;
+  const swaggerUrl = `http://${host}:${port}/api-docs`;
+
   // eslint-disable-next-line no-console
-  console.log(`ServiceHub backend running on http://${host}:${port}/api/v1`);
+  console.log(`ServiceHub backend running on ${backendUrl}`);
   // eslint-disable-next-line no-console
-  console.log(`Swagger docs available at http://${host}:${port}/api-docs`);
+  console.log(`Swagger docs available at ${swaggerUrl}`);
+
+  // Log server startup to Winston application log file
+  appLogger.info('ServiceHub backend started', {
+    event: 'SERVER_START',
+    url: backendUrl,
+    swaggerUrl,
+    port,
+    host,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+  });
 }
 
 bootstrap();
+
