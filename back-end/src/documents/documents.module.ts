@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -12,12 +13,68 @@ import {
   Post,
   Query,
   Req,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { diskStorage } from 'multer';
+import * as path from 'path';
+import * as fs from 'fs';
 import { RequestActor } from '../common/interfaces/request-actor.interface';
 import { validateDocumentPayload } from './document-validation';
 import { DocumentStatus, DocumentType } from '../store/entities';
 import { StoreService } from '../store/store.service';
+import { appLogger } from '../common/logger/winston-logger.service';
+
+// Allowed MIME types for Multer file upload
+const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+];
+
+// Ensure the uploads directory exists
+const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads', 'documents');
+if (!fs.existsSync(UPLOADS_DIR)) {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+}
+
+// Multer disk storage configuration
+const multerDiskStorage = diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, UPLOADS_DIR);
+  },
+  filename: (_req, file, cb) => {
+    // Sanitize original name and add timestamp to avoid collisions
+    const ext = path.extname(file.originalname).toLowerCase();
+    const baseName = path.basename(file.originalname, ext)
+      .replace(/[^a-zA-Z0-9_-]/g, '_')
+      .slice(0, 64);
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    cb(null, `${baseName}-${uniqueSuffix}${ext}`);
+  },
+});
+
+// Multer file filter — rejects disallowed MIME types
+function multerFileFilter(
+  _req: any,
+  file: Express.Multer.File,
+  cb: (error: Error | null, acceptFile: boolean) => void,
+) {
+  if (ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new BadRequestException(
+        `File type "${file.mimetype}" is not allowed. Accepted: PDF, PNG, JPEG, DOCX, XLSX.`,
+      ),
+      false,
+    );
+  }
+}
 
 class CreateDocumentDto {
   @IsString()
@@ -119,6 +176,95 @@ class DocumentsController {
     return {
       data: this.documentsService.createDocument(req.actor, payload),
       message: 'Document created successfully.',
+    };
+  }
+
+  /**
+   * POST /documents/upload — Multer multipart/form-data file upload endpoint.
+   * Accepts a physical file upload (multipart/form-data) alongside document metadata.
+   * The file is saved to disk under uploads/documents/ and metadata is stored in-memory.
+   * This demonstrates the standard Multer file upload middleware pattern.
+   *
+   * Form fields required: caseId, title, type, fileName (from file)
+   * File field: "file"
+   */
+  @Post('upload')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: multerDiskStorage,
+      fileFilter: multerFileFilter,
+      limits: {
+        fileSize: 25 * 1024 * 1024, // 25 MiB max file size
+        files: 1,
+      },
+    }),
+  )
+  uploadDocument(
+    @Req() req: { actor: RequestActor; requestId?: string },
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: {
+      caseId?: string;
+      title?: string;
+      description?: string;
+      type?: string;
+    },
+  ) {
+    if (!file) {
+      throw new BadRequestException('A file must be uploaded. Use multipart/form-data with field name "file".');
+    }
+
+    if (!body.caseId) {
+      throw new BadRequestException('caseId is required as a form field.');
+    }
+
+    if (!body.title || body.title.trim().length < 3) {
+      throw new BadRequestException('title is required (minimum 3 characters) as a form field.');
+    }
+
+    const docType = (body.type || DocumentType.EVIDENCE) as DocumentType;
+    if (!Object.values(DocumentType).includes(docType)) {
+      throw new BadRequestException(`type must be one of: ${Object.values(DocumentType).join(', ')}`);
+    }
+
+    // Log the successful upload to the application log file
+    appLogger.info('File uploaded via multipart/form-data', {
+      event: 'MULTIPART_UPLOAD_SUCCESS',
+      requestId: (req as any).requestId || '-',
+      actorId: req.actor?.id || '-',
+      actorRole: req.actor?.role || '-',
+      originalName: file.originalname,
+      savedAs: file.filename,
+      mimeType: file.mimetype,
+      sizeBytes: file.size,
+      savedPath: file.path,
+      caseId: body.caseId,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Create document metadata entry in the in-memory store
+    const payload: CreateDocumentDto = {
+      caseId: body.caseId,
+      title: body.title.trim(),
+      description: body.description?.trim(),
+      type: docType,
+      fileName: file.filename,
+      // No base64 content — file is stored on disk
+    };
+
+    const document = this.documentsService.createDocument(req.actor, payload);
+
+    return {
+      data: {
+        ...document,
+        upload: {
+          originalName: file.originalname,
+          savedAs: file.filename,
+          mimeType: file.mimetype,
+          sizeBytes: file.size,
+          storagePath: file.path,
+        },
+      },
+      message: 'File uploaded and document created successfully.',
     };
   }
 
