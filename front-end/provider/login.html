@@ -86,12 +86,6 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      const activeUser = getActiveUser();
-      if (activeUser && activeUser.role === 'provider' && activeUser.isLoggedIn) {
-        window.location.replace('provider_dashboard.html');
-        return;
-      }
-
       const loginForm = document.getElementById('loginForm');
       const loginBtn = document.getElementById('loginBtn');
       const inlineMessage = document.getElementById('inlineMessage');

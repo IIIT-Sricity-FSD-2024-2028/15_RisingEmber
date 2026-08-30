@@ -23,19 +23,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   const itemsPerPage = 4;
 
   function getStatusMeta(status) {
-    if (status === "review") {
+    const s = String(status || "").toLowerCase();
+    if (s === "resolved" || s === "closed") {
+      return {
+        className: "status-dot-pill--resolved",
+        label: "Closed / Resolved",
+        icon: "fa-check"
+      };
+    }
+
+    if (s === "review" || s === "under_review") {
       return {
         className: "status-dot-pill--review",
         label: "Under Review",
         icon: "fa-magnifying-glass"
-      };
-    }
-
-    if (status === "resolved") {
-      return {
-        className: "status-dot-pill--resolved",
-        label: "Resolved",
-        icon: "fa-check"
       };
     }
 
@@ -96,6 +97,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? app.formatDisplayDate(dispute.date, { month: "short", day: "numeric", year: "numeric" })
         : dispute.date;
 
+      const isRespondent = dispute.isCustomerRespondent || dispute.filedBy === 'provider';
+      const hasReply = Boolean(dispute.respondentDescription || dispute.customerReply);
+      const replyBtn = (isRespondent && !hasReply)
+        ? `<a href="reply-dispute.html?id=${encodeURIComponent(dispute.id)}" class="btn btn--primary btn--sm" style="margin-right: 8px;"><i class="fa-solid fa-reply"></i> Reply to Dispute</a>`
+        : '';
+
       const card = document.createElement("div");
       card.className = "card";
       card.style.marginBottom = "16px";
@@ -103,10 +110,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 12px;">
           <div>
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin: 0;">${dispute.service}</h3>
+              <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin: 0;">${dispute.service || dispute.title || 'Service Dispute'}</h3>
               <span style="font-size: 0.75rem; color: var(--text-soft); font-weight: 600;">ID: ${dispute.id}</span>
             </div>
-            <p style="font-size: 0.85rem; color: var(--text-mid); margin: 0;">Provider: <strong>${dispute.provider}</strong> • Booking: ${dispute.bookingId}</p>
+            <p style="font-size: 0.85rem; color: var(--text-mid); margin: 0;">Provider: <strong>${dispute.provider || 'Provider'}</strong> • Booking: ${dispute.bookingId}</p>
           </div>
           <span class="status-dot-pill ${status.className}">
             <i class="fa-solid ${status.icon}" style="margin-right: 4px; font-size: 10px; color: inherit; background: transparent;"></i>
@@ -115,12 +122,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         </div>
 
         <div style="background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 16px;">
-          <p style="font-size: 0.9rem; color: var(--text-dark); line-height: 1.5; margin: 0;">"${dispute.desc}"</p>
+          <p style="font-size: 0.9rem; color: var(--text-dark); line-height: 1.5; margin: 0;">"${dispute.description || dispute.desc || 'Dispute filed'}"</p>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
           <span style="font-size: 0.8rem; color: var(--text-soft); font-weight: 500;"><i class="fa-regular fa-calendar" style="margin-right: 4px;"></i> Filed on ${formattedDate}</span>
-          <button class="btn btn--outline btn--sm btn-view-dispute" data-id="${dispute.id}">View Details</button>
+          <div>
+            ${replyBtn}
+            <button class="btn btn--outline btn--sm btn-view-dispute" data-id="${dispute.id}">View Details</button>
+          </div>
         </div>
       `;
 

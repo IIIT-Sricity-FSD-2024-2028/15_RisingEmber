@@ -70,6 +70,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         ? app.formatDisplayDate(booking.date, { month: "short", day: "numeric", year: "numeric" })
         : booking.date;
 
+      const ratingDisplay = booking.rating
+        ? `<div style="margin-top: 8px; font-size: 0.82rem; color: #F59E0B; font-weight: 700;">
+             <i class="fa-solid fa-star"></i> Rated ${booking.rating}/5 — <span style="color: var(--text-mid); font-weight: 400;">"${booking.review || booking.feedback || 'Great service!'}"</span>
+           </div>`
+        : '';
+
       const card = document.createElement("div");
       card.className = "booking-card";
       card.innerHTML = `
@@ -89,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <p><i class="fa-solid fa-calendar-day"></i> ${formattedDate}</p>
           <p><i class="fa-regular fa-clock"></i> ${booking.time}</p>
           <p><i class="fa-solid fa-location-dot"></i> ${booking.address || "Address not provided"}</p>
+          ${ratingDisplay}
         </div>
         <div class="booking-actions">
           <button class="btn btn--primary btn-view" data-id="${booking.bookingId}">View Details</button>
@@ -96,7 +103,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             booking.status === "Confirmed"
               ? `<button class="btn btn-report btn-cancel" data-id="${booking.bookingId}">Cancel Booking</button>`
               : booking.status === "Completed"
-                ? `<button class="btn btn-report btn-report-issue" data-id="${booking.bookingId}">Report Issue</button>`
+                ? `${!booking.rating ? `<button class="btn btn--outline btn-rate-service" data-id="${booking.bookingId}" style="border-color:#F59E0B; color:#D97706;"><i class="fa-solid fa-star"></i> Rate Service</button>` : ''}
+                   <button class="btn btn-report btn-report-issue" data-id="${booking.bookingId}">Report Issue</button>`
                 : ""
           }
         </div>
@@ -111,6 +119,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const viewButton = event.target.closest(".btn-view");
       const cancelButton = event.target.closest(".btn-cancel");
       const reportButton = event.target.closest(".btn-report-issue");
+      const rateButton = event.target.closest(".btn-rate-service");
 
       if (viewButton) {
         localStorage.setItem("selectedBookingId", viewButton.getAttribute("data-id"));
@@ -132,9 +141,62 @@ document.addEventListener("DOMContentLoaded", async () => {
           localStorage.setItem("pendingDisputeContext", JSON.stringify(booking));
           window.location.href = "raise-dispute.html";
         }
+        return;
+      }
+
+      if (rateButton) {
+        const bookingId = rateButton.getAttribute("data-id");
+        openRatingModal(bookingId);
       }
     });
   }
+
+  window.openRatingModal = function(bookingId) {
+    document.getElementById('rateBookingId').value = bookingId;
+    document.getElementById('ratingModalOverlay').style.opacity = '1';
+    document.getElementById('ratingModalOverlay').style.pointerEvents = 'auto';
+  };
+
+  window.closeRatingModal = function() {
+    document.getElementById('ratingModalOverlay').style.opacity = '0';
+    document.getElementById('ratingModalOverlay').style.pointerEvents = 'none';
+  };
+
+  // Star selector
+  const starBtns = document.querySelectorAll('#starRatingContainer .star-btn');
+  starBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const val = Number(btn.getAttribute('data-val'));
+      document.getElementById('selectedStarValue').value = val;
+      starBtns.forEach((s, idx) => {
+        s.style.color = (idx + 1) <= val ? '#F59E0B' : '#D1D5DB';
+      });
+    });
+  });
+
+  window.handleRatingSubmit = function(event) {
+    event.preventDefault();
+    const bookingId = document.getElementById('rateBookingId').value;
+    const rating = Number(document.getElementById('selectedStarValue').value) || 5;
+    const feedbackText = document.getElementById('ratingFeedbackText').value.trim();
+
+    const targetBooking = allBookings.find(b => b.bookingId === bookingId);
+    if (targetBooking) {
+      targetBooking.rating = rating;
+      targetBooking.review = feedbackText;
+      targetBooking.feedback = feedbackText;
+    }
+
+    // Save to localStorage
+    localStorage.setItem("serviceHub_bookings", JSON.stringify(allBookings));
+    localStorage.setItem("sh_bookings", JSON.stringify(allBookings));
+
+    closeRatingModal();
+    render(document.querySelector(".tab-pill.active")?.getAttribute("data-filter") || "all");
+    if (app && typeof app.showToast === "function") {
+      app.showToast("Thank you for your rating & feedback!", "success");
+    }
+  };
 
   tabs.forEach((tab) => {
     tab.addEventListener("click", () => {

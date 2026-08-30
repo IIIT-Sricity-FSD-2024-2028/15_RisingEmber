@@ -7,61 +7,45 @@
     <link rel="stylesheet" href="/assets/vendor/fontawesome-6.4.0/css/all.min.css">
     <style>
         .arb-dashboard-wrapper { display: flex; min-height: 100vh; }
-        .arb-main { flex: 1; background: #F9FAFB; }
-        .arb-content { padding: 40px; max-width: 1200px; margin: 0 auto; }
+        .arb-main { flex: 1; background: #F4F6FB; }
+        .arb-content { padding: 40px; max-width: 1100px; margin: 0 auto; }
 
-        /* Profile Header Card */
         .profile-card {
-            background: white; border: 1px solid #E5E7EB; border-radius: 12px;
+            background: white; border: 1px solid #E8ECF4; border-radius: 16px;
             padding: 30px; display: flex; align-items: center; justify-content: space-between;
-            margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
         .profile-info { display: flex; align-items: center; gap: 25px; }
-        .profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 4px solid #F3F4F6; }
-        .profile-details h2 { font-size: 1.5rem; color: #111827; margin-bottom: 4px; }
-        .profile-details .title { color: #1E40AF; font-weight: 600; font-size: 0.95rem; margin-bottom: 12px; }
-        .contact-meta { display: flex; gap: 20px; color: #6B7280; font-size: 0.85rem; }
+        .profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #EEF2FF; }
+        .profile-details h2 { font-size: 1.5rem; color: #111827; margin-bottom: 4px; font-weight: 800; }
+        .profile-details .title { color: #2F54EB; font-weight: 600; font-size: 0.95rem; margin-bottom: 12px; }
+        .contact-meta { display: flex; flex-wrap: wrap; gap: 20px; color: #4B5563; font-size: 0.85rem; }
         .contact-meta span { display: flex; align-items: center; gap: 6px; }
 
-        /* Section Cards */
         .section-card {
-            background: white; border: 1px solid #E5E7EB; border-radius: 12px;
-            padding: 30px; margin-bottom: 25px;
+            background: white; border: 1px solid #E8ECF4; border-radius: 16px;
+            padding: 30px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);
         }
-        .section-card h3 { font-size: 1rem; font-weight: 700; color: #111827; margin-bottom: 20px; }
+        .section-card h3 { font-size: 1.05rem; font-weight: 700; color: #111827; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 
-        /* Credential Items */
-        .cred-item {
-            display: flex; align-items: center; gap: 15px; padding: 15px;
-            background: #F9FAFB; border-radius: 8px; margin-bottom: 12px;
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .form-group-full { grid-column: 1 / -1; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 0.85rem; font-weight: 600; color: #111827; }
+        .form-group input, .form-group textarea, .form-group select {
+            font-family: inherit; font-size: 0.9rem; color: #111827; background: #FFFFFF;
+            border: 1px solid #E8ECF4; border-radius: 8px; padding: 12px 16px; outline: none; transition: border-color 0.2s; width: 100%;
         }
-        .cred-icon { 
-            width: 40px; height: 40px; border-radius: 50%; display: flex; 
-            align-items: center; justify-content: center; color: white; font-size: 1rem;
-        }
-        .cred-info h4 { font-size: 0.9rem; color: #111827; }
-        .cred-info p { font-size: 0.8rem; color: #6B7280; }
+        .form-group input:focus, .form-group textarea:focus { border-color: #2F54EB; }
 
-        /* Expertise Tags */
-        .expertise-container { display: flex; flex-wrap: wrap; gap: 10px; }
-        .tag { 
-            background: #EFF6FF; color: #1E40AF; padding: 6px 14px; 
-            border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid #DBEAFE;
-        }
+        .btn-primary-action { background: #2F54EB; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: background 0.2s; }
+        .btn-primary-action:hover { background: #1D3FBF; }
+        .btn-secondary-action { background: #EEF2FF; color: #2F54EB; border: 1px solid #C7D2FE; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
 
-        /* Document List */
         .doc-item {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 15px; border: 1px solid #F3F4F6; border-radius: 8px; margin-bottom: 10px;
+            padding: 15px; border: 1px solid #E8ECF4; border-radius: 8px; margin-bottom: 10px; background: #FAFAFC;
         }
-        .doc-meta { display: flex; align-items: center; gap: 12px; }
-        .doc-icon { width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
-        .doc-actions { display: flex; gap: 15px; color: #9CA3AF; cursor: pointer; }
-        .doc-actions i:hover { color: #1E40AF; }
-
-        /* Functional Buttons */
-        .btn-edit { background: #1E3A8A; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .btn-upload { background: #D97706; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
     </style>
 </head>
 <body>
@@ -73,28 +57,86 @@
 
             <div class="arb-content">
                 <header style="margin-bottom: 30px;">
-                    <h1 style="font-size: 1.8rem; font-weight: 800; color: #111827;">Arbitrator Profile</h1>
-                    <p style="color: #6B7280;">Manage your professional information and arbitration credentials.</p>
+                    <h1 style="font-size: 1.8rem; font-weight: 800; color: #111827;">Arbitrator Profile & Settings</h1>
+                    <p style="color: #4B5563;">Manage your account details, professional information, and security preferences.</p>
                 </header>
 
                 <div class="profile-card" id="profileCard"></div>
 
+                <!-- Account & Professional Details Form -->
                 <div class="section-card">
-                    <h3>Professional Credentials</h3>
-                    <div id="credentialsList"></div>
+                    <h3><i class="fa-solid fa-user-gear" style="color: #2F54EB;"></i> Account & Professional Information</h3>
+                    <form id="profileForm" onsubmit="handleSaveProfile(event)">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="profName" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" id="profEmail" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="text" id="profPhone" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Location</label>
+                                <input type="text" id="profLocation" required />
+                            </div>
+                            <div class="form-group form-group-full">
+                                <label>Title / Category</label>
+                                <input type="text" id="profTitle" placeholder="e.g. Consumer Services Specialist" required />
+                            </div>
+                            <div class="form-group form-group-full">
+                                <label>Professional Credentials (comma separated)</label>
+                                <input type="text" id="profCredentials" placeholder="e.g. Certified Consumer Arbitrator, LLM Commercial Law" />
+                            </div>
+                            <div class="form-group form-group-full">
+                                <label>Areas of Expertise (comma separated)</label>
+                                <input type="text" id="profExpertise" placeholder="e.g. Home Services, Service Quality, Payment Disputes" />
+                            </div>
+                            <div class="form-group form-group-full">
+                                <label>Professional Bio</label>
+                                <textarea id="profBio" rows="3" placeholder="Brief description of your arbitration experience..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-action" id="saveProfileBtn">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Profile Changes
+                        </button>
+                    </form>
                 </div>
 
+                <!-- Security & Password Form -->
                 <div class="section-card">
-                    <h3>Areas of Expertise</h3>
-                    <div class="expertise-container" id="expertiseList"></div>
+                    <h3><i class="fa-solid fa-lock" style="color: #2F54EB;"></i> Security & Password</h3>
+                    <form id="passwordForm" onsubmit="handleUpdatePassword(event)">
+                        <div class="form-grid">
+                            <div class="form-group form-group-full">
+                                <label>Current Password</label>
+                                <input type="password" id="currentPass" placeholder="Enter current password" required />
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" id="newPass" placeholder="8+ chars with letters, numbers & symbols" required />
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" id="confirmPass" placeholder="Re-enter new password" required />
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary-action" id="updatePassBtn" style="background: #111827;">
+                            <i class="fa-solid fa-key"></i> Update Password
+                        </button>
+                    </form>
                 </div>
 
+                <!-- Documents Section -->
                 <div class="section-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3>Uploaded Documents</h3>
-                        <button class="btn-upload" onclick="triggerUpload()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Document</button>
+                        <h3><i class="fa-solid fa-folder-open" style="color: #2F54EB;"></i> Uploaded Credentials & Documents</h3>
+                        <button class="btn-secondary-action" onclick="triggerUpload()"><i class="fa-solid fa-cloud-arrow-up"></i> Upload Document</button>
                     </div>
-
                     <div id="documentList"></div>
                 </div>
             </div>
@@ -112,10 +154,6 @@
     <script src="arbitrator_sidebar.js"></script>
     <script src="arbitrator_navbar.js"></script>
     <script>
-        function editProfile() {
-            window.location.href = 'arbitrator_settings.html';
-        }
-
         function triggerUpload() {
             document.getElementById('profileFileUpload').click();
         }
@@ -123,8 +161,8 @@
         function handleFileUpload(input) {
             if (input.files && input.files[0]) {
                 const selectedFile = input.files[0];
-
-                ArbitratorData.profileDocuments.unshift({
+                if (!window.ArbitratorData.profileDocuments) window.ArbitratorData.profileDocuments = [];
+                window.ArbitratorData.profileDocuments.unshift({
                     id: `profile-doc-${Date.now()}`,
                     name: selectedFile.name,
                     size: createArbitratorFileSizeLabel(selectedFile.size),
@@ -133,98 +171,143 @@
                 });
 
                 saveData();
-                loadProfile();
+                renderProfileView();
                 window.showAppToast("Document '" + selectedFile.name + "' uploaded successfully!", "success");
                 input.value = '';
             }
         }
 
-        function loadProfile() {
-            if (!guardArbitratorPage() || typeof ArbitratorData === 'undefined') return;
-            const profile = ArbitratorData.profile;
+        function renderProfileView() {
+            if (!window.ArbitratorData || !window.ArbitratorData.profile) return;
+            const p = window.ArbitratorData.profile;
 
-            // Profile card
-            const profileCard = document.getElementById('profileCard');
-            if (profileCard) {
-                profileCard.innerHTML = `
+            // Render Header Card
+            const card = document.getElementById('profileCard');
+            if (card) {
+                card.innerHTML = `
                     <div class="profile-info">
-                        <img src="${profile.avatar}" alt="${profile.name}" class="profile-img">
+                        <img src="${p.avatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(p.name || 'Arbitrator') + '&background=2F54EB&color=fff'}" class="profile-img">
                         <div class="profile-details">
-                            <h2 id="userName">${profile.name}</h2>
-                            <p class="title">${profile.title}</p>
+                            <h2>${p.name || 'Kabir Malhotra'}</h2>
+                            <p class="title">${p.title || 'Consumer Services Specialist'}</p>
                             <div class="contact-meta">
-                                <span><i class="fa-solid fa-envelope"></i> ${profile.email}</span>
-                                <span><i class="fa-solid fa-phone"></i> ${profile.phone}</span>
-                                <span><i class="fa-solid fa-location-dot"></i> ${profile.location}</span>
+                                <span><i class="fa-solid fa-envelope"></i> ${p.email || 'kabir@gmail.com'}</span>
+                                <span><i class="fa-solid fa-phone"></i> ${p.phone || '9999999996'}</span>
+                                <span><i class="fa-solid fa-location-dot"></i> ${p.location || 'Mumbai, India'}</span>
                             </div>
                         </div>
                     </div>
-                    <button class="btn-edit" onclick="editProfile()"><i class="fa-solid fa-pen-to-square"></i> Edit Profile</button>
                 `;
             }
 
-            // Credentials - static credentials based on profile
-            const credentialsList = document.getElementById('credentialsList');
-            if (credentialsList) {
-                const credentials = Array.isArray(profile.credentials) ? profile.credentials : [];
-                if (!credentials.length) {
-                    credentialsList.innerHTML = '<div style="color: #6B7280; font-size: 0.9rem;">No credentials added yet.</div>';
+            // Populate Form Fields
+            document.getElementById('profName').value = p.name || 'Kabir Malhotra';
+            document.getElementById('profEmail').value = p.email || 'kabir@gmail.com';
+            document.getElementById('profPhone').value = p.phone || '9999999996';
+            document.getElementById('profLocation').value = p.location || 'Mumbai, India';
+            document.getElementById('profTitle').value = p.title || 'Consumer Services Specialist';
+            
+            const creds = Array.isArray(p.credentials) ? p.credentials.map(c => typeof c === 'string' ? c : (c.title || '')).filter(Boolean) : [];
+            document.getElementById('profCredentials').value = creds.join(', ') || 'Certified Consumer Arbitrator, LLM Commercial Law';
+
+            const exps = Array.isArray(p.expertise) ? p.expertise : [];
+            document.getElementById('profExpertise').value = exps.join(', ') || 'Home Services, Service Quality, Payment Disputes';
+            document.getElementById('profBio').value = p.bio || 'Neutral arbitrator specializing in consumer service contracts and quality disputes.';
+
+            // Render Document List
+            const docList = document.getElementById('documentList');
+            if (docList) {
+                const docs = window.ArbitratorData.profileDocuments || [];
+                if (!docs.length) {
+                    docList.innerHTML = '<div style="padding: 20px; color: #9CA3AF; text-align: center;">No documents uploaded yet.</div>';
                 } else {
-                    credentialsList.innerHTML = credentials.map(cred => `
-                    <div class="cred-item">
-                        <div class="cred-icon" style="background: #1E3A8A;"><i class="fa-solid fa-certificate"></i></div>
-                        <div class="cred-info">
-                            <h4>${cred.title}</h4>
-                            <p>${cred.institution}</p>
+                    docList.innerHTML = docs.map(doc => `
+                        <div class="doc-item">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <i class="fa-solid fa-file-pdf" style="color: #EF4444; font-size: 20px;"></i>
+                                <div>
+                                    <strong style="font-size: 0.9rem; color: #111827; display: block;">${doc.name}</strong>
+                                    <span style="font-size: 0.75rem; color: #6B7280;">${doc.size || '1.2 MB'} • ${doc.uploadedAt || 'Recently'}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; color: #4B5563; cursor: pointer;">
+                                <i class="fa-solid fa-download" title="Download" onclick="window.showAppToast('Downloading ${doc.name}', 'info')"></i>
+                            </div>
                         </div>
-                    </div>
                     `).join('');
                 }
             }
+        }
 
-            // Expertise tags
-            const expertiseList = document.getElementById('expertiseList');
-            if (expertiseList) {
-                const expertise = Array.isArray(profile.expertise) ? profile.expertise : [];
-                if (!expertise.length) {
-                    expertiseList.innerHTML = '<div style="color: #6B7280; font-size: 0.9rem;">No expertise added yet.</div>';
-                } else {
-                    expertiseList.innerHTML = expertise.map(tag =>
-                        `<span class="tag">${tag}</span>`
-                    ).join('');
-                }
+        async function handleSaveProfile(event) {
+            event.preventDefault();
+            const btn = document.getElementById('saveProfileBtn');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Saving...';
+
+            try {
+                const p = window.ArbitratorData.profile;
+                p.name = document.getElementById('profName').value.trim();
+                p.email = document.getElementById('profEmail').value.trim();
+                p.phone = document.getElementById('profPhone').value.trim();
+                p.location = document.getElementById('profLocation').value.trim();
+                p.title = document.getElementById('profTitle').value.trim();
+                p.bio = document.getElementById('profBio').value.trim();
+
+                const credStr = document.getElementById('profCredentials').value.trim();
+                p.credentials = credStr ? credStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+                const expStr = document.getElementById('profExpertise').value.trim();
+                p.expertise = expStr ? expStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+
+                saveData();
+                syncArbitratorSessionWithProfile();
+                renderProfileView();
+                window.showAppToast("Profile updated and saved successfully!", "success");
+            } catch (err) {
+                window.showAppToast("Failed to save profile: " + err.message, "error");
+            } finally {
+                btn.innerHTML = orig;
+            }
+        }
+
+        async function handleUpdatePassword(event) {
+            event.preventDefault();
+            const curPass = document.getElementById('currentPass').value;
+            const newPass = document.getElementById('newPass').value;
+            const confPass = document.getElementById('confirmPass').value;
+
+            if (newPass !== confPass) {
+                window.showAppToast("New passwords do not match. Please re-enter.", "warning");
+                return;
             }
 
-            // Document list - static sample
-            const documentList = document.getElementById('documentList');
-            if (documentList) {
-                const profileDocuments = Array.isArray(ArbitratorData.profileDocuments) ? ArbitratorData.profileDocuments : [];
-                if (!profileDocuments.length) {
-                    documentList.innerHTML = '<div style="padding: 20px; color: #9CA3AF; text-align: center;">No profile documents uploaded yet.</div>';
-                    return;
-                }
+            if (newPass.length < 8) {
+                window.showAppToast("Password must be at least 8 characters long.", "warning");
+                return;
+            }
 
-                documentList.innerHTML = profileDocuments.map((doc) => `
-                    <div class="doc-item">
-                        <div class="doc-meta">
-                            <div class="doc-icon" style="background: #FEE2E2; color: #EF4444;"><i class="fa-solid fa-file-pdf"></i></div>
-                            <div>
-                                <p style="font-size: 0.9rem; font-weight: 600;">${doc.name}</p>
-                                <p style="font-size: 0.75rem; color: #9CA3AF;">${doc.size} • ${doc.uploadedAt}</p>
-                            </div>
-                        </div>
-                        <div class="doc-actions">
-                            <i class="fa-solid fa-eye" title="View"></i>
-                            <i class="fa-solid fa-download" title="Download"></i>
-                        </div>
-                    </div>
-                `).join('');
+            const btn = document.getElementById('updatePassBtn');
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
+
+            try {
+                if (window.ArbitratorData.auth) {
+                    window.ArbitratorData.auth.password = newPass;
+                }
+                saveData();
+                document.getElementById('passwordForm').reset();
+                window.showAppToast("Password changed successfully!", "success");
+            } catch (err) {
+                window.showAppToast(err.message, "error");
+            } finally {
+                btn.innerHTML = orig;
             }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.ArbitratorDataReady) await window.ArbitratorDataReady;
-            loadProfile();
+            renderProfileView();
         });
     </script>
 </body>

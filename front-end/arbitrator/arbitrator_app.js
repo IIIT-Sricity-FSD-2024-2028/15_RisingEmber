@@ -68,7 +68,17 @@ function redirectToArbitratorLogin() {
 }
 
 function redirectToArbitratorLanding() {
-    window.location.replace("arbitrator_landing.html");
+    window.location.replace("../Landing_Page/index.html");
+}
+
+function logoutArbitrator() {
+    if (typeof logoutUser === "function") {
+        logoutUser();
+    } else {
+        localStorage.removeItem("arbitrator_session");
+        localStorage.removeItem("active_user");
+    }
+    window.location.replace("../Landing_Page/index.html");
 }
 
 function getApplicationStepUrl(stepNumber) {
@@ -163,8 +173,16 @@ function getArbitratorApplicationRoute() {
 }
 
 function goToArbitratorApplication() {
+    localStorage.removeItem("sh_arbitrator_auth");
     if (typeof beginNewArbitratorApplication === "function") {
         beginNewArbitratorApplication();
+    } else if (window.ArbitratorData) {
+        window.ArbitratorData.registration = {
+            isComplete: false,
+            lastStep: 0,
+            formData: {}
+        };
+        if (typeof saveData === "function") saveData();
     }
 
     window.location.href = getApplicationStepUrl(1);
@@ -175,6 +193,7 @@ function resumeArbitratorApplication() {
 }
 
 function ensureApplicationStep(stepNumber) {
+    if (stepNumber === 1) return true;
     const registration = getArbitratorRegistration();
 
     if (!registration) {
@@ -193,26 +212,11 @@ function ensureApplicationStep(stepNumber) {
 }
 
 function guardArbitratorPage() {
-    const registration = getArbitratorRegistration();
-    if (!registration || registration.isComplete !== true) {
-        redirectToArbitratorLanding();
-        return false;
-    }
-
-    const activeSession = typeof getActiveSession === "function" ? getActiveSession() : null;
-    const activeUser = getLoggedInArbitrator();
-
-    if (
-        !activeSession ||
-        !activeUser ||
-        activeSession.isLoggedIn !== true ||
-        activeSession.role !== "arbitrator" ||
-        activeUser.role !== "arbitrator"
-    ) {
+    const user = getLoggedInArbitrator();
+    if (!user) {
         redirectToArbitratorLogin();
         return false;
     }
-
     syncArbitratorSessionWithProfile();
     return true;
 }

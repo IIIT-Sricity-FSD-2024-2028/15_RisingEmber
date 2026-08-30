@@ -76,30 +76,31 @@
             <label>Issue Category <span class="req">*</span></label>
             <select id="disputeCategory" required>
               <option value="" disabled selected>Select an issue category</option>
-              <option value="incomplete">Service Not Completed</option>
-              <option value="quality">Poor Quality of Work</option>
-              <option value="noshow">Professional No-Show</option>
-              <option value="overcharged">Overcharged</option>
-              <option value="billing">Billing Issue</option>
-              <option value="other">Other</option>
+              <option value="Poor Service Quality">Poor Service Quality</option>
+              <option value="Service Not Completed">Service Not Completed</option>
+              <option value="Provider Behaviour">Provider Behaviour</option>
+              <option value="Billing or Payment Issue">Billing or Payment Issue</option>
+              <option value="Incorrect Charges">Incorrect Charges</option>
+              <option value="Refund Issue">Refund Issue</option>
+              <option value="Booking Issue">Booking Issue</option>
+              <option value="Other">Other</option>
             </select>
           </div>
 
           <div class="input-row">
             <label>Issue Description <span class="req">*</span></label>
             <textarea id="disputeDescription" placeholder="Please describe the issue in detail..." required></textarea>
-            <span class="char-limit">Minimum 50 characters</span>
             <span class="char-limit" id="descriptionCounter">0/1000 characters</span>
           </div>
 
           <div class="input-row">
-            <label>Upload Evidence (Optional)</label>
-            <input type="file" id="disputeEvidence" accept=".png,.jpg,.jpeg,.pdf" multiple hidden />
+            <label>Upload Evidence PDF (Optional)</label>
+            <input type="file" id="disputeEvidence" accept=".pdf" multiple hidden />
             <div class="file-upload-zone" id="disputeUploadZone" style="padding: 32px 20px;">
-              <div class="file-upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+              <div class="file-upload-icon"><i class="fa-solid fa-file-pdf" style="color: var(--red);"></i></div>
               <div class="file-upload-text">
-                <strong style="color: var(--primary);">Click to upload or drag and drop</strong>
-                <span>PNG, JPG, PDF up to 10MB</span>
+                <strong style="color: var(--primary);">Click to upload PDF evidence or drag and drop</strong>
+                <span>PDF documents only (up to 10MB)</span>
               </div>
             </div>
             <div id="selectedFilesList" class="customer-file-list"></div>

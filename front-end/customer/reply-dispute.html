@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Reply to Dispute</title>
+
+  <link href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="/assets/vendor/fontawesome-6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .reply-container { max-width: 820px; }
+    .form-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow-sm); }
+    .input-row { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+    .input-row label { font-size: 0.85rem; font-weight: 600; color: var(--text-dark); }
+    .input-row label .req { color: var(--red); }
+    .input-row input, .input-row textarea { width: 100%; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: var(--font); font-size: 0.9rem; color: var(--text-dark); background: var(--surface); outline: none; transition: border-color 0.2s; }
+    .input-row input:focus, .input-row textarea:focus { border-color: var(--primary); }
+    .input-row textarea { min-height: 140px; resize: vertical; }
+
+    .claimant-card { background: #F9FAFB; border: 1px solid #E5E7EB; border-left: 4px solid var(--primary); padding: 20px; border-radius: var(--radius-sm); margin-bottom: 24px; }
+    .claimant-card h4 { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+    .claimant-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; margin: 0; }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Customer&background=2F54EB&color=fff" alt="Customer" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="customer_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="browse-services.html"    class="sidebar__link"><i class="fa-solid fa-magnifying-glass"></i><span>Browse Services</span></a>
+        <a href="my-bookings.html"        class="sidebar__link"><i class="fa-regular fa-calendar-check"></i><span>My Bookings</span></a>
+        <a href="disputes.html"           class="sidebar__link active"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="reply-container">
+        <div class="page-header" style="margin-bottom: 24px;">
+          <h1><i class="fa-solid fa-reply" style="color: var(--primary);"></i> Reply to Dispute</h1>
+          <p id="replyHeaderSubtitle">Submit your written response and PDF evidence for arbitrator evaluation.</p>
+        </div>
+
+        <div class="claimant-card">
+          <h4><i class="fa-solid fa-store"></i> Provider Complaint Summary</h4>
+          <p id="replyClaimantSummary">Loading dispute details...</p>
+        </div>
+
+        <form id="customerReplyForm" class="form-box" onsubmit="handleCustomerReplyPageSubmit(event)">
+          <div id="replyFormMessage" class="form-feedback"></div>
+
+          <div class="input-row">
+            <label>Dispute Reference ID</label>
+            <input type="text" id="replyDisputeIdInput" readonly style="background: #F9FAFB; color: var(--text-soft);" />
+          </div>
+
+          <div class="input-row">
+            <label>Your Written Reply / Defense Description <span class="req">*</span></label>
+            <textarea id="replyDescriptionInput" placeholder="Explain your side of the dispute in detail..." required></textarea>
+          </div>
+
+          <div class="input-row">
+            <label>Upload Evidence PDF Document (Optional)</label>
+            <input type="file" id="replyEvidencePdf" accept=".pdf" multiple style="padding: 10px; border: 1px dashed var(--primary); border-radius: 8px; background: #F4F6FF;" />
+            <span style="font-size: 0.78rem; color: var(--text-soft); margin-top: 4px;">Only PDF document files (up to 10MB) are accepted as evidence.</span>
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 16px; margin-top: 32px;">
+            <a href="disputes.html" class="btn btn--outline" style="padding: 12px 24px;">Cancel</a>
+            <button type="submit" class="btn btn--primary" id="submitReplyPageBtn" style="padding: 12px 32px;"><i class="fa-solid fa-paper-plane"></i> Submit Written Reply & PDF Evidence</button>
+          </div>
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/backendData.js"></script>
+  <script src="assets/js/app.js"></script>
+  <script>
+    let currentTargetDispute = null;
+
+    function showSafeNotification(msg, type = 'info') {
+      if (window.CustomerApp && typeof window.CustomerApp.showToast === 'function') {
+        window.CustomerApp.showToast(msg, type);
+      } else if (typeof window.showAppToast === 'function') {
+        window.showAppToast(msg, type);
+      } else {
+        alert(msg);
+      }
+    }
+
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve) => {
+        if (!file) { resolve(null); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const disputeId = params.get('id') || localStorage.getItem('replyDisputeId');
+
+      let disputesDB = JSON.parse(localStorage.getItem('sh_disputes') || '[]');
+      if (!Array.isArray(disputesDB) || !disputesDB.length) {
+        disputesDB = JSON.parse(localStorage.getItem('serviceHub_disputes') || '[]');
+      }
+
+      currentTargetDispute = disputesDB.find(d => String(d.id) === String(disputeId)) || disputesDB[0];
+
+      if (currentTargetDispute) {
+        document.getElementById('replyDisputeIdInput').value = currentTargetDispute.id;
+        document.getElementById('replyClaimantSummary').textContent = `Provider (${currentTargetDispute.provider || 'Provider'}): "${currentTargetDispute.description || currentTargetDispute.desc || currentTargetDispute.issue || 'Service Dispute'}"`;
+      }
+    });
+
+    async function handleCustomerReplyPageSubmit(event) {
+      event.preventDefault();
+      const disputeId = document.getElementById('replyDisputeIdInput').value;
+      const text = document.getElementById('replyDescriptionInput').value.trim();
+      const filesInput = document.getElementById('replyEvidencePdf');
+
+      if (!text) {
+        showSafeNotification("Please enter your written response.", "warning");
+        return;
+      }
+
+      const btn = document.getElementById('submitReplyPageBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+      btn.style.pointerEvents = 'none';
+
+      try {
+        const fileList = filesInput && filesInput.files ? Array.from(filesInput.files) : [];
+        const evidenceArr = [];
+
+        for (const f of fileList) {
+          const base64Url = await readFileAsDataUrl(f);
+          evidenceArr.push({
+            name: f.name,
+            size: f.size,
+            type: "application/pdf",
+            url: base64Url || URL.createObjectURL(f),
+            fileLink: base64Url || URL.createObjectURL(f),
+            uploadedAt: new Date().toLocaleDateString()
+          });
+        }
+
+        // 1. Sync backend API if reachable
+        if (typeof requestServiceHubApi === 'function') {
+          try {
+            await requestServiceHubApi('/cases/' + disputeId, {
+              method: 'PATCH',
+              body: { respondentDescription: text, status: 'under_review' }
+            });
+          } catch (apiErr) {
+            console.warn("Backend API sync warning:", apiErr);
+          }
+        }
+
+        // 2. Sync all local storage dispute lists
+        const disputeKeys = ['sh_disputes', 'serviceHub_disputes'];
+        disputeKeys.forEach(key => {
+          let list = JSON.parse(localStorage.getItem(key) || '[]');
+          if (!Array.isArray(list)) list = [];
+          
+          let match = list.find(d => String(d.id) === String(disputeId) || String(d.bookingId) === String(currentTargetDispute?.bookingId));
+          if (match) {
+            match.respondentDescription = text;
+            match.customerReply = text;
+            match.respondentEvidence = evidenceArr;
+            match.status = 'under_review';
+          } else if (currentTargetDispute) {
+            list.unshift({
+              ...currentTargetDispute,
+              respondentDescription: text,
+              customerReply: text,
+              respondentEvidence: evidenceArr,
+              status: 'under_review'
+            });
+          }
+          localStorage.setItem(key, JSON.stringify(list));
+        });
+
+        // 3. Sync Arbitrator workspace DB & documents
+        let arbDb = JSON.parse(localStorage.getItem('arbitrator_db') || '{}');
+        if (!arbDb.assignedCases) arbDb.assignedCases = [];
+        if (!arbDb.caseDocuments) arbDb.caseDocuments = [];
+
+        let caseMatch = arbDb.assignedCases.find(c => String(c.id) === String(disputeId) || String(c.bookingId) === String(currentTargetDispute?.bookingId));
+        if (caseMatch) {
+          caseMatch.respondentDescription = text;
+          caseMatch.respondentEvidence = evidenceArr;
+          caseMatch.status = 'Under Review';
+        } else if (currentTargetDispute) {
+          arbDb.assignedCases.unshift({
+            id: disputeId || 'CASE-20491',
+            bookingId: currentTargetDispute.bookingId || 'booking_8001',
+            type: currentTargetDispute.service || 'Service Dispute',
+            claimant: currentTargetDispute.provider || 'Provider',
+            respondent: currentTargetDispute.customerName || 'Customer',
+            description: currentTargetDispute.description || currentTargetDispute.desc || 'Service Dispute',
+            respondentDescription: text,
+            respondentEvidence: evidenceArr,
+            status: 'Under Review',
+            assigned: new Date().toLocaleDateString()
+          });
+        }
+
+        evidenceArr.forEach(doc => {
+          arbDb.caseDocuments.unshift({
+            id: disputeId || 'CASE-20491',
+            name: doc.name,
+            uploadedBy: 'Customer (Respondent)',
+            date: new Date().toLocaleDateString(),
+            type: 'Respondent Evidence PDF',
+            fileLink: doc.fileLink
+          });
+        });
+
+        localStorage.setItem('arbitrator_db', JSON.stringify(arbDb));
+
+        showSafeNotification("Your written reply and PDF evidence have been submitted successfully!", "success");
+        setTimeout(() => {
+          window.location.href = "disputes.html";
+        }, 800);
+      } catch (err) {
+        showSafeNotification(err.message || "An error occurred while submitting.", "error");
+        btn.innerHTML = orig;
+        btn.style.pointerEvents = 'auto';
+      }
+    }
+  </script>
+</body>
+</html>

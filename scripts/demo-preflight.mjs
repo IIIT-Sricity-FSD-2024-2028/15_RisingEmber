@@ -138,7 +138,7 @@ async function checkBackendAndFrontend() {
     const response = await fetchWithTimeout(`${apiBaseUrl}/session/login`, {
       method: 'POST',
       headers: { 'content-type': 'application/json', 'x-request-id': 'demo-preflight-login' },
-      body: JSON.stringify({ role: 'customer', email: 'aarav@servicehub.test', password: 'customer123' }),
+      body: JSON.stringify({ role: 'customer', email: 'aarav@gmail.com', password: '123456Ab@' }),
     });
     const body = await readJson(response);
     if (!response.ok || body?.data?.actorId !== 'user_2001' || body?.data?.role !== 'customer') {

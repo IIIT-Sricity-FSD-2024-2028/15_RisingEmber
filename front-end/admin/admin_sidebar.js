@@ -37,18 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <i class="fa-solid fa-award"></i> Awards
             </a>
 
-            <a href="admin_messages.html" class="nav-item ${isIn('admin_messages.html') ? 'active' : ''}">
-                <i class="fa-solid fa-message"></i> Messages
-            </a>
-
             <div class="nav-divider"></div>
 
             <a href="admin_reports.html" class="nav-item ${isIn('admin_reports.html') ? 'active' : ''}">
                 <i class="fa-solid fa-file-invoice-dollar"></i> Reports
-            </a>
-
-            <a href="admin_settings.html" class="nav-item ${isIn('admin_settings.html') ? 'active' : ''}">
-                <i class="fa-solid fa-gear"></i> Settings
             </a>
 
             <a href="admin_profile.html" class="nav-item ${isIn('admin_profile.html') ? 'active' : ''}">

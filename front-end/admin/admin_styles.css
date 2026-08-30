@@ -1,22 +1,24 @@
+@import url('/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css');
+
 /* --- GLOBAL VARIABLES & RESET --- */
 :root {
-    --admin-dark: #0f172a;
-    --admin-accent: #2563eb;
-    --admin-text-gray: #94a3b8;
-    --admin-border: #e2e8f0;
-    --main-bg: #f8fafc;
-    --text-main: #1e293b;
+    --admin-dark: #111827;
+    --admin-accent: #2F54EB;
+    --admin-text-gray: #4B5563;
+    --admin-border: #E8ECF4;
+    --main-bg: #F4F6FB;
+    --text-main: #111827;
     --side-bg: #ffffff;
     --white: #ffffff;
-    --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.1);
-    --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    --shadow-sm: 0 4px 6px -1px rgba(0,0,0,0.05);
+    --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
 }
 
 * { 
     margin: 0; 
     padding: 0; 
     box-sizing: border-box; 
-    font-family: 'Inter', -apple-system, sans-serif; 
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif; 
 }
 
 body { 

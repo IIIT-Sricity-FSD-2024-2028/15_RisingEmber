@@ -183,6 +183,41 @@
           </div>
 
           <div class="form-group">
+            <label>Service Category</label>
+            <select id="category" style="font-family: var(--font); font-size: 0.9rem; color: var(--text-dark); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; outline: none; width: 100%;" required>
+              <option value="" disabled selected>Select primary category</option>
+              <option value="Home Cleaning">Home Cleaning</option>
+              <option value="Appliance Repair">Appliance Repair</option>
+              <option value="Plumbing Repair">Plumbing Repair</option>
+              <option value="Electrical Service">Electrical Service</option>
+              <option value="Carpentry">Carpentry</option>
+              <option value="Tutoring">Tutoring</option>
+              <option value="General Services">General Services</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Years of Experience</label>
+            <select id="experience" style="font-family: var(--font); font-size: 0.9rem; color: var(--text-dark); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; outline: none; width: 100%;" required>
+              <option value="" disabled selected>Select experience level</option>
+              <option value="1 – 2 years">1 – 2 years</option>
+              <option value="3 – 5 years">3 – 5 years</option>
+              <option value="6 – 10 years">6 – 10 years</option>
+              <option value="10+ years">10+ years</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Location / Service Area</label>
+            <input type="text" id="location" placeholder="E.g., Mumbai & Navi Mumbai" required />
+          </div>
+
+          <div class="form-group">
+            <label>Short Professional Bio</label>
+            <textarea id="bio" placeholder="Describe your experience and specialties..." required style="font-family: var(--font); font-size: 0.9rem; color: var(--text-dark); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; outline: none; width: 100%; min-height: 80px; resize: vertical;"></textarea>
+          </div>
+
+          <div class="form-group">
             <label>Password</label>
             <div class="password-input-wrapper">
               <input type="password" id="signupPassword" placeholder="Create a password" required />
@@ -282,6 +317,10 @@
         const fullName = document.getElementById('fullName').value.trim();
         const email = document.getElementById('email').value.trim();
         const phone = document.getElementById('phone').value.trim();
+        const category = document.getElementById('category').value;
+        const experience = document.getElementById('experience').value;
+        const location = document.getElementById('location').value.trim();
+        const bio = document.getElementById('bio').value.trim();
         const pass = document.getElementById('signupPassword').value;
         const confPass = document.getElementById('confirmPassword').value;
 
@@ -296,7 +335,7 @@
         submitBtn.style.pointerEvents = 'none';
 
         try {
-          await providerSignup(fullName, email, phone, pass);
+          await providerSignup(fullName, email, phone, pass, category, experience, location, bio);
           window.location.replace('provider_dashboard.html');
         } catch (err) {
           showAppToast(err.message, 'error');
