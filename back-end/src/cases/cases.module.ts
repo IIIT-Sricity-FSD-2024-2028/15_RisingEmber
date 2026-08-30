@@ -24,13 +24,17 @@ class CreateCaseDto {
   bookingId!: string;
 
   @IsString()
-  @MinLength(5)
+  @MinLength(2)
   title!: string;
 
   @IsString()
-  @MinLength(10)
+  @MinLength(1)
   @MaxLength(2000)
   description!: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
 
   @IsOptional()
   @IsEnum({ low: 'low', medium: 'medium', high: 'high' })
@@ -50,6 +54,11 @@ class UpdateCaseDto {
   @IsString()
   @MaxLength(2000)
   message?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(4000)
+  respondentDescription?: string;
 
   @IsOptional()
   @IsString()

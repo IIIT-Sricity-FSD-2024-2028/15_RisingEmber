@@ -127,4 +127,47 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.location.href = 'service-details.html';
         });
     }
+
+    // ==========================================
+    // 4. DYNAMIC RECENT BOOKINGS
+    // ==========================================
+    function renderRecentBookings() {
+        const recentList = document.getElementById('recent-bookings-list');
+        if (!recentList) return;
+
+        const bookings = app && typeof app.getCustomerBookings === 'function'
+            ? app.getCustomerBookings()
+            : (JSON.parse(localStorage.getItem('serviceHub_bookings')) || []);
+
+        if (!Array.isArray(bookings) || !bookings.length) return;
+
+        recentList.innerHTML = '';
+        bookings.slice(0, 3).forEach((booking) => {
+            const isCompleted = booking.status === 'Completed';
+            const isCancelled = booking.status === 'Cancelled';
+            const statusColor = isCompleted ? 'var(--green)' : (isCancelled ? 'var(--red)' : 'var(--primary)');
+            const bgStyle = isCompleted ? 'var(--green-bg)' : (isCancelled ? '#FEE2E2' : 'var(--orange-bg)');
+            const iconClass = isCompleted ? 'fa-wrench' : (isCancelled ? 'fa-xmark' : 'fa-calendar-check');
+            const dateStr = app && typeof app.formatDisplayDate === 'function'
+                ? app.formatDisplayDate(booking.date, { month: 'short', day: 'numeric', year: 'numeric' })
+                : booking.date;
+
+            recentList.innerHTML += `
+                <div class="job-item" style="padding: 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 12px;">
+                  <div class="job-item__customer" style="gap: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 8px; background: ${bgStyle}; color: ${statusColor}; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                      <i class="fa-solid ${iconClass}"></i>
+                    </div>
+                    <div>
+                      <span class="job-item__name">${booking.title}</span>
+                      <span class="job-item__service">${dateStr} • ${booking.time || '10:00 AM'}</span>
+                    </div>
+                  </div>
+                  <span style="font-size: 0.8rem; font-weight: 600; color: ${statusColor};">${booking.status || 'Confirmed'}</span>
+                </div>
+            `;
+        });
+    }
+
+    renderRecentBookings();
 });

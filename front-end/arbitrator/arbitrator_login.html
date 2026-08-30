@@ -87,7 +87,7 @@
 <div class="login-wrapper">
   <div class="login-card">
     <div class="login-form-side">
-      <a href="arbitrator_landing.html" class="login-brand">
+      <a href="../Landing_Page/index.html" class="login-brand">
         <div class="login-logo-icon"><i class="fa-solid fa-gavel"></i></div>
         <span class="login-logo-text">ServiceHub</span>
       </a>
@@ -122,7 +122,7 @@
       </form>
 
       <div class="login-footer">
-        <p>New arbitrator? <a href="arbitrator_landing.html" id="applyToJoinLink">Apply to join</a></p>
+        <p>New arbitrator? <a href="arbitrator_form_1.html" id="applyToJoinLink">Apply to join</a></p>
       </div>
 
       <a href="../Landing_Page/index.html" class="back-link"><i class="fa-solid fa-arrow-left" style="margin-right: 6px;"></i> Back to Home</a>
@@ -155,10 +155,6 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    if (redirectAuthenticatedArbitrator()) {
-      return;
-    }
-
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('loginBtn');
     const applyToJoinLink = document.getElementById('applyToJoinLink');

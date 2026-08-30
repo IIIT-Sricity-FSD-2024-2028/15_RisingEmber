@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  if (addressInput && customer && customer.location) {
+  if (addressInput && customer && customer.location && customer.location.toLowerCase() !== "location not set") {
     addressInput.value = customer.location;
   }
 
@@ -83,7 +83,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   if (addressInput) {
     addressInput.addEventListener("input", () => {
-      if (addressInput.value.trim().length >= 10) {
+      const val = addressInput.value.trim();
+      if (val.length >= 3 && val.toLowerCase() !== "location not set") {
         setAddressValidity("");
       }
     });
@@ -97,8 +98,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       const bookingDate = dateInput ? dateInput.value : "";
       const bookingTime = timeInput ? timeInput.value : "";
 
-      if (address.length < 10) {
-        setAddressValidity("Please enter the full service address, including street or apartment details.");
+      if (!address || address.toLowerCase() === "location not set" || address.length < 3) {
+        setAddressValidity("Please enter a valid service address (cannot be empty or 'Location not set').");
+        if (addressInput) addressInput.focus();
         return;
       }
 

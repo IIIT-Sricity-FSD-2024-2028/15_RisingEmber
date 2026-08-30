@@ -738,12 +738,12 @@ export class StoreService {
       throw new ForbiddenException('You can only raise a dispute for a booking you are involved in.');
     }
 
-    if (
-      booking.escrowStatus !== EscrowStatus.FUNDS_LOCKED ||
-      ![BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS].includes(booking.status)
-    ) {
-      throw new ConflictException('Disputes can only be raised while escrow funds are locked.');
-    }
+    const isComplainantCustomer = actor.role === Role.CUSTOMER || (actor.role === Role.ADMIN && actor.id === booking.customerId);
+    const complainantId = actor.id;
+    const complainantRole = actor.role;
+    const respondentId = isComplainantCustomer ? booking.providerId : booking.customerId;
+    const respondentRole = isComplainantCustomer ? Role.PROVIDER : Role.CUSTOMER;
+    const category = (payload as any).category || (payload.title ? payload.title.replace(/\s*dispute\s*/i, '') : 'General');
 
     const activeCase = this.state.cases.find(
       (caseRecord) => caseRecord.bookingId === booking.id && caseRecord.status !== CaseStatus.CLOSED,
@@ -761,6 +761,11 @@ export class StoreService {
       bookingId: booking.id,
       customerId: booking.customerId,
       providerId: booking.providerId,
+      complainantId,
+      complainantRole,
+      respondentId,
+      respondentRole,
+      category,
       arbitratorId: arbitrator.id,
       createdById: actor.id,
       title: payload.title,
@@ -858,6 +863,11 @@ export class StoreService {
 
     if (payload.message) {
       this.createCaseMessage(caseRecord.id, actor.id, actor.role, payload.message);
+    }
+
+    if ((payload as any).respondentDescription) {
+      (caseRecord as any).respondentDescription = (payload as any).respondentDescription;
+      this.createCaseMessage(caseRecord.id, actor.id, actor.role, `[Respondent Reply]: ${(payload as any).respondentDescription}`);
     }
 
     caseRecord.updatedAt = this.now();
@@ -1817,12 +1827,12 @@ export class StoreService {
       }
 
       const allowedTransitions: Record<BookingStatus, BookingStatus[]> = {
-        [BookingStatus.REQUESTED]: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED],
-        [BookingStatus.CONFIRMED]: [BookingStatus.IN_PROGRESS, BookingStatus.CANCELLED],
-        [BookingStatus.IN_PROGRESS]: [BookingStatus.COMPLETED],
-        [BookingStatus.COMPLETED]: [],
+        [BookingStatus.REQUESTED]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CANCELLED],
+        [BookingStatus.CONFIRMED]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CANCELLED],
+        [BookingStatus.IN_PROGRESS]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CANCELLED],
+        [BookingStatus.COMPLETED]: [BookingStatus.COMPLETED],
         [BookingStatus.CANCELLED]: [],
-        [BookingStatus.DISPUTED]: [],
+        [BookingStatus.DISPUTED]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.DISPUTED],
       };
 
       if (!allowedTransitions[booking.status].includes(nextStatus)) {
@@ -1835,29 +1845,8 @@ export class StoreService {
   }
 
   private applyEscrowTransition(booking: BookingRecord, nextStatus: BookingStatus) {
-    if ([EscrowStatus.RELEASED, EscrowStatus.REFUNDED].includes(booking.escrowStatus)) {
-      if (booking.status !== nextStatus) {
-        throw new ConflictException('Escrow has already been finalized for this booking.');
-      }
-      return;
-    }
-
-    if (nextStatus === BookingStatus.CONFIRMED) {
-      booking.escrowStatus = EscrowStatus.FUNDS_LOCKED;
-      return;
-    }
-
-    if (nextStatus === BookingStatus.COMPLETED) {
-      if (booking.escrowStatus !== EscrowStatus.FUNDS_LOCKED) {
-        throw new ConflictException('Funds must be locked before completion.');
-      }
-      booking.escrowStatus = EscrowStatus.RELEASED;
-      return;
-    }
-
-    if (nextStatus === BookingStatus.CANCELLED && booking.escrowStatus === EscrowStatus.FUNDS_LOCKED) {
-      booking.escrowStatus = EscrowStatus.REFUNDED;
-    }
+    // Platform does not hold, lock, freeze or delay funds. Escrow fund locking is disabled.
+    return;
   }
 
   private applyAwardDecision(caseRecord: CaseRecord, decision: AwardDecision | undefined, actor: RequestActor) {
@@ -1866,21 +1855,16 @@ export class StoreService {
     }
 
     const booking = this.requireBooking(caseRecord.bookingId);
-    if (booking.escrowStatus !== EscrowStatus.FUNDS_LOCKED) {
-      throw new ConflictException('Escrow must be locked before an award decision can finalize funds.');
-    }
 
     if (decision === AwardDecision.RELEASE_TO_PROVIDER) {
-      booking.escrowStatus = EscrowStatus.RELEASED;
       booking.status = BookingStatus.COMPLETED;
-      booking.lastStatusNote = 'Funds released by arbitrator award.';
+      booking.lastStatusNote = 'Arbitrator award issued in favor of provider.';
       this.createBookingEvent(booking.id, BookingStatus.COMPLETED, actor.id, actor.role, booking.lastStatusNote);
     }
 
     if (decision === AwardDecision.REFUND_TO_CUSTOMER) {
-      booking.escrowStatus = EscrowStatus.REFUNDED;
       booking.status = BookingStatus.CANCELLED;
-      booking.cancellationReason = 'Refunded by arbitrator award.';
+      booking.cancellationReason = 'Arbitrator award issued in favor of customer.';
       this.createBookingEvent(booking.id, BookingStatus.CANCELLED, actor.id, actor.role, booking.cancellationReason);
     }
 

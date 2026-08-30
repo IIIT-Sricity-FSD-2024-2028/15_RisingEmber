@@ -131,6 +131,34 @@
         </div>
       </div>
 
+      <!-- Provider Reply Modal -->
+      <div class="award-modal-overlay" id="providerReplyModalOverlay" style="position: fixed; inset: 0; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.2s;">
+        <div style="background: white; border-radius: 16px; width: 100%; max-width: 560px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+          <h2 style="font-size: 1.3rem; font-weight: 800; color: #111827; margin-bottom: 6px;"><i class="fa-solid fa-reply" style="color: var(--primary);"></i> Reply to Dispute & Submit Evidence</h2>
+          <p style="font-size: 0.88rem; color: #6B7280; margin-bottom: 20px;">Provide your written response and attach evidence for the arbitrator's review.</p>
+          
+          <form id="providerReplyForm" onsubmit="handleProviderReplySubmit(event)">
+            <input type="hidden" id="replyDisputeId" />
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+              <div>
+                <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 6px;">Your Written Reply / Description <span style="color: red;">*</span></label>
+                <textarea id="providerReplyText" rows="4" placeholder="Explain your side of the dispute in detail..." required style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 0.88rem; outline: none;"></textarea>
+              </div>
+
+              <div>
+                <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 6px;">Upload Evidence PDF Document (Optional)</label>
+                <input type="file" id="providerEvidenceFiles" accept=".pdf" multiple style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.88rem;" />
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+              <button type="button" class="btn btn--outline" onclick="closeProviderReplyModal()">Cancel</button>
+              <button type="submit" class="btn btn--primary" id="submitReplyBtn">Submit Reply & Evidence</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
     </main>
   </div>
 

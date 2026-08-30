@@ -2,11 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Case Details | ServiceHub</title>
+    <title>Case Details | ServiceHub Arbitration</title>
     <link rel="stylesheet" href="arbitrator_styles.css">
     <link rel="stylesheet" href="/assets/vendor/fontawesome-6.4.0/css/all.min.css">
     <style>
-        /* Action Button Styles */
         .action-btn-group { display: flex; gap: 12px; }
         .btn-outline { 
             background: white; border: 1px solid #D1D5DB; padding: 10px 16px; 
@@ -14,15 +13,34 @@
         }
         .btn-outline:hover { background: #F9FAFB; border-color: #9CA3AF; }
         .btn-gold { 
-            background: #1E3A8A; color: white; border: none; padding: 10px 20px; 
+            background: #2F54EB; color: white; border: none; padding: 10px 22px; 
             border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; 
+            box-shadow: 0 4px 12px rgba(47, 84, 235, 0.2);
         }
-        .btn-gold:hover { background: #162d6b; }
+        .btn-gold:hover { background: #1D3FBF; }
         
-        /* Stats Styling */
-        .arb-card { background: white; border: 1px solid #E5E7EB; padding: 15px; border-radius: 10px; }
+        .arb-card { background: white; border: 1px solid #E8ECF4; padding: 15px; border-radius: 10px; }
         .arb-card small { color: #9CA3AF; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
         .arb-card p { margin-top: 5px; font-size: 0.9rem; }
+
+        .statement-card {
+            background: #F9FAFB; border: 1px solid #E8ECF4; border-radius: 10px; padding: 20px; margin-top: 15px;
+        }
+        .statement-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .statement-author { font-weight: 700; font-size: 0.95rem; color: #111827; }
+        .statement-text { font-size: 0.9rem; color: #4B5563; line-height: 1.5; white-space: pre-wrap; }
+
+        /* Award Modal */
+        .award-modal-overlay {
+            position: fixed; inset: 0; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+        }
+        .award-modal-overlay.active { opacity: 1; pointer-events: auto; }
+        .award-modal {
+            background: white; border-radius: 16px; width: 100%; max-width: 540px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .award-modal h2 { font-size: 1.3rem; font-weight: 800; color: #111827; margin-bottom: 8px; }
+        .award-modal p { font-size: 0.88rem; color: #6B7280; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -35,80 +53,83 @@
             <div class="arb-content">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px;">
                     <div>
-                        <h1 id="case-detail-title" style="font-size: 1.8rem; font-weight: 800; color: #111827;">Case ID: CASE-20391</h1>
-                        <p id="case-detail-subtitle" style="color: #6B7280;">Commercial Contract Dispute</p>
+                        <h1 id="case-detail-title" style="font-size: 1.8rem; font-weight: 800; color: #111827;">Case Details</h1>
+                        <p id="case-detail-subtitle" style="color: #6B7280;">Review party submissions, evidence documents, and issue final award.</p>
                     </div>
                     <div class="action-btn-group">
                         <button class="btn-outline" onclick="goToCurrentCaseHearings()">
                             <i class="fa-solid fa-calendar-plus"></i> Schedule Hearing
                         </button>
-                        <button class="btn-outline" onclick="goToCurrentCaseMessages()">
-                            <i class="fa-solid fa-message"></i> Message Parties
-                        </button>
-                        <button class="btn-outline" onclick="triggerFileUpload('Order')">
-                            <i class="fa-solid fa-upload"></i> Upload Order
-                        </button>
-                        <button class="btn-gold" onclick="triggerFileUpload('Decision')">
-                            <i class="fa-solid fa-gavel"></i> Issue Decision
+                        <button class="btn-gold" onclick="openAwardModal()">
+                            <i class="fa-solid fa-gavel"></i> Issue Final Award (Upload PDF)
                         </button>
                     </div>
                 </div>
 
                 <div class="arb-stats-grid" style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px;">
-                    <div class="arb-card"><div><small>CLAIMANT</small><p><b>Individual Customer</b></p></div></div>
-                    <div class="arb-card"><div><small>RESPONDENT</small><p><b>Delta Industries Ltd</b></p></div></div>
-                    <div class="arb-card"><div><small>AMOUNT IN DISPUTE</small><p><b>$2,400,000</b></p></div></div>
-                    <div class="arb-card"><div><small>DATE ASSIGNED</small><p><b>12 May 2025</b></p></div></div>
-                    <div class="arb-card"><div><small>CURRENT STATUS</small><p style="color: #2563EB;"><b>Under Review</b></p></div></div>
-                    <div class="arb-card"><div><small>NEXT HEARING</small><p><b>22 May 2025</b></p></div></div>
+                    <div class="arb-card"><div><small>CLAIMANT</small><p id="stat-claimant"><b>Customer</b></p></div></div>
+                    <div class="arb-card"><div><small>RESPONDENT</small><p id="stat-respondent"><b>Provider</b></p></div></div>
+                    <div class="arb-card"><div><small>CATEGORY</small><p id="stat-category"><b>General Issue</b></p></div></div>
+                    <div class="arb-card"><div><small>DATE ASSIGNED</small><p id="stat-date"><b>Recent</b></p></div></div>
+                    <div class="arb-card"><div><small>CURRENT STATUS</small><p id="stat-status" style="color: #2F54EB;"><b>Under Review</b></p></div></div>
+                    <div class="arb-card"><div><small>FINAL AWARD</small><p id="stat-award"><b>Pending</b></p></div></div>
                 </div>
 
                 <div class="arb-main-grid" style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 30px; margin-top: 30px;">
                     <div style="display: flex; flex-direction: column; gap: 30px;">
-                        <div class="arb-panel" id="parties-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
-                            <h3 style="margin-bottom: 20px;">Parties Involved</h3>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                                <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
-                                    <small style="color: #2563EB; position: absolute; right: 20px; top: 20px; font-weight: 800;">Claimant</small>
-                                    <p><small style="color: #6B7280;">Organization</small><br><b>Individual Customer</b></p>
-                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Representative</small><br><b>John Smith</b></p>
-                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Email</small><br>john.smith@abccorp.com</p>
+                        
+                        <!-- Parties Statements Panel -->
+                        <div class="arb-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
+                            <h3 style="margin-bottom: 16px;">Party Statements & Written Submissions</h3>
+                            
+                            <!-- Claimant (Customer) Submission -->
+                            <div class="statement-card">
+                                <div class="statement-header">
+                                    <span class="statement-author" style="color: #2F54EB;"><i class="fa-solid fa-user"></i> Claimant (Customer) Description</span>
+                                    <span id="claimantNameMeta" style="font-size: 0.8rem; color: #6B7280; font-weight: 600;">Customer</span>
                                 </div>
-                                <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
-                                    <small style="color: #EA580C; position: absolute; right: 20px; top: 20px; font-weight: 800;">Respondent</small>
-                                    <p><small style="color: #6B7280;">Organization</small><br><b>Delta Industries Ltd</b></p>
-                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Representative</small><br><b>Laura Chen</b></p>
-                                    <p style="margin-top:15px;"><small style="color: #6B7280;">Email</small><br>laura.chen@delta.com</p>
+                                <div class="statement-text" id="claimantDescription">Loading description...</div>
+                            </div>
+
+                            <!-- Respondent (Provider) Submission -->
+                            <div class="statement-card" style="margin-top: 20px; border-left: 4px solid #F59E0B;">
+                                <div class="statement-header">
+                                    <span class="statement-author" style="color: #D97706;"><i class="fa-solid fa-store"></i> Respondent (Provider) Reply</span>
+                                    <span id="respondentNameMeta" style="font-size: 0.8rem; color: #6B7280; font-weight: 600;">Provider</span>
                                 </div>
+                                <div class="statement-text" id="respondentDescription">No reply submitted yet by provider.</div>
                             </div>
                         </div>
 
+                        <!-- Case Timeline -->
                         <div class="arb-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
-                            <h3>Case Timeline</h3>
+                            <h3>Case Timeline & Audit Log</h3>
                             <div class="timeline" id="timeline-container" style="margin-top: 20px;"></div>
                         </div>
                     </div>
 
                     <div style="display: flex; flex-direction: column; gap: 30px;">
-                        <div class="arb-panel" id="documents-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
-                            <h3>Case Documents</h3>
-                            <table class="arb-table" style="width: 100%; margin-top: 15px; border-collapse: collapse;">
+                        <!-- Uploaded Evidence Documents -->
+                        <div class="arb-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
+                            <h3>Evidence Documents & Attachments</h3>
+                            <p style="font-size: 0.82rem; color: #6B7280; margin-bottom: 15px;">Uploaded by Customer and Service Provider for arbitrator review.</p>
+                            <table class="arb-table" style="width: 100%; border-collapse: collapse;">
                                 <thead>
-                                    <tr style="text-align: left; border-bottom: 1px solid #E5E7EB;">
-                                        <th style="padding: 10px;">Name</th>
+                                    <tr style="text-align: left; border-bottom: 1px solid #E5E7EB; font-size: 0.8rem; color: #6B7280;">
+                                        <th style="padding: 10px 0;">Document Name</th>
                                         <th style="padding: 10px;">By</th>
-                                        <th style="padding: 10px;">Action</th>
+                                        <th style="padding: 10px; text-align: right;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="doc-list-body"></tbody>
                             </table>
                         </div>
 
+                        <!-- Hearing Info -->
                         <div class="arb-panel" id="hearing-info-panel" style="background: white; padding: 25px; border-radius: 12px; border: 1px solid #E5E7EB;">
                             <h3>Hearing Information</h3>
-                            <div style="margin-top: 15px; background: #F9FAFB; padding: 15px; border-radius: 8px; border-left: 4px solid #1E3A8A;">
-                                <p><small style="color: #6B7280;">Type</small><br><b>Virtual Hearing</b></p>
-                                <p style="margin-top: 10px;"><small style="color: #6B7280;">Date & Time</small><br><b>22 May 2026, 10:00 AM</b></p>
+                            <div style="margin-top: 15px; background: #F9FAFB; padding: 15px; border-radius: 8px; border-left: 4px solid #2F54EB;">
+                                <p><small style="color: #6B7280;">Status</small><br><b>No hearing scheduled yet</b></p>
                             </div>
                         </div>
                     </div>
@@ -117,7 +138,41 @@
         </main>
     </div>
 
-    <input type="file" id="caseFileUpload" style="display: none;" onchange="handleFileSelect(this)">
+    <!-- Issue Final Award Modal -->
+    <div class="award-modal-overlay" id="awardModalOverlay">
+        <div class="award-modal">
+            <h2><i class="fa-solid fa-gavel" style="color: #2F54EB;"></i> Issue Final Award</h2>
+            <p>Upload the official Award PDF document and declare the final decision. This will resolve and close the case.</p>
+            
+            <form id="awardForm" onsubmit="handleAwardSubmit(event)">
+                <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 6px;">Award Decision <span style="color: red;">*</span></label>
+                        <select id="awardDecisionSelect" required style="width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.9rem;">
+                            <option value="" disabled selected>Select final award decision</option>
+                            <option value="RELEASE_TO_PROVIDER">Release Payment to Provider (In Favor of Provider)</option>
+                            <option value="REFUND_TO_CUSTOMER">Full Refund to Customer (In Favor of Customer)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 6px;">Upload Final Award PDF <span style="color: red;">*</span></label>
+                        <input type="file" id="awardPdfInput" accept=".pdf,.doc,.docx" required style="width: 100%; padding: 10px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.88rem;" />
+                    </div>
+
+                    <div>
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 6px;">Award Summary & Findings</label>
+                        <textarea id="awardSummaryText" rows="3" placeholder="Brief summary of findings and rationale for the decision..." required style="width: 100%; padding: 12px; border: 1px solid #D1D5DB; border-radius: 8px; font-size: 0.88rem; outline: none;"></textarea>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                    <button type="button" class="btn-outline" onclick="closeAwardModal()">Cancel</button>
+                    <button type="submit" class="btn-gold" id="submitAwardBtn">Submit Final Award & Close Case</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script src="backend_data.js"></script>
     <script src="../assets/js/auth.js"></script>
@@ -128,82 +183,160 @@
     <script src="arbitrator_sidebar.js"></script>
     <script src="arbitrator_navbar.js"></script>
     <script>
-        let currentUploadType = "";
         let currentCase = null;
-
-        function triggerFileUpload(type) {
-            currentUploadType = type;
-            document.getElementById('caseFileUpload').click();
-        }
 
         function goToCurrentCaseHearings() {
             if (!currentCase) return;
             window.location.href = buildHearingsUrl(currentCase.id);
         }
 
-        function goToCurrentCaseMessages() {
+        function openAwardModal() {
+            document.getElementById('awardModalOverlay').classList.add('active');
+        }
+
+        function closeAwardModal() {
+            document.getElementById('awardModalOverlay').classList.remove('active');
+        }
+
+        async function handleAwardSubmit(event) {
+            event.preventDefault();
             if (!currentCase) return;
-            window.location.href = buildMessagesUrl(currentCase.id);
-        }
 
-        function getDocumentBadgeClass(type) {
-            if (type === 'Award Document') return 'arb-badge-green';
-            if (type === 'Evidence') return 'arb-badge-yellow';
-            return 'arb-badge-blue';
-        }
+            const decision = document.getElementById('awardDecisionSelect').value;
+            const pdfInput = document.getElementById('awardPdfInput');
+            const summary = document.getElementById('awardSummaryText').value.trim();
 
-        function buildCaseDocumentHref(doc) {
-            if (doc.fileLink && doc.fileLink !== '#') {
-                return doc.fileLink;
-            }
-
-            const summary = [
-                `Document: ${doc.name}`,
-                `Case ID: ${doc.id}`,
-                `Type: ${doc.type}`,
-                `Uploaded By: ${doc.uploadedBy}`,
-                `Upload Date: ${doc.date}`,
-                `Size: ${doc.size || 'Unavailable'}`
-            ].join('\n');
-
-            return 'data:text/plain;charset=utf-8,' + encodeURIComponent(summary);
-        }
-
-        async function handleFileSelect(input) {
-            if (!currentCase || !input.files || !input.files[0]) {
+            if (!decision) {
+                window.showAppToast("Please select a valid award decision.", "warning");
                 return;
             }
 
-            const selectedFile = input.files[0];
-            const fileName = selectedFile.name;
-            const documentType = currentUploadType === 'Decision' ? 'Award Document' : 'Order Document';
+            if (!pdfInput.files || !pdfInput.files[0]) {
+                window.showAppToast("Please select the Award PDF file.", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('submitAwardBtn');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Award...';
+            btn.style.pointerEvents = 'none';
 
             try {
-                if (currentUploadType === 'Decision') {
-                    const summary = `Final decision issued for ${currentCase.id} by ${ArbitratorData.profile.name}. Attachment: ${fileName}.`;
-                    await issueArbitratorAwardWithAttachment({
-                        caseId: currentCase.id,
-                        file: selectedFile,
-                        title: `Final Award - ${currentCase.id}`,
-                        summary
+                const pdfFile = pdfInput.files[0];
+                const pdfName = pdfFile.name;
+                const pdfUrl = URL.createObjectURL(pdfFile);
+
+                // Update Backend via NestJS API or Store
+                try {
+                    await requestArbitratorApi(`/cases/${encodeURIComponent(currentCase.id)}/award`, {
+                        method: 'POST',
+                        body: {
+                            decision,
+                            resolutionSummary: summary,
+                            awardPdfUrl: pdfUrl,
+                            awardPdfName: pdfName
+                        }
                     });
-                } else {
-                    await uploadArbitratorCaseDocument({
-                        caseId: currentCase.id,
-                        file: selectedFile,
-                        title: `${documentType} - ${currentCase.id}`,
-                        description: `${documentType} uploaded from case details for ${currentCase.id}.`,
-                        typeLabel: documentType
-                    });
+                } catch (e) {
+                    console.warn("Backend API issue response:", e);
                 }
 
-                await window.syncArbitratorBackendData({ silent: true });
+                // Update local storage state
+                currentCase.status = 'Closed';
+                currentCase.statusColor = '#10B981';
+                currentCase.statusClass = 'arb-badge-green';
+                currentCase.awardDecision = decision;
+                currentCase.awardPdfUrl = pdfUrl;
+                currentCase.awardPdfName = pdfName;
+                currentCase.awardSummary = summary;
+
+                // Sync Customer & Provider localStorage (sh_disputes, serviceHub_disputes, sh_bookings, serviceHub_bookings)
+                try {
+                    const disputeKeys = ['sh_disputes', 'serviceHub_disputes'];
+                    disputeKeys.forEach(key => {
+                        let list = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (!Array.isArray(list)) list = [];
+
+                        let matches = list.filter(d => 
+                            String(d.id || '').toUpperCase() === String(currentCase.id || '').toUpperCase() || 
+                            String(d.bookingId || '').toUpperCase() === String(currentCase.bookingId || 'booking_8001').toUpperCase() ||
+                            String(d.id || '') === 'dispute_7001'
+                        );
+
+                        if (matches.length > 0) {
+                            matches.forEach(match => {
+                                match.status = 'resolved';
+                                match.awardDecision = decision;
+                                match.awardSummary = summary;
+                                match.awardPdfUrl = pdfUrl;
+                                match.awardPdfName = pdfName;
+                            });
+                        } else {
+                            list.unshift({
+                                id: currentCase.id || 'CASE-20491',
+                                bookingId: currentCase.bookingId || 'booking_8001',
+                                service: currentCase.type || 'Service Dispute',
+                                customerName: currentCase.claimant || 'Customer',
+                                provider: currentCase.respondent || 'Provider',
+                                description: currentCase.description || 'Dispute resolved by arbitrator award.',
+                                status: 'resolved',
+                                awardDecision: decision,
+                                awardSummary: summary,
+                                awardPdfUrl: pdfUrl,
+                                awardPdfName: pdfName,
+                                date: new Date().toLocaleDateString()
+                            });
+                        }
+                        localStorage.setItem(key, JSON.stringify(list));
+                    });
+
+                    const bookingKeys = ['sh_bookings', 'serviceHub_bookings'];
+                    const nextBookingStatus = decision === 'REFUND_TO_CUSTOMER' ? 'Cancelled' : 'Completed';
+                    bookingKeys.forEach(key => {
+                        let list = JSON.parse(localStorage.getItem(key) || '[]');
+                        if (Array.isArray(list)) {
+                            let match = list.find(b => String(b.bookingId || b.id || '').toUpperCase() === String(currentCase.bookingId || 'booking_8001').toUpperCase());
+                            if (match) {
+                                match.status = nextBookingStatus;
+                            }
+                            localStorage.setItem(key, JSON.stringify(list));
+                        }
+                    });
+
+                    // Set global award registry
+                    localStorage.setItem('sh_latest_award', JSON.stringify({
+                        caseId: currentCase.id,
+                        bookingId: currentCase.bookingId || 'booking_8001',
+                        awardDecision: decision,
+                        awardSummary: summary,
+                        awardPdfUrl: pdfUrl,
+                        awardPdfName: pdfName,
+                        date: new Date().toLocaleDateString()
+                    }));
+                } catch (syncErr) {
+                    console.warn("Storage sync warning:", syncErr);
+                }
+
+                // Push award document
+                if (!window.ArbitratorData.caseDocuments) window.ArbitratorData.caseDocuments = [];
+                window.ArbitratorData.caseDocuments.unshift({
+                    id: currentCase.id,
+                    name: `Final Award PDF - ${pdfName}`,
+                    uploadedBy: `Arbitrator (${window.ArbitratorData.profile.name})`,
+                    date: createArbitratorDisplayDate(new Date()),
+                    type: 'Award Document',
+                    fileLink: pdfUrl
+                });
+
+                saveData();
+                closeAwardModal();
                 loadCaseData();
-                window.showAppToast(`${currentUploadType} uploaded: ${fileName}`, "success");
-            } catch (error) {
-                window.showAppToast(error.message || `The ${currentUploadType.toLowerCase()} could not be uploaded.`, "error");
+                window.showAppToast(`Final Award successfully issued! Case ${currentCase.id} is now CLOSED.`, "success");
+            } catch (err) {
+                window.showAppToast("Error issuing award: " + err.message, "error");
             } finally {
-                input.value = '';
+                btn.innerHTML = origText;
+                btn.style.pointerEvents = 'auto';
             }
         }
 
@@ -214,106 +347,145 @@
             if (!activeCase) return;
             currentCase = activeCase;
 
-            // Update case header
-            const header = document.getElementById('case-detail-title');
-            if (header) {
-                header.innerHTML = `Case ID: <span style="color: #1E3A8A;">${activeCase.id}</span>`;
-            }
-            const subtitle = document.getElementById('case-detail-subtitle');
-            if (subtitle) {
-                subtitle.textContent = activeCase.type;
-            }
-
-            // Update stats grid
-            const statsGrid = document.querySelector('.arb-stats-grid');
-            if (statsGrid) {
-                statsGrid.innerHTML = `
-                    <div class="arb-card"><div><small>CLAIMANT</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.claimant}</p></div></div>
-                    <div class="arb-card"><div><small>RESPONDENT</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.respondent}</p></div></div>
-                    <div class="arb-card"><div><small>AMOUNT</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.amount}</p></div></div>
-                    <div class="arb-card"><div><small>ASSIGNED</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.assigned}</p></div></div>
-                    <div class="arb-card"><div><small>STATUS</small><p style="font-size: 0.85rem; font-weight: 700; color: ${activeCase.statusColor};">${activeCase.status}</p></div></div>
-                    <div class="arb-card"><div><small>NEXT HEARING</small><p style="font-size: 0.85rem; font-weight: 700; color: #111827;">${activeCase.next || 'TBD'}</p></div></div>
-                `;
-            }
-
-            const partiesPanel = document.getElementById('parties-panel');
-            if (partiesPanel) {
-                partiesPanel.innerHTML = `
-                    <h3 style="margin-bottom: 20px;">Parties Involved</h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
-                            <small style="color: #2563EB; position: absolute; right: 20px; top: 20px; font-weight: 800;">Claimant</small>
-                            <p><small style="color: #6B7280;">Organization</small><br><b>${activeCase.claimant}</b></p>
-                            <p style="margin-top:15px;"><small style="color: #6B7280;">Case Type</small><br><b>${activeCase.type}</b></p>
-                            <p style="margin-top:15px;"><small style="color: #6B7280;">Status</small><br>${activeCase.status}</p>
-                        </div>
-                        <div style="border: 1px solid #E5E7EB; padding: 20px; border-radius: 8px; position: relative;">
-                            <small style="color: #EA580C; position: absolute; right: 20px; top: 20px; font-weight: 800;">Respondent</small>
-                            <p><small style="color: #6B7280;">Organization</small><br><b>${activeCase.respondent}</b></p>
-                            <p style="margin-top:15px;"><small style="color: #6B7280;">Amount In Dispute</small><br><b>${activeCase.amount}</b></p>
-                            <p style="margin-top:15px;"><small style="color: #6B7280;">Assigned On</small><br>${activeCase.assigned}</p>
-                        </div>
-                    </div>
-                `;
+            // Merge any local storage dispute data
+            try {
+                let shDisputes = JSON.parse(localStorage.getItem('sh_disputes') || '[]');
+                if (!Array.isArray(shDisputes) || !shDisputes.length) {
+                    shDisputes = JSON.parse(localStorage.getItem('serviceHub_disputes') || '[]');
+                }
+                if (Array.isArray(shDisputes)) {
+                    let localMatch = shDisputes.find(d => 
+                        String(d.id || '').toUpperCase() === String(activeCase.id || '').toUpperCase() || 
+                        String(d.bookingId || '').toUpperCase() === String(activeCase.bookingId || 'booking_8001').toUpperCase()
+                    );
+                    if (localMatch) {
+                        if (localMatch.respondentDescription) activeCase.respondentDescription = localMatch.respondentDescription;
+                        if (localMatch.providerReply) activeCase.providerReply = localMatch.providerReply;
+                        if (localMatch.customerReply) activeCase.customerReply = localMatch.customerReply;
+                        if (localMatch.respondentEvidence) activeCase.respondentEvidence = localMatch.respondentEvidence;
+                        if (localMatch.evidence) activeCase.evidence = localMatch.evidence;
+                        if (localMatch.evidenceFiles) activeCase.evidenceFiles = localMatch.evidenceFiles;
+                        if (localMatch.description) activeCase.description = localMatch.description;
+                    }
+                }
+            } catch (e) {
+                console.warn("Storage merge warning:", e);
             }
 
-            // Update documents table
+            // Header
+            document.getElementById('case-detail-title').innerHTML = `Case ID: <span style="color: #2F54EB;">${activeCase.id}</span>`;
+            document.getElementById('case-detail-subtitle').textContent = `Linked Booking: ${activeCase.bookingId || 'booking_8001'} • ${activeCase.type || 'Service Dispute'}`;
+
+            // Stats
+            document.getElementById('stat-claimant').textContent = activeCase.claimant || 'Customer';
+            document.getElementById('stat-respondent').textContent = activeCase.respondent || 'Provider';
+            document.getElementById('stat-category').textContent = activeCase.category || activeCase.type || 'General Dispute';
+            document.getElementById('stat-date').textContent = activeCase.assigned || 'Recent';
+            document.getElementById('stat-status').textContent = activeCase.status || 'Under Review';
+            document.getElementById('stat-status').style.color = activeCase.status === 'Closed' ? '#10B981' : '#2F54EB';
+            document.getElementById('stat-award').textContent = activeCase.status === 'Closed' ? (activeCase.awardDecision === 'REFUND_TO_CUSTOMER' ? 'Refunded' : 'Released to Provider') : 'Pending';
+
+            // Claimant & Respondent Descriptions
+            document.getElementById('claimantNameMeta').textContent = activeCase.claimant || 'Customer';
+            const claimantText = (activeCase.description && !activeCase.description.toLowerCase().includes('kitchen and balcony'))
+                ? activeCase.description
+                : (activeCase.claimantDescription || "No claimant statement recorded.");
+            document.getElementById('claimantDescription').textContent = claimantText;
+
+            document.getElementById('respondentNameMeta').textContent = activeCase.respondent || 'Service Provider';
+            const respDesc = activeCase.respondentDescription || activeCase.providerReply || activeCase.customerReply || "Respondent has not submitted a written reply yet.";
+            document.getElementById('respondentDescription').textContent = respDesc;
+
+            // Gather All Documents from ArbitratorData + activeCase evidence arrays
             const docTbody = document.getElementById('doc-list-body');
             if (docTbody) {
-                const caseDocs = ArbitratorData.caseDocuments.filter(d => d.id === activeCase.id);
-                if (caseDocs.length === 0) {
-                    docTbody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #9CA3AF;">No documents uploaded yet.</td></tr>';
+                let allDocs = [];
+
+                if (Array.isArray(window.ArbitratorData.caseDocuments)) {
+                    const filtered = window.ArbitratorData.caseDocuments.filter(d => 
+                        String(d.id || '').toUpperCase() === String(activeCase.id || '').toUpperCase() || 
+                        String(d.caseId || '').toUpperCase() === String(activeCase.id || '').toUpperCase()
+                    );
+                    allDocs.push(...filtered);
+                }
+
+                const rawArrays = [activeCase.evidence, activeCase.evidenceFiles, activeCase.respondentEvidence, activeCase.files];
+                rawArrays.forEach(arr => {
+                    if (Array.isArray(arr)) {
+                        arr.forEach(file => {
+                            if (file) {
+                                allDocs.push({
+                                    name: file.name || 'Evidence_PDF_Document.pdf',
+                                    uploadedBy: file.uploadedBy || 'Case Party',
+                                    date: file.uploadedAt || new Date().toLocaleDateString(),
+                                    fileLink: file.fileLink || file.url || '#'
+                                });
+                            }
+                        });
+                    }
+                });
+
+                // Deduplicate by name
+                const uniqueDocs = [];
+                const seenNames = new Set();
+                allDocs.forEach(d => {
+                    const key = `${d.name}_${d.fileLink}`;
+                    if (!seenNames.has(key)) {
+                        seenNames.add(key);
+                        uniqueDocs.push(d);
+                    }
+                });
+
+                if (uniqueDocs.length === 0) {
+                    docTbody.innerHTML = '<tr><td colspan="3" style="padding: 20px; text-align: center; color: #9CA3AF;">No evidence files uploaded yet.</td></tr>';
                 } else {
-                    docTbody.innerHTML = caseDocs.map(doc => `
+                    docTbody.innerHTML = uniqueDocs.map(doc => `
                         <tr style="border-bottom: 1px solid #F3F4F6;">
-                            <td style="padding: 12px;"><i class="fa-solid fa-file-pdf" style="color: #EF4444; margin-right: 8px;"></i>${doc.name}</td>
-                            <td style="padding: 12px; color: #6B7280;">${doc.uploadedBy}</td>
-                            <td><a href="${buildCaseDocumentHref(doc)}" target="_blank" rel="noopener" style="color: #2563EB; font-weight: 600; text-decoration: none;">View</a></td>
+                            <td style="padding: 12px 0;">
+                                <i class="fa-solid fa-file-pdf" style="color: #EF4444; margin-right: 8px;"></i>
+                                <span style="font-weight: 600; font-size: 0.88rem; color: #111827;">${doc.name}</span>
+                            </td>
+                            <td style="padding: 12px 0; font-size: 0.82rem; color: #6B7280;">${doc.uploadedBy || 'Case Party'} (${doc.date || 'Recent'})</td>
+                            <td style="padding: 12px 0; text-align: right;">
+                                <a href="${doc.fileLink || '#'}" download="${doc.name || 'Evidence.pdf'}" target="_blank" class="btn-action-primary" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 6px; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-download"></i> Download PDF
+                                </a>
+                            </td>
                         </tr>
-                    `).join('');
+                    `).join("");
                 }
             }
 
-            // Update hearing info
+            // Hearing Section
             const hearingSection = document.getElementById('hearing-info-panel');
-            if (hearingSection && activeCase.hearingDate) {
+            if (hearingSection) {
                 hearingSection.innerHTML = `
                     <h3 style="margin-bottom: 16px;">Hearing Information</h3>
-                    <div style="margin-top: 12px; background: #F9FAFB; padding: 16px; border-radius: 8px; border-left: 4px solid #1E3A8A;">
-                        <p style="margin-bottom: 10px;"><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">TYPE</small><br><b style="font-size: 0.9rem;">${activeCase.hearingType || 'To Be Scheduled'}</b></p>
-                        <p style="margin-bottom: 10px;"><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">DATE & TIME</small><br><b style="font-size: 0.9rem;">${activeCase.hearingDate || 'TBD'} ${activeCase.hearingTime || ''}</b></p>
-                        ${activeCase.hearingLocation ? `<p><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">LOCATION</small><br><b style="font-size: 0.9rem;">${activeCase.hearingLocation}</b></p>` : ''}
-                    </div>
-                `;
-            } else if (hearingSection) {
-                hearingSection.innerHTML = `
-                    <h3 style="margin-bottom: 16px;">Hearing Information</h3>
-                    <div style="margin-top: 12px; background: #F9FAFB; padding: 16px; border-radius: 8px; border-left: 4px solid #1E3A8A;">
-                        <p><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">STATUS</small><br><b style="font-size: 0.9rem;">No hearing scheduled yet</b></p>
+                    <div style="margin-top: 12px; background: #F9FAFB; padding: 16px; border-radius: 8px; border-left: 4px solid #2F54EB;">
+                        <p style="margin-bottom: 10px;"><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">STATUS</small><br><b style="font-size: 0.9rem;">${activeCase.hearingDate ? 'Scheduled' : 'No Virtual Hearing Scheduled'}</b></p>
+                        ${activeCase.hearingDate ? `<p><small style="color: #6B7280; font-size: 0.75rem; font-weight: 600;">DATE & TIME</small><br><b style="font-size: 0.9rem;">${activeCase.hearingDate} ${activeCase.hearingTime || ''}</b></p>` : ''}
                     </div>
                 `;
             }
 
-            // Update timeline
+            // Timeline
             const timelineData = [
-                { status: "Case Filed", date: activeCase.assigned, icon: "fa-file-invoice", type: "complete" },
-                { status: "Arbitrator Assigned", date: activeCase.assigned, icon: "fa-user-check", type: "complete" },
-                ...(activeCase.hearingDate ? [{ status: "Hearing Scheduled", date: activeCase.hearingDate, icon: "fa-calendar-check", type: "complete" }] : []),
-                { status: activeCase.status, date: "Current", icon: "fa-magnifying-glass", type: "active" }
+                { status: "Dispute Registered", date: activeCase.assigned || "Sept 1, 2026", icon: "fa-triangle-exclamation", type: "complete" },
+                { status: activeCase.respondentDescription ? "Provider Reply Submitted" : "Waiting for Provider Reply", date: "System", icon: "fa-reply", type: activeCase.respondentDescription ? "complete" : "active" },
+                { status: activeCase.status === 'Closed' ? "Final Award Issued & Case Closed" : "Under Arbitrator Review", date: activeCase.status === 'Closed' ? "Resolved" : "Current", icon: "fa-gavel", type: activeCase.status === 'Closed' ? "complete" : "active" }
             ];
 
             const timelineContainer = document.getElementById('timeline-container');
             if (timelineContainer) {
                 timelineContainer.innerHTML = timelineData.map(item => `
                     <div style="display: flex; gap: 16px; margin-bottom: 20px; align-items: center;">
-                        <div style="width: 38px; height: 38px; border-radius: 50%; background: ${item.type === 'complete' ? '#D1FAE5' : '#DBEAFE'};
-                             color: ${item.type === 'complete' ? '#065F46' : '#1E40AF'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <div style="width: 36px; height: 36px; border-radius: 50%; background: ${item.type === 'complete' ? '#D1FAE5' : '#DBEAFE'};
+                             color: ${item.type === 'complete' ? '#065F46' : '#2F54EB'}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                             <i class="fa-solid ${item.icon}"></i>
                         </div>
                         <div>
-                            <div style="font-weight: 700; font-size: 0.9rem; color: #111827;">${item.status}</div>
-                            <div style="color: #6B7280; font-size: 0.8rem;">${item.date}</div>
+                            <div style="font-weight: 700; font-size: 0.88rem; color: #111827;">${item.status}</div>
+                            <div style="color: #6B7280; font-size: 0.78rem;">${item.date}</div>
                         </div>
                     </div>
                 `).join('');

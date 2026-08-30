@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                     <ul>
                         <li onclick="window.location.href='admin_profile.html'"><i class="fa-solid fa-user"></i> My Profile</li>
-                        <li onclick="window.location.href='admin_settings.html'"><i class="fa-solid fa-gear"></i> Platform Settings</li>
                         <li class="logout-item" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</li>
                     </ul>
                 </div>
@@ -222,5 +221,5 @@ async function handleLogout() {
         saveAdminData();
     }
 
-    window.location.replace('admin_landing.html');
+    window.location.replace('../Landing_Page/index.html');
 }

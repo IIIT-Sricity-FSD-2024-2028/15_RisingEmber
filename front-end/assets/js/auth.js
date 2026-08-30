@@ -740,13 +740,12 @@ function providerLogin(email, password, expectedRole = 'provider') {
   });
 }
 
-function providerSignup(name, email, phone, password) {
+function providerSignup(name, email, phone, password, category, experience, location, bio) {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
       const trimmedName = String(name || '').trim();
       const normalizedEmail = normalizeEmail(email);
       const trimmedPhone = String(phone || '').trim();
-      const normalizedPhone = normalizePhone(phone);
 
       // --- Field presence validation ---
       if (!trimmedName || !normalizedEmail || !trimmedPhone || !password) {
@@ -787,7 +786,10 @@ function providerSignup(name, email, phone, password) {
             phone: trimmedPhone,
             password,
             businessName: `${trimmedName}'s Services`,
-            category: 'General Services'
+            category: category || 'General Services',
+            experienceLevel: experience || '1 – 3 years',
+            serviceArea: location || 'Local Area',
+            bio: bio || 'Professional service provider.'
           }
         });
 

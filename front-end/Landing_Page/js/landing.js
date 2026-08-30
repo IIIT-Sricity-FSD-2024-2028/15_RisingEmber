@@ -318,7 +318,7 @@
       }
 
       if (selectedRole === 'arbitrator') {
-        window.location.href = '../arbitrator/arbitrator_landing.html';
+        window.location.href = '../arbitrator/arbitrator_login.html';
         return;
       }
 

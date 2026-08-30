@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const feedback = document.getElementById("disputeFormMessage");
 
   const maxFileSize = 10 * 1024 * 1024;
-  const acceptedTypes = new Set(["image/png", "image/jpeg", "application/pdf"]);
+  const acceptedTypes = new Set(["application/pdf"]);
   let selectedFiles = [];
 
   function updateFeedback(message, tone) {
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       return `
         <div class="customer-file-chip">
-          <span>${file.name} • ${sizeLabel}</span>
+          <span><i class="fa-solid fa-file-pdf" style="color: var(--red); margin-right: 6px;"></i>${file.name} • ${sizeLabel}</span>
           <button type="button" data-remove-index="${index}">Remove</button>
         </div>
       `;
@@ -90,22 +90,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  function acceptFiles(fileList) {
+  function readFileAsDataUrl(file) {
+    return new Promise((resolve) => {
+      if (!file) { resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function acceptFiles(fileList) {
     const incomingFiles = Array.from(fileList || []);
     if (!incomingFiles.length) return;
 
-    const rejectedFile = incomingFiles.find((file) => !acceptedTypes.has(file.type) || file.size > maxFileSize);
+    const rejectedFile = incomingFiles.find((file) => file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf") || file.size > maxFileSize);
     if (rejectedFile) {
-      updateFeedback("Only PNG, JPG, and PDF files up to 10 MB are allowed.", "error");
+      updateFeedback("Only PDF document files up to 10 MB are allowed for dispute evidence.", "error");
       return;
     }
 
-    const nextFiles = incomingFiles.map((file) => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      uploadedAt: new Date().toISOString()
-    }));
+    const nextFiles = [];
+    for (const file of incomingFiles) {
+      const base64Url = await readFileAsDataUrl(file);
+      nextFiles.push({
+        name: file.name,
+        size: file.size,
+        type: "application/pdf",
+        uploadedAt: new Date().toISOString(),
+        url: base64Url || URL.createObjectURL(file),
+        fileLink: base64Url || URL.createObjectURL(file)
+      });
+    }
 
     selectedFiles = [...selectedFiles, ...nextFiles].slice(0, 5);
     updateFeedback("", "info");
@@ -165,8 +181,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (description.length < 50) {
-      updateFeedback("Please describe the issue in at least 50 characters.", "error");
+    if (!description || description.length < 1) {
+      updateFeedback("Please describe the issue.", "error");
       return;
     }
 

@@ -379,7 +379,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const inferredLocation = job.location || job.address || 'Location to be confirmed';
     const inferredPhone = job.customerPhone || '+1 (555) 000-0000';
     const inferredTime = job.time || 'Time to be confirmed';
-    const inferredDescription = job.description || `Customer requested ${serviceName.toLowerCase()} support.`;
+    const rawDesc = job.description || job.notes || '';
+    const inferredDescription = (rawDesc && !rawDesc.toLowerCase().includes('kitchen and balcony'))
+      ? rawDesc
+      : `${serviceName} (${job.category || 'General Service'}): Professional service provided for customer premises.`;
     const inferredStage = job.progressStage || (
       job.status === 'completed'
         ? 'completed'
@@ -2337,8 +2340,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (disputeCategoryInput) disputeCategoryInput.focus();
         return;
       }
-      if (!description || description.length < 20) {
-        showToast('Dispute description must be at least 20 characters long.', 'error');
+      if (!description || description.length < 1) {
+        showToast('Please describe the issue.', 'error');
         if (disputeDescriptionInput) disputeDescriptionInput.focus();
         return;
       }
@@ -2495,24 +2498,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateShowingText(disputesShowingText, 0, 0, 0, 'disputes');
       } else {
         paginationState.items.forEach((dispute) => {
-          const disputeDetailsUrl = buildProviderUrl('job-details.html', dispute.id);
+          const detailsUrl = `dispute-details.html?id=${encodeURIComponent(dispute.id)}`;
+          
+          const latestAward = JSON.parse(localStorage.getItem('sh_latest_award') || 'null');
+          if (latestAward && (latestAward.caseId === dispute.id || latestAward.bookingId === dispute.bookingId)) {
+            dispute.status = 'resolved';
+            dispute.awardDecision = latestAward.awardDecision;
+            dispute.awardSummary = latestAward.awardSummary;
+            dispute.awardPdfUrl = latestAward.awardPdfUrl;
+            dispute.awardPdfName = latestAward.awardPdfName;
+          }
+
+          const isClosed = String(dispute.status).toLowerCase() === 'closed' || String(dispute.status).toLowerCase() === 'resolved' || Boolean(dispute.awardDecision);
+          
           let statusPill = '';
-          if (dispute.status === 'pending') statusPill = '<span class="status-dot-pill status-dot-pill--pending"><i></i>Pending</span>';
+          if (isClosed) statusPill = '<span class="status-dot-pill status-dot-pill--resolved"><i></i>Closed / Resolved</span>';
           else if (dispute.status === 'under_review') statusPill = '<span class="status-dot-pill status-dot-pill--review"><i></i>Under Review</span>';
-          else statusPill = '<span class="status-dot-pill status-dot-pill--resolved"><i></i>Resolved</span>';
+          else statusPill = '<span class="status-dot-pill status-dot-pill--pending"><i></i>Pending</span>';
+
+          let actionBtn = '';
+          if (isClosed && dispute.awardPdfUrl) {
+            actionBtn = `<a href="${dispute.awardPdfUrl}" download="${dispute.awardPdfName || 'Final_Award.pdf'}" target="_blank" class="btn btn--sm btn--primary" style="background:#10B981; border:none; margin-right:6px;"><i class="fa-solid fa-file-pdf"></i> View Award PDF</a>`;
+          } else {
+            const hasReply = Boolean(dispute.respondentDescription || dispute.providerReply);
+            actionBtn = hasReply
+              ? `<span style="font-size:0.8rem; color:var(--text-soft); font-weight:600; margin-right:8px;"><i class="fa-solid fa-check"></i> Reply Submitted</span>`
+              : `<button class="btn btn--sm btn--primary" style="margin-right:6px;" onclick="openProviderReplyModal('${dispute.id}')"><i class="fa-solid fa-reply"></i> Reply</button>`;
+          }
+
+          actionBtn += `<a href="${detailsUrl}" class="btn btn--sm btn--outline"><i class="fa-regular fa-eye"></i> View Details</a>`;
 
           disputesTableBody.innerHTML += `
             <tr>
-              <td class="job-id-cell"><a href="${disputeDetailsUrl}">${dispute.id}</a></td>
+              <td class="job-id-cell"><a href="${detailsUrl}">${dispute.id}</a></td>
               <td>
                 <div class="table-customer">
                   <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(dispute.customerName)}&background=random" alt="Customer"/>
                   <span>${dispute.customerName}</span>
                 </div>
               </td>
-              <td>${dispute.issue}</td>
+              <td>${dispute.issue || dispute.title || 'General Dispute'}</td>
               <td>${statusPill}</td>
-              <td><a href="${disputeDetailsUrl}" class="text-link">View Details</a></td>
+              <td>${actionBtn}</td>
             </tr>
           `;
         });
@@ -2526,6 +2553,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     renderDisputesTable();
+
+    window.openProviderReplyModal = function(disputeId) {
+      localStorage.setItem('replyDisputeId', disputeId);
+      window.location.href = `reply-dispute.html?id=${encodeURIComponent(disputeId)}`;
+    };
+
+    window.closeProviderReplyModal = function() {
+      document.getElementById('providerReplyModalOverlay').classList.remove('active');
+    };
+
+    window.handleProviderReplySubmit = async function(event) {
+      event.preventDefault();
+      const disputeId = document.getElementById('replyDisputeId').value;
+      const text = document.getElementById('providerReplyText').value.trim();
+      const filesInput = document.getElementById('providerEvidenceFiles');
+
+      if (!text) {
+        showToast("Please enter your written response.", "warning");
+        return;
+      }
+
+      const btn = document.getElementById('submitReplyBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+      btn.style.pointerEvents = 'none';
+
+      try {
+        const fileList = filesInput && filesInput.files ? Array.from(filesInput.files) : [];
+        const evidenceArr = fileList.map(f => ({ name: f.name, type: "application/pdf", url: URL.createObjectURL(f), fileLink: URL.createObjectURL(f), uploadedAt: new Date().toLocaleDateString() }));
+
+        const targetDispute = disputesDB.find(d => String(d.id) === String(disputeId));
+        if (targetDispute) {
+          targetDispute.respondentDescription = text;
+          targetDispute.providerReply = text;
+          targetDispute.respondentEvidence = evidenceArr;
+          targetDispute.status = 'under_review';
+        }
+
+        // Sync all storage keys
+        const disputeKeys = ['sh_disputes', 'serviceHub_disputes'];
+        disputeKeys.forEach(key => {
+          let list = JSON.parse(localStorage.getItem(key) || '[]');
+          if (Array.isArray(list)) {
+            let match = list.find(d => String(d.id) === String(disputeId));
+            if (match) {
+              match.respondentDescription = text;
+              match.providerReply = text;
+              match.respondentEvidence = evidenceArr;
+              match.status = 'under_review';
+            }
+            localStorage.setItem(key, JSON.stringify(list));
+          }
+        });
+
+        // Sync Arbitrator workspace DB
+        let arbDb = JSON.parse(localStorage.getItem('arbitrator_db') || '{}');
+        if (arbDb && Array.isArray(arbDb.assignedCases)) {
+          let match = arbDb.assignedCases.find(c => String(c.id) === String(disputeId) || String(c.bookingId) === String(targetDispute?.bookingId));
+          if (match) {
+            match.respondentDescription = text;
+            match.respondentEvidence = evidenceArr;
+          }
+          localStorage.setItem('arbitrator_db', JSON.stringify(arbDb));
+        }
+
+        closeProviderReplyModal();
+        renderDisputesTable();
+        showToast("Your written reply and PDF evidence have been submitted successfully!", "success");
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        btn.innerHTML = orig;
+        btn.style.pointerEvents = 'auto';
+      }
+    };
 
     const exportDisputesBtn = document.getElementById('exportDisputesBtn');
     if (exportDisputesBtn) {

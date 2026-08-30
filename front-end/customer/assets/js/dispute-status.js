@@ -102,7 +102,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     const evidenceGrid = document.getElementById("evidenceGrid");
     if (!evidenceGrid) return;
 
-    const evidence = Array.isArray(disputeRecord.evidence) ? disputeRecord.evidence : [];
+    let evidence = [];
+    const fields = [disputeRecord.evidence, disputeRecord.evidenceFiles, disputeRecord.files, disputeRecord.respondentEvidence, disputeRecord.uploadedEvidence];
+    fields.forEach(arr => {
+      if (Array.isArray(arr)) {
+        arr.forEach(file => {
+          if (file) evidence.push(file);
+        });
+      }
+    });
+
     if (!evidence.length) {
       evidenceGrid.innerHTML = `
         <div style="grid-column: 1 / -1; text-align: center; padding: 28px; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text-mid);">
@@ -113,23 +122,23 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     evidenceGrid.innerHTML = evidence.map((file) => {
-      const isPdf = file.type === "application/pdf";
-      const sizeLabel = file.size >= 1024 * 1024
-        ? `${(file.size / (1024 * 1024)).toFixed(1)} MB`
-        : `${Math.max(1, Math.round(file.size / 1024))} KB`;
+      const fileName = file.name || "Evidence_Document.pdf";
+      const fileUrl = file.fileLink || file.url || "#";
+      const isPdf = true;
+      const sizeLabel = file.size ? (file.size >= 1024 * 1024 ? `${(file.size / (1024 * 1024)).toFixed(1)} MB` : `${Math.max(1, Math.round(file.size / 1024))} KB`) : "PDF Document";
 
       return `
         <div class="evidence-item">
-          <div class="evidence-icon ${isPdf ? "pdf" : ""}">
-            <i class="fa-regular ${isPdf ? "fa-file-pdf" : "fa-image"}"></i>
+          <div class="evidence-icon pdf">
+            <i class="fa-solid fa-file-pdf" style="color: var(--red);"></i>
           </div>
           <div class="evidence-details">
-            <span class="evidence-name">${file.name}</span>
-            <span class="evidence-meta">${sizeLabel} • Uploaded ${app.formatDisplayDate(file.uploadedAt || disputeRecord.submittedAt, { month: "short", day: "numeric" })}</span>
+            <span class="evidence-name">${fileName}</span>
+            <span class="evidence-meta">${sizeLabel} • Uploaded PDF</span>
           </div>
-          <button type="button" class="btn-icon" data-download-file="${file.name}">
+          <a href="${fileUrl}" download="${fileName}" target="_blank" class="btn-icon" style="display: inline-flex; align-items: center; justify-content: center; text-decoration: none; color: var(--primary);">
             <i class="fa-solid fa-download"></i>
-          </button>
+          </a>
         </div>
       `;
     }).join("");
@@ -142,7 +151,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const statusLink = document.getElementById("viewDisputeStatusLink");
 
     if (disputeIdValue) disputeIdValue.textContent = disputeRecord.id;
-    if (serviceValue) serviceValue.textContent = disputeRecord.service;
+    if (serviceValue) serviceValue.textContent = disputeRecord.service || disputeRecord.title;
     if (bookingValue) bookingValue.textContent = disputeRecord.bookingId;
     if (statusLink) {
       statusLink.addEventListener("click", () => {
@@ -152,7 +161,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function populateStatusPage(disputeRecord) {
-    const statusMeta = getStatusMeta(disputeRecord.status);
+    const latestAward = JSON.parse(localStorage.getItem('sh_latest_award') || 'null');
+    if (latestAward && (latestAward.caseId === disputeRecord.id || latestAward.bookingId === disputeRecord.bookingId)) {
+      disputeRecord.status = 'resolved';
+      disputeRecord.awardDecision = latestAward.awardDecision;
+      disputeRecord.awardSummary = latestAward.awardSummary;
+      disputeRecord.awardPdfUrl = latestAward.awardPdfUrl;
+      disputeRecord.awardPdfName = latestAward.awardPdfName;
+    }
+
+    const isClosed = String(disputeRecord.status).toLowerCase() === 'closed' || String(disputeRecord.status).toLowerCase() === 'resolved' || Boolean(disputeRecord.awardDecision);
+    const statusMeta = getStatusMeta(isClosed ? "resolved" : disputeRecord.status);
 
     const disputeIdValue = document.getElementById("statusDisputeId");
     const serviceValue = document.getElementById("statusServiceName");
@@ -163,17 +182,57 @@ document.addEventListener("DOMContentLoaded", async () => {
     const badgeContainer = document.getElementById("statusBadge");
 
     if (disputeIdValue) disputeIdValue.textContent = disputeRecord.id;
-    if (serviceValue) serviceValue.textContent = disputeRecord.service;
-    if (bookingValue) bookingValue.textContent = disputeRecord.bookingId;
-    if (categoryValue) categoryValue.textContent = getCategoryLabel(disputeRecord.category);
+    if (serviceValue) serviceValue.textContent = disputeRecord.service || disputeRecord.title || "Service Dispute";
+    if (bookingValue) bookingValue.textContent = disputeRecord.bookingId || "booking_8001";
+    if (categoryValue) categoryValue.textContent = getCategoryLabel(disputeRecord.category || disputeRecord.issue);
     if (submittedDateValue) {
-      submittedDateValue.textContent = app.formatDisplayDate(disputeRecord.submittedAt || disputeRecord.date);
+      submittedDateValue.textContent = app.formatDisplayDate(disputeRecord.submittedAt || disputeRecord.date || new Date());
     }
     if (descriptionValue) {
-      descriptionValue.textContent = disputeRecord.desc;
+      descriptionValue.textContent = disputeRecord.description || disputeRecord.desc || disputeRecord.claimantDescription || "No detailed description provided.";
     }
     if (badgeContainer) {
       badgeContainer.innerHTML = `<span class="status-dot-pill ${statusMeta.className}"><i></i> ${statusMeta.label}</span>`;
+    }
+
+    // Render Arbitrator Verdict & Final Award Section if closed
+    if (isClosed) {
+      const summaryBox = document.getElementById("statusDescription")?.parentElement;
+      if (summaryBox && !document.getElementById("awardVerdictBox")) {
+        const decisionText = disputeRecord.awardDecision === "REFUND_TO_CUSTOMER" ? "Full Refund Issued to Customer" : "Released Payment to Provider";
+        const awardPdfUrl = disputeRecord.awardPdfUrl || "#";
+        const awardPdfName = disputeRecord.awardPdfName || `Final_Award_${disputeRecord.id}.pdf`;
+        
+        const verdictHtml = `
+          <div id="awardVerdictBox" style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius); padding: 20px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4 style="color: #166534; font-size: 1rem; margin: 0;"><i class="fa-solid fa-gavel"></i> Final Arbitrator Award & Verdict</h4>
+              <span class="status-dot-pill status-dot-pill--resolved">Closed / Resolved</span>
+            </div>
+            <p style="font-size: 0.9rem; color: #15803D; font-weight: 700; margin-bottom: 6px;">Decision: ${decisionText}</p>
+            <p style="font-size: 0.88rem; color: #166534; line-height: 1.5; margin-bottom: 14px;">${disputeRecord.awardSummary || "The arbitrator has completed the case review and issued a binding decision."}</p>
+            <a href="${awardPdfUrl}" download="${awardPdfName}" target="_blank" class="btn btn--primary" style="display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; padding: 8px 16px;">
+              <i class="fa-solid fa-file-pdf"></i> Download Official Award PDF
+            </a>
+          </div>
+        `;
+        summaryBox.insertAdjacentHTML('beforeend', verdictHtml);
+      }
+    }
+
+    // Render Respondent Reply Section if available
+    const respReply = disputeRecord.respondentDescription || disputeRecord.providerReply;
+    if (respReply) {
+      const summaryBox = document.getElementById("statusDescription")?.parentElement;
+      if (summaryBox && !document.getElementById("respondentReplyBox")) {
+        const replyHtml = `
+          <div id="respondentReplyBox" style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: var(--radius); padding: 20px; margin-top: 20px;">
+            <h4 style="color: #92400E; font-size: 0.95rem; margin-bottom: 8px;"><i class="fa-solid fa-reply"></i> Respondent Written Reply</h4>
+            <p style="font-size: 0.88rem; color: #78350F; line-height: 1.5; margin: 0;">"${respReply}"</p>
+          </div>
+        `;
+        summaryBox.insertAdjacentHTML('beforeend', replyHtml);
+      }
     }
 
     renderTimeline(disputeRecord);

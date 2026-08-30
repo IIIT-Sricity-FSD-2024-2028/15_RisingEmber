@@ -2,22 +2,24 @@
    ARBITRATOR MODULE STYLES
    ============================ */
 
+@import url('/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css');
+
 /* CSS Variables */
 :root {
     /* Brand Colors */
-    --primary-blue: #0061FF;
-    --dark-slate: #1E293B;
-    --stroke-gray: #E5E7EB;
-    --input-bg: #D1D5DB;
-    --step-green: #228B22;
+    --primary-blue: #2F54EB;
+    --dark-slate: #111827;
+    --stroke-gray: #E8ECF4;
+    --input-bg: #F4F6FB;
+    --step-green: #10B981;
 
     /* Dashboard Specific */
-    --arb-primary: #1E3A8A;
+    --arb-primary: #2F54EB;
     --arb-accent: #F59E0B;
-    --arb-bg: #F3F4F6;
-    --arb-border: #E5E7EB;
+    --arb-bg: #F4F6FB;
+    --arb-border: #E8ECF4;
     --arb-text-dark: #111827;
-    --arb-text-gray: #6B7280;
+    --arb-text-gray: #4B5563;
 }
 
 /* Reset */
@@ -28,8 +30,8 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background-color: #F8FAFF;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background-color: #F4F6FB;
     color: #111827;
     line-height: 1.4;
 }

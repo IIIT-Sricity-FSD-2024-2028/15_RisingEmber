@@ -141,6 +141,41 @@
         </div>
     </main>
   </div>
+
+  <!-- Customer Rating Modal -->
+  <div id="ratingModalOverlay" style="position: fixed; inset: 0; background: rgba(17, 24, 39, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; opacity: 0; pointer-events: none; transition: opacity 0.2s;">
+    <div style="background: white; border-radius: 16px; width: 100%; max-width: 480px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #111827; margin-bottom: 6px;"><i class="fa-solid fa-star" style="color: #F59E0B;"></i> Rate & Review Service</h2>
+      <p style="font-size: 0.88rem; color: #6B7280; margin-bottom: 20px;">Share your feedback to help us improve service quality.</p>
+
+      <form id="ratingForm" onsubmit="handleRatingSubmit(event)">
+        <input type="hidden" id="rateBookingId" />
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 8px;">Select Rating (1 to 5 Stars)</label>
+            <div style="display: flex; gap: 8px; font-size: 1.6rem; color: #D1D5DB; cursor: pointer;" id="starRatingContainer">
+              <i class="fa-solid fa-star star-btn" data-val="1"></i>
+              <i class="fa-solid fa-star star-btn" data-val="2"></i>
+              <i class="fa-solid fa-star star-btn" data-val="3"></i>
+              <i class="fa-solid fa-star star-btn" data-val="4"></i>
+              <i class="fa-solid fa-star star-btn" data-val="5"></i>
+            </div>
+            <input type="hidden" id="selectedStarValue" value="5" />
+          </div>
+
+          <div>
+            <label style="font-size: 0.85rem; font-weight: 700; color: #111827; display: block; margin-bottom: 6px;">Your Written Feedback</label>
+            <textarea id="ratingFeedbackText" rows="3" placeholder="Describe your experience with the service provider..." required style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 0.88rem; outline: none;"></textarea>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn btn--outline" onclick="closeRatingModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary" id="submitRatingBtn">Submit Rating & Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
   
   <script src="assets/js/backendData.js"></script>
   <script src="assets/js/app.js"></script>

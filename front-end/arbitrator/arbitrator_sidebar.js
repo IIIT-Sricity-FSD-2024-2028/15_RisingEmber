@@ -21,9 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <li class="arbitrator-nav-item"><a href="arbitrator_documents.html"><i class="fa-solid fa-file-lines"></i> Case Documents</a></li>
                 <li class="arbitrator-nav-item"><a href="arbitrator_hearings.html"><i class="fa-solid fa-calendar"></i> Hearings & Schedule</a></li>
                 <li class="arbitrator-nav-item"><a href="arbitrator_decisions.html"><i class="fa-solid fa-gavel"></i> Decisions & Awards</a></li>
-                <li class="arbitrator-nav-item"><a href="arbitrator_messages.html"><i class="fa-solid fa-envelope"></i> Messages</a></li>
-                <li class="arbitrator-nav-item"><a href="arbitrator_profile.html"><i class="fa-solid fa-user-gear"></i> Profile & Credentials</a></li>
-                <li class="arbitrator-nav-item"><a href="arbitrator_settings.html"><i class="fa-solid fa-cog"></i> Settings</a></li>
+                <li class="arbitrator-nav-item"><a href="arbitrator_profile.html"><i class="fa-solid fa-user"></i> Profile & Credentials</a></li>
                 <li class="arbitrator-nav-item"><a href="../Landing_Page/index.html" onclick="event.preventDefault(); logoutArbitrator();"><i class="fa-solid fa-sign-out-alt"></i> Logout</a></li>
             </ul>
         </aside>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ServiceHub – Provider Dispute Details</title>
+
+  <link href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css" rel="stylesheet"/>
+  <link rel="stylesheet" href="/assets/vendor/fontawesome-6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="assets/css/styles.css" />
+  <style>
+    .details-container { max-width: 900px; }
+    .card-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
+    .meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 20px; padding: 20px; background: #F9FAFB; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-bottom: 24px; }
+    .meta-item label { font-size: 0.78rem; text-transform: uppercase; color: var(--text-soft); font-weight: 700; display: block; margin-bottom: 4px; }
+    .meta-item span { font-size: 0.95rem; font-weight: 600; color: var(--text-dark); }
+    
+    .evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+    .evidence-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+    .evidence-info { display: flex; align-items: center; gap: 12px; }
+    .evidence-info i { font-size: 24px; color: #EF4444; }
+    .evidence-text strong { display: block; font-size: 0.88rem; color: var(--text-dark); }
+    .evidence-text span { font-size: 0.75rem; color: var(--text-soft); }
+  </style>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="navbar__brand" style="cursor: pointer;" onclick="window.location.href='../Landing_Page/index.html'">
+      <div class="navbar__logo"><i class="fa-solid fa-wrench"></i></div>
+      <span class="navbar__name">ServiceHub</span>
+    </div>
+    <div class="navbar__actions">
+      <button class="navbar__notif"><i class="fa-regular fa-bell"></i></button>
+      <img src="https://ui-avatars.com/api/?name=Provider&background=2F54EB&color=fff" alt="Provider" class="navbar__avatar" />
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <nav class="sidebar__nav">
+        <a href="provider_dashboard.html" class="sidebar__link"><i class="fa-solid fa-house"></i><span>Dashboard</span></a>
+        <a href="profile.html"            class="sidebar__link"><i class="fa-regular fa-user"></i><span>Profile</span></a>
+        <a href="services.html"           class="sidebar__link"><i class="fa-solid fa-wrench"></i><span>Services</span></a>
+        <a href="jobs.html"               class="sidebar__link"><i class="fa-solid fa-briefcase"></i><span>Active Jobs</span></a>
+        <a href="earnings.html"           class="sidebar__link"><i class="fa-solid fa-dollar-sign"></i><span>Earnings</span></a>
+        <a href="disputes.html"           class="sidebar__link active"><i class="fa-solid fa-triangle-exclamation"></i><span>Disputes</span></a>
+      </nav>
+      <a href="../Landing_Page/index.html" class="sidebar__logout"><i class="fa-solid fa-arrow-right-from-bracket"></i><span>Logout</span></a>
+    </aside>
+
+    <main class="main">
+      <div class="details-container">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+          <div>
+            <a href="disputes.html" class="btn btn--outline btn--sm" style="margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-solid fa-arrow-left"></i> Back to Disputes</a>
+            <h1 id="disputeTitle" style="font-size: 1.6rem; font-weight: 800; color: var(--text-dark); margin: 0;">Dispute Status & Resolution Details</h1>
+          </div>
+          <div id="disputeStatusBadge"></div>
+        </div>
+
+        <!-- Meta Summary Grid -->
+        <div class="meta-grid">
+          <div class="meta-item">
+            <label>Dispute ID</label>
+            <span id="metaDisputeId">#CASE-20491</span>
+          </div>
+          <div class="meta-item">
+            <label>Linked Booking</label>
+            <span id="metaBookingId">#booking_8001</span>
+          </div>
+          <div class="meta-item">
+            <label>Customer</label>
+            <span id="metaCustomerName">Aarav Mehta</span>
+          </div>
+          <div class="meta-item">
+            <label>Date Filed</label>
+            <span id="metaDateFiled">Recent</span>
+          </div>
+        </div>
+
+        <!-- Issue Summary -->
+        <div class="card-box">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 12px;"><i class="fa-solid fa-file-lines text-primary" style="margin-right: 8px;"></i> Customer Issue Description</h3>
+          <p id="issueDescription" style="font-size: 0.92rem; color: var(--text-mid); line-height: 1.6; margin: 0;">Loading issue description...</p>
+        </div>
+
+        <!-- Respondent Written Reply Section -->
+        <div class="card-box" id="respondentReplyCard">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin: 0;"><i class="fa-solid fa-reply text-primary" style="margin-right: 8px;"></i> Provider Written Response</h3>
+            <span id="replyStatusTag" style="font-size: 0.8rem; font-weight: 600; color: var(--text-soft);"></span>
+          </div>
+          <p id="respondentText" style="font-size: 0.92rem; color: var(--text-mid); line-height: 1.6; margin: 0;">No written reply submitted yet.</p>
+          <div id="replyActionBtnWrapper" style="margin-top: 16px; display: none;">
+            <a href="#" id="gotoReplyBtn" class="btn btn--primary btn--sm"><i class="fa-solid fa-pen"></i> Submit Written Reply & PDF Evidence</a>
+          </div>
+        </div>
+
+        <!-- Arbitrator Verdict Section (Shows if Closed) -->
+        <div id="arbitratorVerdictSection" style="display: none;" class="card-box">
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: var(--radius-sm); padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <h3 style="color: #166534; font-size: 1.1rem; margin: 0;"><i class="fa-solid fa-gavel"></i> Official Arbitrator Final Award & Ruling</h3>
+              <span class="status-dot-pill status-dot-pill--resolved">Closed / Resolved</span>
+            </div>
+            <p id="verdictDecisionText" style="font-size: 1rem; color: #15803D; font-weight: 800; margin-bottom: 8px;">Decision: Released Payment to Provider</p>
+            <p id="verdictSummaryText" style="font-size: 0.92rem; color: #166534; line-height: 1.6; margin-bottom: 20px;">Arbitrator review completed.</p>
+            <a href="#" id="downloadAwardPdfBtn" download="Final_Award.pdf" target="_blank" class="btn btn--primary" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px;">
+              <i class="fa-solid fa-file-pdf"></i> Download Official Award PDF
+            </a>
+          </div>
+        </div>
+
+        <!-- Evidence Files -->
+        <div class="card-box">
+          <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 12px;"><i class="fa-solid fa-paperclip text-primary" style="margin-right: 8px;"></i> Uploaded Evidence Documents</h3>
+          <div class="evidence-grid" id="providerEvidenceGrid">
+            <div style="grid-column: 1 / -1; text-align: center; color: var(--text-soft); padding: 20px;">No evidence files uploaded yet.</div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="assets/js/backendData.js"></script>
+  <script src="../assets/js/auth.js"></script>
+  <script src="assets/js/script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      protectPage('provider');
+      const params = new URLSearchParams(window.location.search);
+      const disputeId = params.get('id') || localStorage.getItem('selectedDisputeId') || localStorage.getItem('replyDisputeId');
+
+      let disputesDB = JSON.parse(localStorage.getItem('sh_disputes') || '[]');
+      if (!Array.isArray(disputesDB) || !disputesDB.length) {
+        disputesDB = JSON.parse(localStorage.getItem('serviceHub_disputes') || '[]');
+      }
+
+      let dispute = disputesDB.find(d => String(d.id || '').toUpperCase() === String(disputeId || '').toUpperCase() || String(d.bookingId || '').toUpperCase() === String(disputeId || '').toUpperCase()) || disputesDB[0];
+
+      // Merge latest award
+      const latestAward = JSON.parse(localStorage.getItem('sh_latest_award') || 'null');
+      if (latestAward && dispute && (latestAward.caseId === dispute.id || latestAward.bookingId === dispute.bookingId)) {
+        dispute.status = 'resolved';
+        dispute.awardDecision = latestAward.awardDecision;
+        dispute.awardSummary = latestAward.awardSummary;
+        dispute.awardPdfUrl = latestAward.awardPdfUrl;
+        dispute.awardPdfName = latestAward.awardPdfName;
+      }
+
+      if (!dispute) {
+        document.querySelector('.details-container').innerHTML = '<div style="padding: 40px; text-align: center;"><h2>No dispute details found.</h2><a href="disputes.html" class="btn btn--primary">Back to Disputes</a></div>';
+        return;
+      }
+
+      const isClosed = String(dispute.status).toLowerCase() === 'closed' || String(dispute.status).toLowerCase() === 'resolved' || Boolean(dispute.awardDecision);
+
+      // Meta
+      document.getElementById('disputeTitle').textContent = `Dispute Details: ${dispute.service || dispute.issue || 'Service Dispute'}`;
+      document.getElementById('metaDisputeId').textContent = dispute.id;
+      document.getElementById('metaBookingId').textContent = dispute.bookingId || 'booking_8001';
+      document.getElementById('metaCustomerName').textContent = dispute.customerName || 'Aarav Mehta';
+      document.getElementById('metaDateFiled').textContent = dispute.date || 'Recent';
+
+      document.getElementById('disputeStatusBadge').innerHTML = isClosed
+        ? '<span class="status-dot-pill status-dot-pill--resolved"><i></i>Closed / Resolved</span>'
+        : (dispute.status === 'under_review' ? '<span class="status-dot-pill status-dot-pill--review"><i></i>Under Review</span>' : '<span class="status-dot-pill status-dot-pill--pending"><i></i>Pending</span>');
+
+      // Issue Description
+      document.getElementById('issueDescription').textContent = dispute.description || dispute.desc || dispute.issue || 'Service dispute filed.';
+
+      // Respondent Reply
+      const respReply = dispute.respondentDescription || dispute.providerReply;
+      if (respReply) {
+        document.getElementById('respondentText').textContent = respReply;
+        document.getElementById('replyStatusTag').textContent = 'Submitted';
+        document.getElementById('replyStatusTag').style.color = '#10B981';
+      } else {
+        document.getElementById('replyActionBtnWrapper').style.display = 'block';
+        document.getElementById('gotoReplyBtn').href = `reply-dispute.html?id=${encodeURIComponent(dispute.id)}`;
+      }
+
+      // Award Section
+      if (isClosed) {
+        const verdictSec = document.getElementById('arbitratorVerdictSection');
+        verdictSec.style.display = 'block';
+        const decisionText = dispute.awardDecision === 'REFUND_TO_CUSTOMER' ? 'Full Refund Issued to Customer' : 'Released Payment to Provider';
+        document.getElementById('verdictDecisionText').textContent = `Decision: ${decisionText}`;
+        document.getElementById('verdictSummaryText').textContent = dispute.awardSummary || 'Arbitrator completed review and issued a binding award.';
+        
+        const dlBtn = document.getElementById('downloadAwardPdfBtn');
+        dlBtn.href = dispute.awardPdfUrl || '#';
+        dlBtn.download = dispute.awardPdfName || `Final_Award_${dispute.id}.pdf`;
+      }
+
+      // Evidence Grid
+      const grid = document.getElementById('providerEvidenceGrid');
+      let evidence = [];
+      const fields = [dispute.evidence, dispute.evidenceFiles, dispute.files, dispute.respondentEvidence, dispute.uploadedEvidence];
+      fields.forEach(arr => {
+        if (Array.isArray(arr)) {
+          arr.forEach(file => { if (file) evidence.push(file); });
+        }
+      });
+
+      if (!evidence.length) {
+        grid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-soft); padding: 20px; border: 1px dashed var(--border); border-radius: var(--radius-sm);">No evidence files uploaded for this dispute.</div>';
+      } else {
+        grid.innerHTML = evidence.map(file => {
+          const name = file.name || 'Evidence_Document.pdf';
+          const link = file.fileLink || file.url || '#';
+          return `
+            <div class="evidence-card">
+              <div class="evidence-info">
+                <i class="fa-solid fa-file-pdf"></i>
+                <div class="evidence-text">
+                  <strong>${name}</strong>
+                  <span>PDF Document</span>
+                </div>
+              </div>
+              <a href="${link}" download="${name}" target="_blank" class="btn btn--outline btn--sm" style="padding: 6px 12px;">
+                <i class="fa-solid fa-download"></i>
+              </a>
+            </div>
+          `;
+        }).join('');
+      }
+
+    });
+  </script>
+</body>
+</html>
