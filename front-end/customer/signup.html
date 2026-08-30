@@ -143,6 +143,25 @@
     .auth-image-wrapper { width: 100%; max-width: 400px; display: flex; justify-content: center; }
     .auth-image-wrapper img { width: 100%; height: auto; object-fit: contain; border-radius: 12px; box-shadow: var(--shadow-md); }
 
+    /* Plan Selection Styles */
+    .plan-selector { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+    .plan-card {
+      border: 2px solid var(--border); border-radius: 12px; padding: 14px 16px;
+      cursor: pointer; transition: all 0.2s ease; background: var(--surface);
+      display: flex; align-items: flex-start; gap: 12px; position: relative;
+    }
+    .plan-card:hover { border-color: #CBD5E1; }
+    .plan-card.active { border-color: var(--primary); background: var(--primary-light); }
+    .plan-radio { margin-top: 3px; accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer; }
+    .plan-info h4 { font-size: 0.92rem; font-weight: 700; color: var(--text-dark); margin-bottom: 2px; }
+    .plan-info p { font-size: 0.8rem; color: var(--text-mid); line-height: 1.4; }
+    .plan-price-tag { margin-left: auto; font-weight: 800; font-size: 1rem; color: var(--primary); white-space: nowrap; }
+
+    .card-details-section {
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px;
+      padding: 16px; margin-top: 10px; display: flex; flex-direction: column; gap: 12px;
+    }
+
     /* Responsive adjustments */
     @media (max-width: 900px) {
       .auth-card { flex-direction: column; }
@@ -207,6 +226,56 @@
             </div>
           </div>
 
+          <div class="form-group" style="margin-top: 8px;">
+            <label>Select Membership Plan</label>
+            <div class="plan-selector">
+              <label class="plan-card active" id="plan1Card">
+                <input type="radio" name="customerPlan" value="free" class="plan-radio" checked onchange="togglePlanSelection('free')" />
+                <div class="plan-info">
+                  <h4>Plan 1: Free Plan</h4>
+                  <p>Only marketplace access. No dispute resolution mechanism included.</p>
+                </div>
+                <span class="plan-price-tag">$0</span>
+              </label>
+
+              <label class="plan-card" id="plan2Card">
+                <input type="radio" name="customerPlan" value="paid" class="plan-radio" onchange="togglePlanSelection('paid')" />
+                <div class="plan-info">
+                  <h4>Plan 2: Paid Plan</h4>
+                  <p>Both marketplace access and dispute resolution mechanism. One-time fee of $20 deducted at registration.</p>
+                </div>
+                <span class="plan-price-tag">$20</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="cardDetailsContainer" class="card-details-section" style="display: none;">
+            <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
+              <i class="fa-solid fa-credit-card" style="color: var(--primary);"></i> Credit Card Information ($20 One-Time Fee)
+            </div>
+            <div class="form-group">
+              <label>Cardholder Name</label>
+              <input type="text" id="cardholderName" placeholder="Name on credit card" />
+            </div>
+            <div class="form-group">
+              <label>Card Number</label>
+              <input type="text" id="cardNumber" placeholder="1234 5678 9101 1121" maxlength="19" />
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <div class="form-group" style="flex: 1;">
+                <label>Expiration Date</label>
+                <input type="text" id="expDate" placeholder="MM/YY" maxlength="5" />
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label>CVV</label>
+                <input type="password" id="cvv" placeholder="123" maxlength="4" />
+              </div>
+            </div>
+            <div class="form-hint" style="color: #475569; font-size: 0.78rem; line-height: 1.4;">
+              <i class="fa-solid fa-shield-halved" style="color: #10B981;"></i> During registration, credit card details are saved so that for every dispute filed, billing can occur for arbitration fee and platform fee.
+            </div>
+          </div>
+
           <div class="auth-checkbox">
             <label>
               <input type="checkbox" required />
@@ -232,6 +301,36 @@
   </div>
   <script src="assets/js/backendData.js"></script>
   <script src="../assets/js/auth.js"></script>
+  <script>
+    function togglePlanSelection(selectedPlan) {
+      const plan1Card = document.getElementById("plan1Card");
+      const plan2Card = document.getElementById("plan2Card");
+      const cardDetailsContainer = document.getElementById("cardDetailsContainer");
+
+      const cardholderName = document.getElementById("cardholderName");
+      const cardNumber = document.getElementById("cardNumber");
+      const expDate = document.getElementById("expDate");
+      const cvv = document.getElementById("cvv");
+
+      if (selectedPlan === "paid") {
+        plan1Card.classList.remove("active");
+        plan2Card.classList.add("active");
+        cardDetailsContainer.style.display = "flex";
+        if (cardholderName) cardholderName.required = true;
+        if (cardNumber) cardNumber.required = true;
+        if (expDate) expDate.required = true;
+        if (cvv) cvv.required = true;
+      } else {
+        plan2Card.classList.remove("active");
+        plan1Card.classList.add("active");
+        cardDetailsContainer.style.display = "none";
+        if (cardholderName) cardholderName.required = false;
+        if (cardNumber) cardNumber.required = false;
+        if (expDate) expDate.required = false;
+        if (cvv) cvv.required = false;
+      }
+    }
+  </script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>
