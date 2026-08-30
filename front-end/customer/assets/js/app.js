@@ -1439,12 +1439,20 @@
     const phone = String(data.phone || "").trim();
     const password = String(data.password || "");
     const location = String(data.location || "Location not set").trim();
+    const plan = data.plan === "paid" ? "paid" : "free";
+    const paymentDetails = data.paymentDetails || undefined;
 
     if (!isValidHumanName(name)) throw new Error("Please enter a valid full name using letters only.");
     if (!isValidEmail(email)) throw new Error("Please enter a valid email address.");
     if (!isValidPhone(phone)) throw new Error("Please enter a valid phone number.");
     if (!isStrongPassword(password)) {
       throw new Error("Password must be 8+ characters and include uppercase, lowercase, number, and symbol.");
+    }
+
+    if (plan === "paid") {
+      if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expDate || !paymentDetails.cvv) {
+        throw new Error("Please complete all credit card details for the Paid plan.");
+      }
     }
 
     const registration = await requestCustomerApi("/customers/register", {
@@ -1454,14 +1462,16 @@
         email,
         phone,
         password,
-        city: location
+        city: location,
+        plan,
+        paymentDetails
       }
     });
 
     const publicCustomer = persistCustomerFromBackend(registration.profileSummary, password);
     await syncCustomerBackendData({ silent: true });
 
-    addNotification("Welcome to ServiceHub", "Your customer account is ready to use.", {
+    addNotification("Welcome to ServiceHub", plan === "paid" ? "Your Paid customer account ($20 fee) is ready." : "Your Free customer account is ready.", {
       href: "customer_dashboard.html",
       icon: "fa-user-plus",
       tone: "green",
@@ -1469,6 +1479,36 @@
     });
 
     return publicCustomer;
+  }
+
+  async function upgradeCustomerPlan(paymentDetails) {
+    const sessionAccount = getSessionAccount();
+    if (!sessionAccount) throw new Error("You need to log in again before upgrading your plan.");
+
+    if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expDate || !paymentDetails.cvv) {
+      throw new Error("Please enter valid credit card details to upgrade to the Paid Plan ($100 conversion fee).");
+    }
+
+    const updatedProfile = await requestCustomerApi("/users/me", {
+      method: "PATCH",
+      headers: getCustomerApiHeaders(sessionAccount),
+      body: {
+        plan: "paid",
+        paymentDetails
+      }
+    });
+
+    const updatedCustomer = persistCustomerFromBackend(updatedProfile, sessionAccount.password);
+    await syncCustomerBackendData({ silent: true });
+
+    addNotification("Plan Upgraded", "Your account has been upgraded to the Paid Plan ($100 fee paid). You now have full dispute resolution access.", {
+      href: "profile.html",
+      icon: "fa-crown",
+      tone: "green",
+      unread: false
+    });
+
+    return updatedCustomer;
   }
 
   async function updateCustomerProfile(payload) {
@@ -1982,13 +2022,32 @@
           return;
         }
 
+        const selectedPlanEl = signupForm.querySelector("input[name='customerPlan']:checked");
+        const plan = selectedPlanEl ? selectedPlanEl.value : "free";
+
+        let paymentDetails = undefined;
+        if (plan === "paid") {
+          const cardholderName = document.getElementById("cardholderName") ? document.getElementById("cardholderName").value.trim() : "";
+          const cardNumber = document.getElementById("cardNumber") ? document.getElementById("cardNumber").value.trim() : "";
+          const expDate = document.getElementById("expDate") ? document.getElementById("expDate").value.trim() : "";
+          const cvv = document.getElementById("cvv") ? document.getElementById("cvv").value.trim() : "";
+
+          if (!cardNumber || !expDate || !cvv) {
+            setFormFeedback(feedback, "Please complete all credit card details for the Paid Plan ($20 one-time fee).", "error");
+            return;
+          }
+          paymentDetails = { cardholderName: cardholderName || name, cardNumber, expDate, cvv };
+        }
+
         try {
           if (submitButton) submitButton.disabled = true;
           await registerCustomer({
             name,
             email,
             phone,
-            password
+            password,
+            plan,
+            paymentDetails
           });
           setFormFeedback(feedback, "Account created successfully. Redirecting to your dashboard...", "success");
           window.setTimeout(() => {
@@ -2052,6 +2111,7 @@
     getSessionAccount,
     loginCustomer,
     registerCustomer,
+    upgradeCustomerPlan,
     updateCustomerProfile,
     updateCustomerPassword,
     logoutCustomer,

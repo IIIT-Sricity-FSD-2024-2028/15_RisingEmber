@@ -740,7 +740,7 @@ function providerLogin(email, password, expectedRole = 'provider') {
   });
 }
 
-function providerSignup(name, email, phone, password, category, experience, location, bio) {
+function providerSignup(name, email, phone, password, category, experience, location, bio, paymentDetails) {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
       const trimmedName = String(name || '').trim();
@@ -789,7 +789,8 @@ function providerSignup(name, email, phone, password, category, experience, loca
             category: category || 'General Services',
             experienceLevel: experience || '1 – 3 years',
             serviceArea: location || 'Local Area',
-            bio: bio || 'Professional service provider.'
+            bio: bio || 'Professional service provider.',
+            paymentDetails
           }
         });
 
