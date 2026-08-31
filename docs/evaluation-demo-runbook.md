@@ -30,9 +30,9 @@ The backend listens on `http://127.0.0.1:3000`; the static frontend listens on `
 node scripts/demo-preflight.mjs
 ```
 
-The preflight checks the runtime, installed dependencies, all pinned local vendor assets, backend health, Swagger, the landing page, the seeded customer login, and an authorized `/users/me` read. A failed check prints the corrective command. Swagger is at [http://127.0.0.1:3000/api-docs](http://127.0.0.1:3000/api-docs).
+The preflight checks the runtime, installed dependencies, all pinned local vendor assets, backend health, Swagger, the landing page, the seeded customer login, and an authorized `/users/me` read. A failed check prints the corrective command. Swagger is at http://127.0.0.1:3000/api-docs.
 
-The backend is an in-memory evaluation store. To reset state, stop and restart the backend. For a clean browser run, open the site at `http://127.0.0.1:8080`, use a fresh private window (or clear site data for that origin only), and do not delete the whole browser profile.
+The backend uses an in-memory evaluation store, so resetting its state requires stopping and restarting the backend. For a clean browser run, open `http://127.0.0.1:8080`, in a fresh private window or clear site data for that origin only. Do not delete the entire browser profile.
 
 ## 2. Evaluation-only accounts
 
