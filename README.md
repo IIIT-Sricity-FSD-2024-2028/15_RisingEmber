@@ -72,11 +72,11 @@ Our solution enforces fairness through three non-negotiable mechanisms:
 
 ## 🧪 Evaluation readiness
 
-The current build has a repeatable local walkthrough, deterministic seed data, an automated preflight, and a separate explanation of the request pipeline. Start with [the evaluation demo runbook](docs/evaluation-demo-runbook.md), then use [the middleware/request-pipeline guide](docs/middleware-request-pipeline.md) when presenting the backend controls.
+This build provides a repeatable local walkthrough, deterministic seed data, an automated preflight check, and a dedicated guide detailing how requests move through the system. Start with [the evaluation demo runbook](docs/evaluation-demo-runbook.md), and use [the middleware/request-pipeline guide](docs/middleware-request-pipeline.md) when presenting the backend safeguards and request handling.
 
-From the repository root, `node scripts/demo-preflight.mjs` checks the runtime, dependencies, pinned offline assets, backend health, Swagger, frontend delivery, seeded login, and an authorized read. The full regression gates are `cd back-end && npm run test:e2e` and `cd front-end && npm run test:e2e`.
+From the repository root, run `node scripts/demo-preflight.mjs` to validate the runtime environment, dependencies, pinned offline assets, backend availability, Swagger access, frontend serving, seeded authentication, and an authorized read operation. The full end-to-end regression suites can be run via `cd back-end && npm run test:e2e` for the backend and `cd front-end && npm run test:e2e` for the frontend. 
 
-The evaluation build is intentionally honest about its scope: it uses an in-memory store, simulated escrow/refund transitions, and evaluation-only `x-role`/`x-actor-id` identity headers. It does not represent production JWT/session security, persistent storage, KYC, or a real bank/payment integration.
+The evaluation build is intentionally scoped: it relies on an in-memory data store, simulated escrow/refund transitions, and evaluation-only `x-role`/`x-actor-id` identity headers. It should not be treated as a production implementation for JWT/session-based authentication, persistent storage, KYC verification, or real-world banking and payment integrations.
 
 ---
 
