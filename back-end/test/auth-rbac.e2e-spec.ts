@@ -16,10 +16,10 @@ describe('ServiceHub authentication and actor guard', () => {
 
   it('authenticates each seeded role through the backend session endpoint', async () => {
     const credentials = [
-      ['customer', 'aarav@servicehub.test', 'customer123', 'user_2001'],
-      ['provider', 'rohan@servicehub.test', 'provider123', 'user_3001'],
-      ['arbitrator', 'kabir@servicehub.test', 'arbitrator123', 'user_4001'],
-      ['admin', 'admin@servicehub.test', 'admin123', 'user_1001'],
+      ['customer', 'aarav@gmail.com', '123456Ab@', 'user_2001'],
+      ['provider', 'rohan@gmail.com', '123456Ab@', 'user_3001'],
+      ['arbitrator', 'kabir@gmail.com', '123456Ab@', 'user_4001'],
+      ['admin', 'admin@gmail.com', '123456Ab@', 'user_1001'],
     ] as const;
 
     for (const [role, email, password, actorId] of credentials) {
@@ -36,12 +36,12 @@ describe('ServiceHub authentication and actor guard', () => {
   it('rejects wrong passwords and role/email mismatches', async () => {
     await request(app!.getHttpServer())
       .post('/api/v1/session/login')
-      .send({ role: 'customer', email: 'aarav@servicehub.test', password: 'wrong-password' })
+      .send({ role: 'customer', email: 'aarav@gmail.com', password: 'wrong-password' })
       .expect(401);
 
     await request(app!.getHttpServer())
       .post('/api/v1/session/login')
-      .send({ role: 'provider', email: 'aarav@servicehub.test', password: 'customer123' })
+      .send({ role: 'provider', email: 'aarav@gmail.com', password: '123456Ab@' })
       .expect(401);
   });
 
@@ -53,7 +53,7 @@ describe('ServiceHub authentication and actor guard', () => {
 
     await request(app!.getHttpServer())
       .post('/api/v1/session/login')
-      .send({ role: 'provider', email: 'rohan@servicehub.test', password: 'provider123' })
+      .send({ role: 'provider', email: 'rohan@gmail.com', password: '123456Ab@' })
       .expect(403);
 
     provider!.isActive = true;

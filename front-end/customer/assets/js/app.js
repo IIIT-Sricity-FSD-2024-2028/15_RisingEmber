@@ -24,7 +24,6 @@
   };
 
   const AUTH_PAGES = new Set(["login.html", "signup.html"]);
-  const DEFAULT_PASSWORD = "Customer@123";
   const STYLE_ID = "customer-app-runtime-styles";
   const DEFAULT_MEMBER_SINCE = "January 2024";
   const API_BASE_URL_KEY = "serviceHub_api_base_url";
@@ -429,7 +428,8 @@
       avatar: String(source.avatar || "").trim(),
       createdAt: source.createdAt || new Date().toISOString(),
       role: "customer",
-      password: String(source.password || DEFAULT_PASSWORD)
+      sessionToken: String(source.sessionToken || "").trim(),
+      expiresAt: String(source.expiresAt || "").trim()
     };
   }
 
@@ -444,7 +444,9 @@
       memberSince: customer.memberSince,
       avatar: customer.avatar,
       createdAt: customer.createdAt,
-      role: customer.role
+      role: customer.role,
+      sessionToken: customer.sessionToken,
+      expiresAt: customer.expiresAt
     };
   }
 
@@ -472,46 +474,17 @@
   }
 
   async function resetCustomerPassword(identifier, nextPassword) {
-    const accounts = getCustomerAccounts();
-    const accountIndex = findCustomerAccountIndex(identifier, accounts);
-
-    if (accountIndex === -1 && !isValidEmail(identifier) && !isValidPhone(identifier)) {
-      throw new Error("We couldn't find an account with that email or phone.");
+    if (!isValidEmail(identifier) && !isValidPhone(identifier)) {
+      throw new Error("Enter a valid customer email or phone number.");
     }
 
-    if (!isStrongPassword(nextPassword)) {
-      throw new Error("Your new password must be at least 8 characters and include upper, lower, number, and symbol.");
-    }
-
-    const resetResult = await requestCustomerApi("/session/password-reset", {
+    return requestCustomerApi("/session/password-reset", {
       method: "POST",
       body: {
         role: "customer",
-        identifier,
-        password: String(nextPassword || "")
+        identifier
       }
     });
-
-    if (accountIndex !== -1) {
-      accounts[accountIndex] = sanitizeCustomerRecord({
-        ...accounts[accountIndex],
-        password: String(nextPassword || "")
-      });
-      saveCustomerAccounts(accounts);
-      return accounts[accountIndex];
-    }
-
-    return mergeCustomerAccount({
-      id: resetResult.profileSummary.id,
-      name: resetResult.profileSummary.name,
-      email: resetResult.profileSummary.email,
-      phone: resetResult.profileSummary.phone,
-      avatar: resetResult.profileSummary.avatarUrl || "",
-      location: resetResult.profileSummary.profile && (resetResult.profileSummary.profile.address || resetResult.profileSummary.profile.city) || "",
-      memberSince: getMonthYearLabel(resetResult.profileSummary.createdAt),
-      createdAt: resetResult.profileSummary.createdAt,
-      password: String(nextPassword || "")
-    }, nextPassword);
   }
 
   function saveCurrentCustomer(customer, persistSession) {
@@ -542,7 +515,8 @@
     const session = readJSON(KEYS.SESSION, null);
     if (!session || !session.email) return null;
 
-    return getCustomerAccounts().find((account) => account.email === normalizeEmail(session.email)) || null;
+    const account = getCustomerAccounts().find((entry) => entry.email === normalizeEmail(session.email));
+    return sanitizeCustomerRecord({ ...(account || {}), ...session });
   }
 
   function getCustomerApiBaseUrl() {
@@ -558,6 +532,9 @@
   function getCustomerApiHeaders(customerOverride) {
     const customer = customerOverride || getCurrentCustomer();
     if (!customer || !customer.id) return {};
+
+    const token = String(customer.sessionToken || "").trim();
+    if (token) return { Authorization: `Bearer ${token}` };
 
     return {
       "x-role": "customer",
@@ -578,6 +555,12 @@
     const config = options && typeof options === "object" ? options : {};
     const headers = { ...(config.headers || {}) };
     let requestBody = config.body;
+
+    if (!headers.Authorization && !headers.authorization) {
+      const session = readJSON(KEYS.SESSION, null);
+      const token = String(session && session.sessionToken || "").trim();
+      if (token) headers.Authorization = `Bearer ${token}`;
+    }
 
     if (requestBody !== undefined && requestBody !== null && !(requestBody instanceof FormData)) {
       headers["Content-Type"] = headers["Content-Type"] || "application/json";
@@ -671,11 +654,8 @@
     return scheduled.toISOString();
   }
 
-  function mergeCustomerAccount(customer, passwordOverride) {
-    const account = sanitizeCustomerRecord({
-      ...customer,
-      password: passwordOverride || customer.password || DEFAULT_PASSWORD
-    });
+  function mergeCustomerAccount(customer) {
+    const account = sanitizeCustomerRecord(customer);
     const existingAccounts = getCustomerAccounts();
     const nextAccounts = existingAccounts.slice();
     const accountIndex = nextAccounts.findIndex((entry) => entry.email === account.email || entry.id === account.id);
@@ -687,7 +667,7 @@
     return account;
   }
 
-  function persistCustomerFromBackend(profileSummary, passwordOverride) {
+  function persistCustomerFromBackend(profileSummary, sessionMetadata = {}) {
     const profile = profileSummary && profileSummary.profile ? profileSummary.profile : {};
     const persistedAccount = mergeCustomerAccount({
       id: profileSummary.id,
@@ -697,8 +677,10 @@
       avatar: profileSummary.avatarUrl || "",
       location: profile.address || profile.city || "",
       memberSince: profileSummary.createdAt ? getMonthYearLabel(profileSummary.createdAt) : DEFAULT_MEMBER_SINCE,
-      createdAt: profileSummary.createdAt || new Date().toISOString()
-    }, passwordOverride || (getSessionAccount() && getSessionAccount().password));
+      createdAt: profileSummary.createdAt || new Date().toISOString(),
+      sessionToken: String(sessionMetadata.sessionToken || (getCustomerSession() && getCustomerSession().sessionToken) || ""),
+      expiresAt: String(sessionMetadata.expiresAt || (getCustomerSession() && getCustomerSession().expiresAt) || "")
+    });
 
     return saveCurrentCustomer(persistedAccount, true);
   }
@@ -741,6 +723,10 @@
       ))),
       unitPrice: toNumber(booking.service && booking.service.price, booking.totalAmount),
       total: toNumber(booking.totalAmount, 0),
+      subtotalAmount: toNumber(booking.subtotalAmount, booking.totalAmount),
+      platformFeeAmount: toNumber(booking.platformFeeAmount, 0),
+      providerPayoutAmount: toNumber(booking.providerPayoutAmount, booking.totalAmount),
+      platformFeeStatus: String(booking.platformFeeStatus || "pending"),
       status: booking.status,
       createdAt: booking.createdAt,
       cancellationReason: booking.cancellationReason || "",
@@ -884,7 +870,8 @@
         serviceId: payload.serviceId,
         scheduledAt: buildScheduledIso(payload.date, payload.time),
         notes: payload.notes || payload.title || "",
-        address: payload.address || ""
+        address: payload.address || "",
+        idempotencyKey: payload.idempotencyKey
       }
     });
 
@@ -1132,6 +1119,10 @@
       durationHours,
       unitPrice,
       total: Number.isFinite(explicitTotal) ? Number(explicitTotal.toFixed(2)) : Number((unitPrice * durationHours).toFixed(2)),
+      subtotalAmount: toNumber(source.subtotalAmount, Number.isFinite(explicitTotal) ? explicitTotal : unitPrice * durationHours),
+      platformFeeAmount: toNumber(source.platformFeeAmount, 0),
+      providerPayoutAmount: toNumber(source.providerPayoutAmount, Number.isFinite(explicitTotal) ? explicitTotal : unitPrice * durationHours),
+      platformFeeStatus: String(source.platformFeeStatus || "pending"),
       status: normalizeBookingStatus(source.status),
       createdAt: toIsoTimestamp(source.createdAt || source.bookedAt, `${normalizedDate}T09:00:00`),
       cancellationReason: source.cancellationReason || "",
@@ -1419,7 +1410,10 @@
       }
     });
 
-    const sessionCustomer = persistCustomerFromBackend(loginData.profileSummary, passwordValue);
+    const sessionCustomer = persistCustomerFromBackend(loginData.profileSummary, {
+      sessionToken: loginData.sessionToken,
+      expiresAt: loginData.expiresAt
+    });
     await syncCustomerBackendData({ silent: true });
 
     addNotification("Signed in", "You are now logged in to your customer account.", {
@@ -1439,8 +1433,6 @@
     const phone = String(data.phone || "").trim();
     const password = String(data.password || "");
     const location = String(data.location || "Location not set").trim();
-    const plan = data.plan === "paid" ? "paid" : "free";
-    const paymentDetails = data.paymentDetails || undefined;
 
     if (!isValidHumanName(name)) throw new Error("Please enter a valid full name using letters only.");
     if (!isValidEmail(email)) throw new Error("Please enter a valid email address.");
@@ -1449,29 +1441,27 @@
       throw new Error("Password must be 8+ characters and include uppercase, lowercase, number, and symbol.");
     }
 
-    if (plan === "paid") {
-      if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expDate || !paymentDetails.cvv) {
-        throw new Error("Please complete all credit card details for the Paid plan.");
-      }
-    }
-
-    const registration = await requestCustomerApi("/customers/register", {
+    await requestCustomerApi("/customers/register", {
       method: "POST",
       body: {
         name,
         email,
         phone,
         password,
-        city: location,
-        plan,
-        paymentDetails
+        city: location
       }
     });
-
-    const publicCustomer = persistCustomerFromBackend(registration.profileSummary, password);
+    const loginData = await requestCustomerApi("/session/login", {
+      method: "POST",
+      body: { role: "customer", email, password }
+    });
+    const publicCustomer = persistCustomerFromBackend(loginData.profileSummary, {
+      sessionToken: loginData.sessionToken,
+      expiresAt: loginData.expiresAt
+    });
     await syncCustomerBackendData({ silent: true });
 
-    addNotification("Welcome to ServiceHub", plan === "paid" ? "Your Paid customer account ($20 fee) is ready." : "Your Free customer account is ready.", {
+    addNotification("Welcome to ServiceHub", "Your customer account is ready. Customers pay only the listed service price.", {
       href: "customer_dashboard.html",
       icon: "fa-user-plus",
       tone: "green",
@@ -1479,36 +1469,6 @@
     });
 
     return publicCustomer;
-  }
-
-  async function upgradeCustomerPlan(paymentDetails) {
-    const sessionAccount = getSessionAccount();
-    if (!sessionAccount) throw new Error("You need to log in again before upgrading your plan.");
-
-    if (!paymentDetails || !paymentDetails.cardNumber || !paymentDetails.expDate || !paymentDetails.cvv) {
-      throw new Error("Please enter valid credit card details to upgrade to the Paid Plan ($100 conversion fee).");
-    }
-
-    const updatedProfile = await requestCustomerApi("/users/me", {
-      method: "PATCH",
-      headers: getCustomerApiHeaders(sessionAccount),
-      body: {
-        plan: "paid",
-        paymentDetails
-      }
-    });
-
-    const updatedCustomer = persistCustomerFromBackend(updatedProfile, sessionAccount.password);
-    await syncCustomerBackendData({ silent: true });
-
-    addNotification("Plan Upgraded", "Your account has been upgraded to the Paid Plan ($100 fee paid). You now have full dispute resolution access.", {
-      href: "profile.html",
-      icon: "fa-crown",
-      tone: "green",
-      unread: false
-    });
-
-    return updatedCustomer;
   }
 
   async function updateCustomerProfile(payload) {
@@ -1539,7 +1499,7 @@
       }
     });
 
-    const updatedCustomer = persistCustomerFromBackend(updatedProfile, sessionAccount.password);
+    const updatedCustomer = persistCustomerFromBackend(updatedProfile);
     await syncCustomerBackendData({ silent: true });
 
     addNotification("Profile updated", "Your customer profile details were saved successfully.", {
@@ -1562,9 +1522,6 @@
     if (!currentValue || !nextValue) {
       throw new Error("Please complete all password fields.");
     }
-    if (sessionAccount.password !== currentValue) {
-      throw new Error("Your current password is incorrect.");
-    }
     if (currentValue === nextValue) {
       throw new Error("Your new password must be different from the current password.");
     }
@@ -1572,19 +1529,26 @@
       throw new Error("Password must be 8+ characters and include uppercase, lowercase, number, and symbol.");
     }
 
-    await requestCustomerApi("/users/me", {
+    await requestCustomerApi("/session/password", {
       method: "PATCH",
       headers: getCustomerApiHeaders(sessionAccount),
       body: {
+        currentPassword: currentValue,
+        nextPassword: nextValue
+      }
+    });
+    const loginData = await requestCustomerApi("/session/login", {
+      method: "POST",
+      body: {
+        role: "customer",
+        email: sessionAccount.email,
         password: nextValue
       }
     });
-
-    const updatedAccount = mergeCustomerAccount({
-      ...sessionAccount,
-      password: nextValue
-    }, nextValue);
-    saveCurrentCustomer(updatedAccount, true);
+    persistCustomerFromBackend(loginData.profileSummary, {
+      sessionToken: loginData.sessionToken,
+      expiresAt: loginData.expiresAt
+    });
 
     addNotification("Password updated", "Your account password was changed successfully.", {
       href: "profile.html",
@@ -1595,6 +1559,13 @@
   }
 
   function logoutCustomer() {
+    const session = getCustomerSession();
+    if (session && session.sessionToken) {
+      requestCustomerApi("/session/logout", {
+        method: "POST",
+        headers: getCustomerApiHeaders(session)
+      }).catch(() => {});
+    }
     removeKeys(
       KEYS.SESSION,
       KEYS.USER,
@@ -1949,15 +1920,9 @@
           return;
         }
 
-        const nextPassword = await requestPrompt("Reset Password", `Enter a new password for account: ${identifier}`, {
-          inputType: "password",
-          placeholder: "New password (8+ chars)"
-        });
-        if (nextPassword === null || nextPassword === false) return;
-
         try {
-          await resetCustomerPassword(identifier, nextPassword);
-          showToast("Success! Your password has been updated. You can now log in.", "success");
+          await resetCustomerPassword(identifier);
+          showToast("If that account exists, password-reset assistance has been requested.", "success");
         } catch (error) {
           showDialogMessage("Reset Failed", error.message, { type: "danger" });
         }
@@ -2022,32 +1987,13 @@
           return;
         }
 
-        const selectedPlanEl = signupForm.querySelector("input[name='customerPlan']:checked");
-        const plan = selectedPlanEl ? selectedPlanEl.value : "free";
-
-        let paymentDetails = undefined;
-        if (plan === "paid") {
-          const cardholderName = document.getElementById("cardholderName") ? document.getElementById("cardholderName").value.trim() : "";
-          const cardNumber = document.getElementById("cardNumber") ? document.getElementById("cardNumber").value.trim() : "";
-          const expDate = document.getElementById("expDate") ? document.getElementById("expDate").value.trim() : "";
-          const cvv = document.getElementById("cvv") ? document.getElementById("cvv").value.trim() : "";
-
-          if (!cardNumber || !expDate || !cvv) {
-            setFormFeedback(feedback, "Please complete all credit card details for the Paid Plan ($20 one-time fee).", "error");
-            return;
-          }
-          paymentDetails = { cardholderName: cardholderName || name, cardNumber, expDate, cvv };
-        }
-
         try {
           if (submitButton) submitButton.disabled = true;
           await registerCustomer({
             name,
             email,
             phone,
-            password,
-            plan,
-            paymentDetails
+            password
           });
           setFormFeedback(feedback, "Account created successfully. Redirecting to your dashboard...", "success");
           window.setTimeout(() => {
@@ -2111,7 +2057,6 @@
     getSessionAccount,
     loginCustomer,
     registerCustomer,
-    upgradeCustomerPlan,
     updateCustomerProfile,
     updateCustomerPassword,
     logoutCustomer,

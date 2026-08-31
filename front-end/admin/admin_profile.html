@@ -93,11 +93,11 @@
                         <div class="info-grid">
                             <div class="field-group">
                                 <label>Current Password</label>
-                                <input type="password" placeholder="Enter current password" class="edit-input">
+                                <input type="password" id="current-password" placeholder="Enter current password" class="edit-input">
                             </div>
                             <div class="field-group">
                                 <label>New Password</label>
-                                <input type="password" placeholder="Enter new password" class="edit-input">
+                                <input type="password" id="new-password" placeholder="Enter new password" class="edit-input">
                             </div>
                         </div>
                     </div>
@@ -196,7 +196,8 @@
             try {
                 const roleTitle = document.getElementById('in-role').value;
                 const department = document.getElementById('in-dept').value;
-                const newPass = document.querySelectorAll('input[type="password"]')[1].value;
+                const currentPass = document.getElementById('current-password').value;
+                const newPass = document.getElementById('new-password').value;
 
                 await requestAdminApi('/users/me', {
                     method: 'PATCH',
@@ -206,10 +207,24 @@
                         email,
                         phone,
                         avatarUrl: AdminData.profile.avatar,
-                        title: roleTitle,
-                        ...(newPass ? { password: newPass } : {})
+                        title: roleTitle
                     }
                 });
+
+                if (newPass) {
+                    if (!currentPass) throw new Error('Enter your current password before changing it.');
+                    await requestAdminApi('/session/password', {
+                        method: 'PATCH',
+                        headers: getAdminRequestHeaders(),
+                        body: { currentPassword: currentPass, nextPassword: newPass }
+                    });
+                    const loginData = await requestAdminApi('/session/login', {
+                        method: 'POST',
+                        body: { role: 'admin', email, password: newPass }
+                    });
+                    AdminData.session.sessionToken = loginData.sessionToken || '';
+                    AdminData.session.expiresAt = loginData.expiresAt || '';
+                }
 
                 AdminData.profile.department = department;
                 AdminData.profile.role = roleTitle;

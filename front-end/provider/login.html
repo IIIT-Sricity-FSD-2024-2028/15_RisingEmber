@@ -7,7 +7,7 @@
 
   <link href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css" rel="stylesheet"/>
   <link rel="stylesheet" href="/assets/vendor/fontawesome-6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=2" />
 </head>
 <body class="auth-page">
 
@@ -139,16 +139,9 @@
             return;
           }
 
-          const nextPassword = await window.showAppPrompt('Reset Password', `Enter a new password for provider account: ${identifier}`, {
-            inputType: 'password',
-            placeholder: 'New password (8+ chars)'
-          });
-          if (nextPassword === null || nextPassword === false) return;
-
           try {
-            await resetProviderPassword(identifier, nextPassword);
-            document.getElementById('loginPassword').value = nextPassword;
-            showMessage('<i class="fa-regular fa-circle-check" style="margin-right:6px;"></i> <strong>Password reset complete.</strong> You can log in with the new password now.', 'success');
+            await resetProviderPassword(identifier);
+            showMessage('<i class="fa-regular fa-circle-check" style="margin-right:6px;"></i> If that account exists, password-reset assistance has been requested.', 'success');
           } catch (error) {
             showMessage('<i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i> ' + error.message, 'error');
           }

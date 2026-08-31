@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <i class="fa-solid fa-star" style="color: var(--orange);"></i>
                         <span style="color: var(--text-mid); margin-left: 4px;">${service.rating} (${service.reviews} reviews)</span>
                     </div>
-                    <p style="font-size: 0.85rem; color: var(--text-soft); font-weight: 500;">From $${service.price}/hour</p>
+                    <p style="font-size: 0.85rem; color: var(--text-soft); font-weight: 500;">From ₹${Number(service.price || 0).toLocaleString('en-IN')}/service</p>
                 </div>
                 <div style="padding: 0 20px 20px;">
                     <button class="btn btn--primary btn--full btn-book-now" 
@@ -100,6 +100,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (navSearch) navSearch.addEventListener('input', handleSearchInput);
     if (bannerSearch) bannerSearch.addEventListener('input', handleSearchInput);
+    const bannerSearchButton = document.querySelector('.search-bar-banner button');
+    if (bannerSearchButton) {
+        bannerSearchButton.addEventListener('click', () => {
+            const query = String(bannerSearch && bannerSearch.value || '').trim();
+            window.location.href = `browse-services.html${query ? `?q=${encodeURIComponent(query)}` : ''}`;
+        });
+    }
+    [navSearch, bannerSearch].filter(Boolean).forEach((input) => {
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            const query = String(input.value || '').trim();
+            window.location.href = `browse-services.html${query ? `?q=${encodeURIComponent(query)}` : ''}`;
+        });
+    });
 
     // ==========================================
     // 3. EVENT DELEGATION FOR 'BOOK NOW'

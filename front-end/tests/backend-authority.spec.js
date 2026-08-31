@@ -5,14 +5,14 @@ test('a rejected customer booking is not cached as a successful local mutation',
     localStorage.setItem('serviceHub_customer_session', JSON.stringify({
       id: 'user_2001',
       name: 'Aarav Mehta',
-      email: 'aarav@servicehub.test',
+      email: 'aarav@gmail.com',
       role: 'customer',
       isLoggedIn: true
     }));
     localStorage.setItem('serviceHub_user', JSON.stringify({
       id: 'user_2001',
       name: 'Aarav Mehta',
-      email: 'aarav@servicehub.test',
+      email: 'aarav@gmail.com',
       role: 'customer'
     }));
   });

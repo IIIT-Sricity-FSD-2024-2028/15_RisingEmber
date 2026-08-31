@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("disp-provider-name").innerText = booking.provider || "Service Professional";
   document.getElementById("disp-address").innerText = booking.address || "No address provided";
   document.getElementById("disp-time").innerText = booking.time || "Time not set";
-  document.getElementById("disp-total").innerText = `$${Number(booking.total || 0).toFixed(2)}`;
+  document.getElementById("disp-total").innerText = `₹${Number(booking.total || 0).toLocaleString("en-IN")}`;
 
   const avatarImg = document.getElementById("disp-provider-img");
   if (avatarImg) {

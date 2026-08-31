@@ -165,11 +165,6 @@ class UpdateMeDto {
 
   @IsOptional()
   @IsString()
-  @MinLength(6)
-  password?: string;
-
-  @IsOptional()
-  @IsString()
   city?: string;
 
   @IsOptional()
@@ -218,6 +213,11 @@ class UpdateMeDto {
 }
 
 class UpdateUserDto extends UpdateMeDto {
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string;
+
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;

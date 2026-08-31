@@ -46,6 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
             <a href="admin_profile.html" class="nav-item ${isIn('admin_profile.html') ? 'active' : ''}">
                 <i class="fa-solid fa-circle-user"></i> Profile
             </a>
+
+            <a href="admin_settings.html" class="nav-item ${isIn('admin_settings.html') ? 'active' : ''}">
+                <i class="fa-solid fa-sliders"></i> Settings
+            </a>
         </nav>
     </div>`;
 

@@ -29,7 +29,7 @@
     <nav class="navbar">
         <div class="container" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
             <a href="../Landing_Page/index.html" class="logo">ServiceHub</a>
-            <button class="btn btn-blue" style="font-size: 0.9rem; padding: 8px 20px;">Contact : ABC@gmail.com</button>
+            <a class="btn btn-blue" href="mailto:arbitration@servicehub.com" style="font-size: 0.9rem; padding: 8px 20px;">Contact: arbitration@servicehub.com</a>
         </div>
     </nav>
 
@@ -125,13 +125,18 @@
             }
 
             const formData = ArbitratorData.registration.formData;
-            if (!formData.password || formData.password.length < 8) {
-                window.showAppToast("Please return to Step 1 and create a valid password.", "warning");
+            const applicationPassword = await window.showAppPrompt(
+                "Confirm Application Password",
+                "Re-enter the password you want to use for this arbitrator account. It will be sent once and will not be stored in the browser.",
+                { inputType: "password", placeholder: "8+ characters" }
+            );
+            if (!applicationPassword || applicationPassword.length < 8) {
+                window.showAppToast("Enter a password with at least 8 characters to submit.", "warning");
                 return;
             }
 
             try {
-                await arbitratorSignup(formData.name, formData.email, formData.password, {
+                await arbitratorSignup(formData.name, formData.email, applicationPassword, {
                     phone: formData.phone,
                     location: formData.country,
                     title: formData.title,

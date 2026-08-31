@@ -226,54 +226,10 @@
             </div>
           </div>
 
-          <div class="form-group" style="margin-top: 8px;">
-            <label>Select Membership Plan</label>
-            <div class="plan-selector">
-              <label class="plan-card active" id="plan1Card">
-                <input type="radio" name="customerPlan" value="free" class="plan-radio" checked onchange="togglePlanSelection('free')" />
-                <div class="plan-info">
-                  <h4>Plan 1: Free Plan</h4>
-                  <p>Only marketplace access. No dispute resolution mechanism included.</p>
-                </div>
-                <span class="plan-price-tag">$0</span>
-              </label>
-
-              <label class="plan-card" id="plan2Card">
-                <input type="radio" name="customerPlan" value="paid" class="plan-radio" onchange="togglePlanSelection('paid')" />
-                <div class="plan-info">
-                  <h4>Plan 2: Paid Plan</h4>
-                  <p>Both marketplace access and dispute resolution mechanism. One-time fee of $20 deducted at registration.</p>
-                </div>
-                <span class="plan-price-tag">$20</span>
-              </label>
-            </div>
-          </div>
-
-          <div id="cardDetailsContainer" class="card-details-section" style="display: none;">
-            <div style="font-size: 0.85rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 6px;">
-              <i class="fa-solid fa-credit-card" style="color: var(--primary);"></i> Credit Card Information ($20 One-Time Fee)
-            </div>
-            <div class="form-group">
-              <label>Cardholder Name</label>
-              <input type="text" id="cardholderName" placeholder="Name on credit card" />
-            </div>
-            <div class="form-group">
-              <label>Card Number</label>
-              <input type="text" id="cardNumber" placeholder="1234 5678 9101 1121" maxlength="19" />
-            </div>
-            <div style="display: flex; gap: 12px;">
-              <div class="form-group" style="flex: 1;">
-                <label>Expiration Date</label>
-                <input type="text" id="expDate" placeholder="MM/YY" maxlength="5" />
-              </div>
-              <div class="form-group" style="flex: 1;">
-                <label>CVV</label>
-                <input type="password" id="cvv" placeholder="123" maxlength="4" />
-              </div>
-            </div>
-            <div class="form-hint" style="color: #475569; font-size: 0.78rem; line-height: 1.4;">
-              <i class="fa-solid fa-shield-halved" style="color: #10B981;"></i> During registration, credit card details are saved so that for every dispute filed, billing can occur for arbitration fee and platform fee.
-            </div>
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 16px; margin-top: 8px;">
+            <p style="font-size: 0.84rem; color: #166534; margin: 0; line-height: 1.5;">
+              <i class="fa-solid fa-shield-halved" style="margin-right: 6px;"></i> No signup fee and no card details required. Customers pay only the listed service price.
+            </p>
           </div>
 
           <div class="auth-checkbox">
@@ -301,36 +257,6 @@
   </div>
   <script src="assets/js/backendData.js"></script>
   <script src="../assets/js/auth.js"></script>
-  <script>
-    function togglePlanSelection(selectedPlan) {
-      const plan1Card = document.getElementById("plan1Card");
-      const plan2Card = document.getElementById("plan2Card");
-      const cardDetailsContainer = document.getElementById("cardDetailsContainer");
-
-      const cardholderName = document.getElementById("cardholderName");
-      const cardNumber = document.getElementById("cardNumber");
-      const expDate = document.getElementById("expDate");
-      const cvv = document.getElementById("cvv");
-
-      if (selectedPlan === "paid") {
-        plan1Card.classList.remove("active");
-        plan2Card.classList.add("active");
-        cardDetailsContainer.style.display = "flex";
-        if (cardholderName) cardholderName.required = true;
-        if (cardNumber) cardNumber.required = true;
-        if (expDate) expDate.required = true;
-        if (cvv) cvv.required = true;
-      } else {
-        plan2Card.classList.remove("active");
-        plan1Card.classList.add("active");
-        cardDetailsContainer.style.display = "none";
-        if (cardholderName) cardholderName.required = false;
-        if (cardNumber) cardNumber.required = false;
-        if (expDate) expDate.required = false;
-        if (cvv) cvv.required = false;
-      }
-    }
-  </script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

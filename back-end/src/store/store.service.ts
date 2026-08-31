@@ -33,6 +33,7 @@ import {
   NotificationRecord,
   NotificationTone,
   PlatformSettings,
+  PlatformFeeStatus,
   ProviderProfile,
   Role,
   ReviewRecord,
@@ -42,6 +43,7 @@ import {
   UserRecord,
   WaitlistEntryRecord,
 } from './entities';
+import { randomBytes } from 'crypto';
 import { RequestActor } from '../common/interfaces/request-actor.interface';
 import { isDataUrlContent, validateDocumentPayload } from '../documents/document-validation';
 import { createDemoState, DEMO_SEED_NOW } from './demo-seed';
@@ -102,6 +104,7 @@ type SettingsPatch = {
 
 @Injectable()
 export class StoreService {
+  private readonly sessions = new Map<string, { actorId: string; expiresAt: string }>();
   private readonly counters = new Map<string, number>([
     ['user', 5000],
     ['profile', 6000],
@@ -123,12 +126,31 @@ export class StoreService {
 
   private readonly escrowAutoReleaseHours = 72;
   private readonly requestedBookingExpiryHours = 24;
+  private readonly sessionDurationHours = 8;
+  private readonly platformFeeRateBps = 500;
   private clock: () => Date = () => new Date();
 
   private state: StoreState = createDemoState(new Date(DEMO_SEED_NOW));
 
   findUserById(id: string): UserRecord | undefined {
     return this.state.users.find((user) => user.id === id);
+  }
+
+  findUserBySessionToken(token: string): UserRecord | undefined {
+    const session = this.sessions.get(token);
+    if (!session) return undefined;
+
+    if (new Date(session.expiresAt).getTime() <= new Date(this.now()).getTime()) {
+      this.sessions.delete(token);
+      return undefined;
+    }
+
+    const user = this.findUserById(session.actorId);
+    if (!user?.isActive) {
+      this.sessions.delete(token);
+      return undefined;
+    }
+    return user;
   }
 
   login(role: Role, email: string, password: string) {
@@ -144,35 +166,43 @@ export class StoreService {
       throw new ForbiddenException('This account is not active.');
     }
 
+    const sessionToken = randomBytes(32).toString('base64url');
+    const expiresAt = new Date(
+      new Date(this.now()).getTime() + this.sessionDurationHours * 60 * 60 * 1000,
+    ).toISOString();
+    this.sessions.set(sessionToken, { actorId: user.id, expiresAt });
+
     return {
       actorId: user.id,
       role: user.role,
+      sessionToken,
+      expiresAt,
       profileSummary: this.serializeUser(user),
     };
   }
 
-  resetPassword(role: Role, identifier: string, nextPassword: string) {
-    const normalizedIdentifier = String(identifier || '').trim().toLowerCase();
-    const normalizedDigits = String(identifier || '').replace(/\D/g, '');
-    const user = this.state.users.find((entry) => {
-      if (entry.role !== role) return false;
-      const emailMatches = entry.email.toLowerCase() === normalizedIdentifier;
-      const phoneMatches = String(entry.phone || '').replace(/\D/g, '') === normalizedDigits;
-      return emailMatches || (normalizedDigits.length >= 10 && phoneMatches);
-    });
+  requestPasswordReset(_role: Role, _identifier: string) {
+    return { accepted: true };
+  }
 
-    if (!user) {
-      throw new NotFoundException('No account was found for that role and identifier.');
+  changePassword(actor: RequestActor, currentPassword: string, nextPassword: string) {
+    const user = this.requireUser(actor.id);
+    if (user.password !== currentPassword) {
+      throw new UnauthorizedException('Current password is incorrect.');
+    }
+    if (currentPassword === nextPassword) {
+      throw new BadRequestException('New password must be different from the current password.');
     }
 
-    user.password = String(nextPassword || '');
+    user.password = nextPassword;
     user.updatedAt = this.now();
+    this.revokeUserSessions(user.id);
+    return { changed: true };
+  }
 
-    return {
-      actorId: user.id,
-      role: user.role,
-      profileSummary: this.serializeUser(user),
-    };
+  logoutSession(sessionToken?: string) {
+    if (sessionToken) this.sessions.delete(sessionToken);
+    return { loggedOut: true };
   }
 
   registerCustomer(payload: {
@@ -571,6 +601,7 @@ export class StoreService {
       scheduledAt: string;
       notes?: string;
       address?: string;
+      idempotencyKey?: string;
     },
   ) {
     this.assertRoles(actor, [Role.CUSTOMER]);
@@ -585,6 +616,28 @@ export class StoreService {
       throw new BadRequestException('scheduledAt must be a valid ISO datetime string.');
     }
 
+    const normalizedIdempotencyKey = String(payload.idempotencyKey || '').trim() || undefined;
+    if (normalizedIdempotencyKey) {
+      const existing = this.state.bookings.find(
+        (entry) => entry.customerId === actor.id && entry.idempotencyKey === normalizedIdempotencyKey,
+      );
+      if (existing) {
+        const sameRequest = existing.serviceId === service.id
+          && existing.scheduledAt === scheduledAt.toISOString()
+          && String(existing.address || '') === String(payload.address || '')
+          && String(existing.notes || '') === String(payload.notes || '');
+        if (!sameRequest) {
+          throw new ConflictException('This booking request key was already used with different details.');
+        }
+        return this.serializeBooking(existing);
+      }
+    }
+
+    const subtotalAmount = this.roundCurrency(service.price);
+    const platformFeeAmount = this.roundCurrency(
+      subtotalAmount * this.platformFeeRateBps / 10_000,
+    );
+
     const booking = this.createBookingRecord({
       serviceId: service.id,
       customerId: actor.id,
@@ -593,9 +646,15 @@ export class StoreService {
       status: BookingStatus.REQUESTED,
       notes: payload.notes,
       address: payload.address,
-      totalAmount: service.price,
+      subtotalAmount,
+      totalAmount: subtotalAmount,
       currency: service.currency,
       escrowStatus: EscrowStatus.NOT_LOCKED,
+      platformFeeRateBps: this.platformFeeRateBps,
+      platformFeeAmount,
+      providerPayoutAmount: this.roundCurrency(subtotalAmount - platformFeeAmount),
+      platformFeeStatus: PlatformFeeStatus.PENDING,
+      idempotencyKey: normalizedIdempotencyKey,
     });
 
     this.createBookingEvent(booking.id, BookingStatus.REQUESTED, actor.id, actor.role, 'Booking created');
@@ -1043,6 +1102,13 @@ export class StoreService {
       .map((document) => this.serializeDocument(document));
   }
 
+  assertCanAttachDocument(actor: RequestActor, caseId: string) {
+    const caseRecord = this.requireCase(caseId);
+    if (!this.canSeeCase(actor, caseRecord)) {
+      throw new ForbiddenException('You cannot attach documents to this case.');
+    }
+  }
+
   createDocument(
     actor: RequestActor,
     payload: {
@@ -1054,10 +1120,8 @@ export class StoreService {
       content?: string;
     },
   ) {
+    this.assertCanAttachDocument(actor, payload.caseId);
     const caseRecord = this.requireCase(payload.caseId);
-    if (!this.canSeeCase(actor, caseRecord)) {
-      throw new ForbiddenException('You cannot attach documents to this case.');
-    }
 
     const document = this.createDocumentRecord({
       caseId: caseRecord.id,
@@ -1369,6 +1433,7 @@ export class StoreService {
         now - updatedAt > this.requestedBookingExpiryHours * 60 * 60 * 1000
       ) {
         booking.status = BookingStatus.CANCELLED;
+        booking.platformFeeStatus = PlatformFeeStatus.VOIDED;
         booking.cancellationReason = 'Auto-cancelled because provider did not confirm in time.';
         booking.updatedAt = this.now();
         this.createBookingEvent(booking.id, BookingStatus.CANCELLED, 'system', Role.ADMIN, booking.cancellationReason);
@@ -1382,6 +1447,7 @@ export class StoreService {
       ) {
         booking.status = BookingStatus.COMPLETED;
         booking.escrowStatus = EscrowStatus.RELEASED;
+        booking.platformFeeStatus = PlatformFeeStatus.EARNED;
         booking.lastStatusNote = 'Auto-released after service completion timeout.';
         booking.updatedAt = this.now();
         this.createBookingEvent(booking.id, BookingStatus.COMPLETED, 'system', Role.ADMIN, booking.lastStatusNote);
@@ -1640,9 +1706,19 @@ export class StoreService {
     const services = this.state.services.filter((service) => service.providerId === actor.id);
     const bookings = this.state.bookings.filter((booking) => booking.providerId === actor.id);
     const cases = this.state.cases.filter((caseRecord) => caseRecord.providerId === actor.id);
-    const earnings = bookings
-      .filter((booking) => booking.status === BookingStatus.COMPLETED)
-      .reduce((sum, booking) => sum + booking.totalAmount, 0);
+    const completedBookings = bookings.filter((booking) => booking.status === BookingStatus.COMPLETED);
+    const grossEarnings = completedBookings.reduce(
+      (sum, booking) => sum + this.getBookingEconomics(booking).subtotalAmount,
+      0,
+    );
+    const platformFees = completedBookings.reduce(
+      (sum, booking) => sum + this.getBookingEconomics(booking).platformFeeAmount,
+      0,
+    );
+    const earnings = completedBookings.reduce(
+      (sum, booking) => sum + this.getBookingEconomics(booking).providerPayoutAmount,
+      0,
+    );
 
     return {
       metrics: {
@@ -1652,7 +1728,9 @@ export class StoreService {
         ).length,
         completedBookings: bookings.filter((booking) => booking.status === BookingStatus.COMPLETED).length,
         openCases: cases.filter((caseRecord) => caseRecord.status !== CaseStatus.CLOSED).length,
-        earnings,
+        grossEarnings: this.roundCurrency(grossEarnings),
+        platformFees: this.roundCurrency(platformFees),
+        earnings: this.roundCurrency(earnings),
       },
       services: services.map((service) => this.serializeService(service)),
       recentBookings: bookings.slice(-5).reverse().map((booking) => this.serializeBooking(booking)),
@@ -1672,6 +1750,14 @@ export class StoreService {
         totalBookings: this.state.bookings.length,
         openCases: this.state.cases.filter((caseRecord) => caseRecord.status !== CaseStatus.CLOSED).length,
         pendingApplications: pendingApplications.length,
+        platformRevenue: this.roundCurrency(
+          this.state.bookings.reduce((sum, booking) => {
+            const economics = this.getBookingEconomics(booking);
+            return sum + (economics.platformFeeStatus === PlatformFeeStatus.EARNED
+              ? economics.platformFeeAmount
+              : 0);
+          }, 0),
+        ),
       },
       recentCases: this.state.cases.slice(-5).reverse().map((caseRecord) => this.serializeCase(caseRecord)),
       pendingApplications,
@@ -1699,8 +1785,9 @@ export class StoreService {
   }
 
   private serializeUser(user: UserRecord) {
+    const { password: _password, ...safeUser } = user;
     return {
-      ...user,
+      ...safeUser,
       profile: this.getProfileForUser(user.id, user.role),
     };
   }
@@ -1711,8 +1798,6 @@ export class StoreService {
     return {
       ...service,
       providerName: provider.name,
-      providerEmail: provider.email,
-      providerPhone: provider.phone,
       businessName: profile.businessName,
       providerCategory: profile.category,
     };
@@ -1725,6 +1810,7 @@ export class StoreService {
 
     return {
       ...booking,
+      ...this.getBookingEconomics(booking),
       service: this.serializeService(service),
       customer: this.serializeUser(customer),
       provider: this.serializeUser(provider),
@@ -1785,8 +1871,17 @@ export class StoreService {
     return {
       ...review,
       service: this.serializeService(this.requireService(review.serviceId)),
-      customer: this.serializeUser(this.requireUser(review.customerId)),
-      provider: this.serializeUser(this.requireUser(review.providerId)),
+      customer: this.serializePublicUser(this.requireUser(review.customerId)),
+      provider: this.serializePublicUser(this.requireUser(review.providerId)),
+    };
+  }
+
+  private serializePublicUser(user: UserRecord) {
+    return {
+      id: user.id,
+      role: user.role,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
     };
   }
 
@@ -1827,12 +1922,12 @@ export class StoreService {
       }
 
       const allowedTransitions: Record<BookingStatus, BookingStatus[]> = {
-        [BookingStatus.REQUESTED]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CANCELLED],
-        [BookingStatus.CONFIRMED]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CANCELLED],
-        [BookingStatus.IN_PROGRESS]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.CANCELLED],
-        [BookingStatus.COMPLETED]: [BookingStatus.COMPLETED],
+        [BookingStatus.REQUESTED]: [BookingStatus.CONFIRMED, BookingStatus.CANCELLED],
+        [BookingStatus.CONFIRMED]: [BookingStatus.IN_PROGRESS, BookingStatus.CANCELLED],
+        [BookingStatus.IN_PROGRESS]: [BookingStatus.COMPLETED, BookingStatus.CANCELLED],
+        [BookingStatus.COMPLETED]: [],
         [BookingStatus.CANCELLED]: [],
-        [BookingStatus.DISPUTED]: [BookingStatus.CONFIRMED, BookingStatus.IN_PROGRESS, BookingStatus.COMPLETED, BookingStatus.DISPUTED],
+        [BookingStatus.DISPUTED]: [],
       };
 
       if (!allowedTransitions[booking.status].includes(nextStatus)) {
@@ -1845,8 +1940,24 @@ export class StoreService {
   }
 
   private applyEscrowTransition(booking: BookingRecord, nextStatus: BookingStatus) {
-    // Platform does not hold, lock, freeze or delay funds. Escrow fund locking is disabled.
-    return;
+    if (nextStatus === BookingStatus.CONFIRMED) {
+      booking.escrowStatus = EscrowStatus.FUNDS_LOCKED;
+      booking.platformFeeStatus = PlatformFeeStatus.PENDING;
+      return;
+    }
+
+    if (nextStatus === BookingStatus.COMPLETED) {
+      booking.escrowStatus = EscrowStatus.RELEASED;
+      booking.platformFeeStatus = PlatformFeeStatus.EARNED;
+      return;
+    }
+
+    if (nextStatus === BookingStatus.CANCELLED) {
+      booking.escrowStatus = booking.escrowStatus === EscrowStatus.FUNDS_LOCKED
+        ? EscrowStatus.REFUNDED
+        : EscrowStatus.NOT_LOCKED;
+      booking.platformFeeStatus = PlatformFeeStatus.VOIDED;
+    }
   }
 
   private applyAwardDecision(caseRecord: CaseRecord, decision: AwardDecision | undefined, actor: RequestActor) {
@@ -1858,13 +1969,17 @@ export class StoreService {
 
     if (decision === AwardDecision.RELEASE_TO_PROVIDER) {
       booking.status = BookingStatus.COMPLETED;
+      booking.escrowStatus = EscrowStatus.RELEASED;
+      booking.platformFeeStatus = PlatformFeeStatus.EARNED;
       booking.lastStatusNote = 'Arbitrator award issued in favor of provider.';
       this.createBookingEvent(booking.id, BookingStatus.COMPLETED, actor.id, actor.role, booking.lastStatusNote);
     }
 
     if (decision === AwardDecision.REFUND_TO_CUSTOMER) {
       booking.status = BookingStatus.CANCELLED;
-      booking.cancellationReason = 'Arbitrator award issued in favor of customer.';
+      booking.escrowStatus = EscrowStatus.REFUNDED;
+      booking.platformFeeStatus = PlatformFeeStatus.VOIDED;
+      booking.cancellationReason = 'Refunded by arbitrator award.';
       this.createBookingEvent(booking.id, BookingStatus.CANCELLED, actor.id, actor.role, booking.cancellationReason);
     }
 
@@ -2209,6 +2324,37 @@ export class StoreService {
     return record;
   }
 
+  private getBookingEconomics(booking: BookingRecord) {
+    const subtotalAmount = this.roundCurrency(booking.subtotalAmount ?? booking.totalAmount);
+    const platformFeeRateBps = booking.platformFeeRateBps ?? this.platformFeeRateBps;
+    const platformFeeAmount = this.roundCurrency(
+      booking.platformFeeAmount ?? subtotalAmount * platformFeeRateBps / 10_000,
+    );
+    const providerPayoutAmount = this.roundCurrency(
+      booking.providerPayoutAmount ?? subtotalAmount - platformFeeAmount,
+    );
+    const platformFeeStatus = booking.platformFeeStatus
+      ?? (booking.status === BookingStatus.COMPLETED || booking.escrowStatus === EscrowStatus.RELEASED
+        ? PlatformFeeStatus.EARNED
+        : booking.status === BookingStatus.CANCELLED || booking.escrowStatus === EscrowStatus.REFUNDED
+          ? PlatformFeeStatus.VOIDED
+          : PlatformFeeStatus.PENDING);
+
+    return {
+      subtotalAmount,
+      platformFeeRateBps,
+      platformFeeAmount,
+      providerPayoutAmount,
+      platformFeeStatus,
+    };
+  }
+
+  private revokeUserSessions(userId: string) {
+    for (const [token, session] of this.sessions.entries()) {
+      if (session.actorId === userId) this.sessions.delete(token);
+    }
+  }
+
   private buildRecord<T>(prefix: string, input: Omit<T, 'id' | 'createdAt' | 'updatedAt'>): T {
     const timestamp = this.now();
     return {
@@ -2229,6 +2375,7 @@ export class StoreService {
   setClockForTests(clock: () => Date) {
     this.clock = clock;
     this.state = createDemoState(this.clock());
+    this.sessions.clear();
   }
 
   private now() {
@@ -2237,6 +2384,10 @@ export class StoreService {
 
   private humanizeToken(value: string) {
     return value.replace(/_/g, ' ');
+  }
+
+  private roundCurrency(value: number) {
+    return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
   }
 
   private compactObject<T extends object>(payload: T) {

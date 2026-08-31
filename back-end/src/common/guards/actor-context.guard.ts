@@ -31,6 +31,34 @@ export class ActorContextGuard implements CanActivate {
       actor?: RequestActor;
     }>();
 
+    const authorization = String(request.headers.authorization || '').trim();
+    if (authorization) {
+      const match = /^Bearer\s+([A-Za-z0-9_-]+)$/i.exec(authorization);
+      if (!match) {
+        throw new ForbiddenException('Invalid authorization header.');
+      }
+
+      const sessionToken = match[1];
+      const user = this.storeService.findUserBySessionToken(sessionToken);
+      if (!user) {
+        throw new ForbiddenException('Invalid or expired session.');
+      }
+
+      request.actor = {
+        id: user.id,
+        role: user.role,
+        user,
+        sessionToken,
+      };
+      return true;
+    }
+
+    const allowEvaluationHeaders = process.env.NODE_ENV === 'test'
+      || process.env.ALLOW_EVALUATION_ACTOR_HEADERS === 'true';
+    if (!allowEvaluationHeaders) {
+      throw new ForbiddenException('A valid bearer session is required.');
+    }
+
     const roleHeader = this.normalizeRoleHeader(String(request.headers['x-role'] || ''));
     const actorId = String(request.headers['x-actor-id'] || '').trim();
 

@@ -117,14 +117,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const step = 16;
     const increment = target / (duration / step);
     if (increment === 0) {
-      el.textContent = isMonetary ? '$0' : '0';
+      el.textContent = isMonetary ? '₹0' : '0';
       return;
     }
     const timer = setInterval(() => {
       start += increment;
       if (start >= target) { start = target; clearInterval(timer); }
       const display = Math.floor(start).toLocaleString();
-      el.textContent = isMonetary ? `$${display}` : display;
+      el.textContent = isMonetary ? `₹${display}` : display;
     }, step);
   }
 
@@ -403,7 +403,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       status: job.status || 'pending',
       progressStage: inferredStage,
       statusUpdates: Array.isArray(job.statusUpdates) ? job.statusUpdates : [],
-      notes: job.notes || ''
+      notes: job.notes || '',
+      grossAmount: Number(job.grossAmount ?? job.price ?? 0) || 0,
+      platformFeeAmount: Number(job.platformFeeAmount || 0) || 0,
+      netAmount: Number(job.netAmount ?? job.providerPayoutAmount ?? job.price ?? 0) || 0,
+      platformFeeStatus: normalizeTextValue(job.platformFeeStatus) || 'pending'
     };
   }
 
@@ -436,6 +440,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   function getProviderApiHeaders(userOverride) {
     const provider = userOverride || activeUser || (typeof getActiveUser === 'function' ? getActiveUser() : null);
     if (!provider || !provider.id) return {};
+
+    const token = normalizeTextValue(provider.sessionToken);
+    if (token) return { Authorization: `Bearer ${token}` };
 
     return {
       'x-role': 'provider',
@@ -618,7 +625,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       statusUpdates: parsedEvents,
       notes: stripProviderStageNote(booking.lastStatusNote || latestEventMeta.note || ''),
       providerEmail: booking.provider && booking.provider.email ? booking.provider.email : activeEmail || '',
-      price: Number(booking.totalAmount || (booking.service && booking.service.price) || 0)
+      price: Number(booking.providerPayoutAmount || booking.totalAmount || (booking.service && booking.service.price) || 0),
+      grossAmount: Number(booking.subtotalAmount || booking.totalAmount || 0),
+      platformFeeAmount: Number(booking.platformFeeAmount || 0),
+      netAmount: Number(booking.providerPayoutAmount || booking.totalAmount || 0),
+      platformFeeStatus: booking.platformFeeStatus || 'pending'
     });
   }
 
@@ -777,7 +788,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     return null;
   }
 
-  async function updateProviderProfileRecord(nextUser, passwordOverride = '') {
+  async function updateProviderProfileRecord(nextUser) {
     if (!window.ServiceHubApi || typeof window.ServiceHubApi.request !== 'function') {
       return typeof persistProviderSession === 'function'
         ? persistProviderSession(nextUser)
@@ -802,7 +813,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const persistedProfile = typeof persistProviderSessionFromProfileSummary === 'function'
-      ? persistProviderSessionFromProfileSummary(updatedProfile, passwordOverride || nextUser.password || '')
+      ? persistProviderSessionFromProfileSummary(updatedProfile, {
+          sessionToken: activeUser && activeUser.sessionToken,
+          expiresAt: activeUser && activeUser.expiresAt
+        })
       : nextUser;
 
     await syncProviderBackendCollections({ silent: true });
@@ -868,8 +882,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Skip elements that will be updated by dynamic data — they handle their own animation
     if (el.hasAttribute('data-dynamic')) return;
     const raw = el.textContent.trim();
-    const isMonetary = raw.startsWith('$');
-    const numStr = raw.replace(/[$,]/g, '');
+    const isMonetary = raw.startsWith('$') || raw.startsWith('₹');
+    const numStr = raw.replace(/[$₹,]/g, '');
     const target = parseFloat(numStr);
     if (isNaN(target)) return;
     animateValue(el, target, isMonetary);
@@ -1089,7 +1103,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (accountIndex === -1) {
         providerList.unshift({
           ...nextUser,
-          password: previousIdentity.password || '',
           role: 'provider'
         });
       } else {
@@ -1102,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       let persistedUser = nextUser;
       try {
-        persistedUser = await updateProviderProfileRecord(nextUser, previousIdentity.password || '');
+        persistedUser = await updateProviderProfileRecord(nextUser);
       } catch (error) {
         showToast(error && error.message ? error.message : 'We could not save your provider profile right now.', 'error');
         return;
@@ -2391,22 +2404,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   const earningsTableBody = document.querySelector('table.data-table tbody');
   if (window.location.pathname.includes('earnings.html')) {
     const completedJobs = visibleJobs.filter((job) => job.status === 'completed');
-    const totalEarnings = completedJobs.reduce((sum, job) => sum + (job.price || 150), 0);
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const currentMonth = monthNames[new Date().getMonth()];
+    const grossEarnings = completedJobs.reduce((sum, job) => sum + job.grossAmount, 0);
+    const platformFees = completedJobs.reduce((sum, job) => sum + job.platformFeeAmount, 0);
+    const totalEarnings = completedJobs.reduce((sum, job) => sum + job.netAmount, 0);
     let currentEarningsPage = 1;
 
     const earningTotal = document.getElementById('earningTotal');
-    const earningMonth = document.getElementById('earningMonth');
+    const earningGross = document.getElementById('earningGross');
+    const earningFees = document.getElementById('earningFees');
     const earningJobCount = document.getElementById('earningJobCount');
-    const earningMonthLabel = document.getElementById('earningMonthLabel');
     const earningsPagination = document.getElementById('earningsPagination') || document.querySelector('.pagination');
     const earningsShowingText = document.getElementById('earningsShowingText') || document.querySelector('.table-showing-text');
 
     if (earningTotal) animateValue(earningTotal, totalEarnings, true);
-    if (earningMonth) animateValue(earningMonth, totalEarnings, true);
+    if (earningGross) animateValue(earningGross, grossEarnings, true);
+    if (earningFees) animateValue(earningFees, platformFees, true);
     if (earningJobCount) animateValue(earningJobCount, completedJobs.length, false);
-    if (earningMonthLabel) earningMonthLabel.textContent = 'Earnings in ' + currentMonth;
 
     function renderEarningsTable() {
       if (!earningsTableBody) return;
@@ -2416,7 +2429,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       earningsTableBody.innerHTML = '';
 
       if (!completedJobs.length) {
-        earningsTableBody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding: 20px;">No completed transactions found.</td></tr>`;
+        earningsTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding: 20px;">No completed transactions found.</td></tr>`;
         renderPaginationControls(earningsPagination, 1, 1, () => {});
         updateShowingText(earningsShowingText, 0, 0, 0, 'transactions');
       } else {
@@ -2432,7 +2445,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
               </td>
               <td>${job.date}</td>
-              <td class="amount-cell">$${(job.price || 150).toFixed(2)}</td>
+              <td class="amount-cell">₹${job.grossAmount.toLocaleString('en-IN')}</td>
+              <td class="amount-cell">−₹${job.platformFeeAmount.toLocaleString('en-IN')}</td>
+              <td class="amount-cell"><strong>₹${job.netAmount.toLocaleString('en-IN')}</strong></td>
             </tr>
           `;
         });
@@ -2450,9 +2465,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
       exportBtn.addEventListener('click', () => {
-        let csvContent = 'data:text/csv;charset=utf-8,Job ID,Service,Customer,Date,Amount\n';
+        let csvContent = 'data:text/csv;charset=utf-8,Job ID,Service,Customer,Date,Gross,ServiceHub Fee,Net Payout\n';
         completedJobs.forEach((job) => {
-          csvContent += `#${job.id},${job.service},${job.customerName},${job.date},$${(job.price || 150).toFixed(2)}\n`;
+          csvContent += `#${job.id},${job.service},${job.customerName},${job.date},${job.grossAmount.toFixed(2)},${job.platformFeeAmount.toFixed(2)},${job.netAmount.toFixed(2)}\n`;
         });
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');

@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("confirmService").textContent = booking.title;
   document.getElementById("confirmProvider").textContent = booking.provider;
   document.getElementById("confirmAddress").textContent = booking.address || "Address not provided";
-  document.getElementById("confirmTotal").textContent = `$${Number(booking.total || 0).toFixed(2)}`;
+  document.getElementById("confirmTotal").textContent = `₹${Number(booking.total || 0).toLocaleString("en-IN")}`;
 
   const providerImage = document.getElementById("confirmProviderImg");
   if (providerImage) {

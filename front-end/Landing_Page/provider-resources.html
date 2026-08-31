@@ -6,13 +6,13 @@
   <title>Provider Resources – ServiceHub</title>
   <link href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css" rel="stylesheet"/>
   <link rel="stylesheet" href="/assets/vendor/fontawesome-6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="css/landing.css" />
+  <link rel="stylesheet" href="css/landing.css?v=2" />
 </head>
 <body>
   <nav class="navbar">
     <div class="container navbar-container">
       <a href="index.html" class="brand"><div class="logo-icon"><i class="fa-solid fa-wrench"></i></div><span class="logo-text">ServiceHub</span></a>
-      <div class="mobile-menu-btn" id="mobileMenuBtn"><i class="fa-solid fa-bars"></i></div>
+      <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
       <ul class="nav-links" id="navLinks">
         <li><a href="index.html#services">Services</a></li><li><a href="locations.html">Locations</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li class="mobile-only"><a href="role-selection.html?action=login" class="btn btn-text btn-full mt-16">Login</a></li><li class="mobile-only"><a href="role-selection.html?action=signup" class="btn btn-primary btn-full mt-16">Sign Up</a></li>
       </ul>
@@ -51,6 +51,6 @@
   </section>
 
   <footer class="footer"><div class="container footer-bottom" style="border-top: none; justify-content: center;"><p>&copy; 2024 ServiceHub. All rights reserved.</p></div></footer>
-  <script>document.getElementById('mobileMenuBtn').addEventListener('click', () => { document.getElementById('navLinks').classList.toggle('active'); });</script>
+  <script>document.getElementById('mobileMenuBtn').addEventListener('click', (event) => { const active = document.getElementById('navLinks').classList.toggle('active'); event.currentTarget.setAttribute('aria-expanded', String(active)); });</script>
 </body>
 </html>

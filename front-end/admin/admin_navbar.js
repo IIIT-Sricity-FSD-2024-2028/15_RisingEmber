@@ -217,7 +217,12 @@ async function handleLogout() {
     if (!confirmed) return;
 
     if (window.AdminData && window.AdminData.session) {
+        if (window.AdminData.session.sessionToken && typeof window.requestAdminApi === 'function') {
+            window.requestAdminApi('/session/logout', { method: 'POST' }).catch(() => {});
+        }
         window.AdminData.session.isLoggedIn = false;
+        window.AdminData.session.sessionToken = '';
+        window.AdminData.session.expiresAt = '';
         saveAdminData();
     }
 

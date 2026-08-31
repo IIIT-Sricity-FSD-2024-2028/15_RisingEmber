@@ -331,12 +331,14 @@
             isLoggedIn: false,
             lastLogin: null,
             actorId: 'user_1001',
+            sessionToken: '',
+            expiresAt: '',
             role: 'admin'
         },
         profile: {
             name: "Naina Kapoor",
             role: "System Administrator",
-            email: "admin@servicehub.test",
+            email: "admin@gmail.com",
             phone: "9999999991",
             department: "System Administration",
             avatar: "https://i.pravatar.cc/150?u=admin_m"
@@ -377,6 +379,7 @@
             pendingReviews: 0,
             verifiedArbitrators: 0,
             activeDisputes: 0,
+            platformRevenue: 0,
             totalUsers: 0,
             resolvedCases: 0,
             systemHealth: "98.2%"
@@ -1118,6 +1121,11 @@
         const headers = { ...(options.headers || {}) };
         let body = options.body;
 
+        const session = window.AdminData && window.AdminData.session ? window.AdminData.session : {};
+        if (!headers.Authorization && !headers.authorization && session.sessionToken) {
+            headers.Authorization = `Bearer ${session.sessionToken}`;
+        }
+
         if (body !== undefined && body !== null && !(body instanceof FormData)) {
             headers['Content-Type'] = headers['Content-Type'] || 'application/json';
             body = typeof body === 'string' ? body : JSON.stringify(body);
@@ -1148,6 +1156,9 @@
 
     function getAdminRequestHeaders() {
         const session = window.AdminData && window.AdminData.session ? window.AdminData.session : {};
+        if (session.sessionToken) {
+            return { Authorization: `Bearer ${session.sessionToken}` };
+        }
         return {
             'x-role': 'admin',
             'x-actor-id': session.actorId || 'user_1001'
@@ -1452,6 +1463,7 @@
                     ...window.AdminData.stats,
                     totalUsers: dashboard && dashboard.metrics ? dashboard.metrics.totalUsers : 0,
                     activeDisputes: dashboard && dashboard.metrics ? dashboard.metrics.openCases : 0,
+                    platformRevenue: dashboard && dashboard.metrics ? Number(dashboard.metrics.platformRevenue) || 0 : 0,
                     resolvedCases: mappedCases.filter((item) => item.status === 'Awarded' || item.status === 'Closed').length,
                     verifiedArbitrators: mappedArbitrators.filter((item) => item.status === 'Active').length,
                     newApplications: mappedArbitrators.length,

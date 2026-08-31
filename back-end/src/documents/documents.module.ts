@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import * as path from 'path';
 import * as fs from 'fs';
 import { RequestActor } from '../common/interfaces/request-actor.interface';
@@ -36,27 +36,20 @@ const ALLOWED_MIME_TYPES = [
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 ];
 
-// Ensure the uploads directory exists
-const UPLOADS_DIR = path.resolve(process.cwd(), 'uploads', 'documents');
-if (!fs.existsSync(UPLOADS_DIR)) {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+function getUploadsDirectory() {
+  return path.resolve(
+    process.env.SERVICEHUB_UPLOADS_DIR || path.join(process.cwd(), 'uploads', 'documents'),
+  );
 }
 
-// Multer disk storage configuration
-const multerDiskStorage = diskStorage({
-  destination: (_req, _file, cb) => {
-    cb(null, UPLOADS_DIR);
-  },
-  filename: (_req, file, cb) => {
-    // Sanitize original name and add timestamp to avoid collisions
-    const ext = path.extname(file.originalname).toLowerCase();
-    const baseName = path.basename(file.originalname, ext)
-      .replace(/[^a-zA-Z0-9_-]/g, '_')
-      .slice(0, 64);
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
-    cb(null, `${baseName}-${uniqueSuffix}${ext}`);
-  },
-});
+function buildStoredFileName(originalName: string) {
+  const ext = path.extname(originalName).toLowerCase();
+  const baseName = path.basename(originalName, ext)
+    .replace(/[^a-zA-Z0-9_-]/g, '_')
+    .slice(0, 64) || 'document';
+  const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+  return `${baseName}-${uniqueSuffix}${ext}`;
+}
 
 // Multer file filter — rejects disallowed MIME types
 function multerFileFilter(
@@ -146,6 +139,10 @@ class DocumentsService {
     return this.storeService.createDocument(actor, payload);
   }
 
+  assertCanCreateDocument(actor: RequestActor, caseId: string) {
+    this.storeService.assertCanAttachDocument(actor, caseId);
+  }
+
   updateDocument(actor: RequestActor, documentId: string, payload: UpdateDocumentDto) {
     return this.storeService.updateDocument(actor, documentId, payload);
   }
@@ -191,7 +188,7 @@ class DocumentsController {
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: multerDiskStorage,
+      storage: memoryStorage(),
       fileFilter: multerFileFilter,
       limits: {
         fileSize: 25 * 1024 * 1024, // 25 MiB max file size
@@ -199,7 +196,7 @@ class DocumentsController {
       },
     }),
   )
-  uploadDocument(
+  async uploadDocument(
     @Req() req: { actor: RequestActor; requestId?: string },
     @UploadedFile() file: Express.Multer.File,
     @Body() body: {
@@ -226,42 +223,54 @@ class DocumentsController {
       throw new BadRequestException(`type must be one of: ${Object.values(DocumentType).join(', ')}`);
     }
 
-    // Log the successful upload to the application log file
+    this.documentsService.assertCanCreateDocument(req.actor, body.caseId);
+
+    const uploadsDirectory = getUploadsDirectory();
+    const savedAs = buildStoredFileName(file.originalname);
+    const storagePath = path.join(uploadsDirectory, savedAs);
+    const payload: CreateDocumentDto = {
+      caseId: body.caseId,
+      title: body.title.trim(),
+      description: body.description?.trim(),
+      type: docType,
+      fileName: savedAs,
+    };
+    validateDocumentPayload(payload);
+
+    await fs.promises.mkdir(uploadsDirectory, { recursive: true });
+    await fs.promises.writeFile(storagePath, file.buffer, { flag: 'wx' });
+
+    let document;
+    try {
+      document = this.documentsService.createDocument(req.actor, payload);
+    } catch (error) {
+      await fs.promises.unlink(storagePath).catch(() => undefined);
+      throw error;
+    }
+
     appLogger.info('File uploaded via multipart/form-data', {
       event: 'MULTIPART_UPLOAD_SUCCESS',
       requestId: (req as any).requestId || '-',
       actorId: req.actor?.id || '-',
       actorRole: req.actor?.role || '-',
       originalName: file.originalname,
-      savedAs: file.filename,
+      savedAs,
       mimeType: file.mimetype,
       sizeBytes: file.size,
-      savedPath: file.path,
+      savedPath: storagePath,
       caseId: body.caseId,
       timestamp: new Date().toISOString(),
     });
-
-    // Create document metadata entry in the in-memory store
-    const payload: CreateDocumentDto = {
-      caseId: body.caseId,
-      title: body.title.trim(),
-      description: body.description?.trim(),
-      type: docType,
-      fileName: file.filename,
-      // No base64 content — file is stored on disk
-    };
-
-    const document = this.documentsService.createDocument(req.actor, payload);
 
     return {
       data: {
         ...document,
         upload: {
           originalName: file.originalname,
-          savedAs: file.filename,
+          savedAs,
           mimeType: file.mimetype,
           sizeBytes: file.size,
-          storagePath: file.path,
+          storagePath,
         },
       },
       message: 'File uploaded and document created successfully.',

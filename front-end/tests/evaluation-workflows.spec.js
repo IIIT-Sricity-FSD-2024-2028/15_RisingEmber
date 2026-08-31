@@ -9,12 +9,12 @@ import {
 const API_BASE_URL = 'http://127.0.0.1:3000/api/v1';
 
 const ACTORS = {
-  customer: { role: 'customer', id: 'user_2001', email: 'aarav@servicehub.test', password: 'customer123' },
-  disputeCustomer: { role: 'customer', id: 'user_2002', email: 'siya@servicehub.test', password: 'customer123' },
-  provider: { role: 'provider', id: 'user_3001', email: 'rohan@servicehub.test', password: 'provider123' },
-  disputeProvider: { role: 'provider', id: 'user_3002', email: 'neha@servicehub.test', password: 'provider123' },
-  arbitrator: { role: 'arbitrator', id: 'user_4001', email: 'kabir@servicehub.test', password: 'arbitrator123' },
-  admin: { role: 'admin', id: 'user_1001', email: 'admin@servicehub.test', password: 'admin123' },
+  customer: { role: 'customer', id: 'user_2001', email: 'aarav@gmail.com', password: '123456Ab@' },
+  disputeCustomer: { role: 'customer', id: 'user_2002', email: 'siya@gmail.com', password: '123456Ab@' },
+  provider: { role: 'provider', id: 'user_3001', email: 'rohan@gmail.com', password: '123456Ab@' },
+  disputeProvider: { role: 'provider', id: 'user_3002', email: 'neha@gmail.com', password: '123456Ab@' },
+  arbitrator: { role: 'arbitrator', id: 'user_4001', email: 'kabir@gmail.com', password: '123456Ab@' },
+  admin: { role: 'admin', id: 'user_1001', email: 'admin@gmail.com', password: '123456Ab@' },
 };
 
 const WORKFLOW_IDS = ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8', 'W9', 'W10'];
@@ -374,7 +374,7 @@ async function runFreshDisputeCreation(customerPage, providerPage, arbitratorPag
     });
     await customerPage.goto('/customer/raise-dispute.html', { waitUntil: 'domcontentloaded' });
     await expect(customerPage.locator('#disputeBookingId')).toHaveValue('booking_6001');
-    await customerPage.locator('#disputeCategory').selectOption('quality');
+    await customerPage.locator('#disputeCategory').selectOption({ label: 'Poor Service Quality' });
     await customerPage.locator('#disputeDescription').fill('Too short');
     await customerPage.locator('#disputeForm button[type="submit"]').click();
     await expect(customerPage.locator('#disputeFormMessage')).toBeVisible();
@@ -438,7 +438,7 @@ async function runAdminWorkflow(adminPage, request) {
     data: {
       name: 'Phase Ten Target',
       email: targetEmail,
-      password: 'customer123',
+      password: '123456Ab@',
       phone: '9999999910',
       city: 'Mumbai',
       address: 'Evaluation address',
@@ -550,7 +550,7 @@ test.describe.serial('ServiceHub evaluator walkthrough', () => {
     }
   });
 
-  test('all 81 role-aware HTML pages boot with no critical runtime or asset failures', async ({ browser }) => {
+  test('all 84 role-aware HTML pages boot with no critical runtime or asset failures', async ({ browser }) => {
     const contextEntries = await Promise.all(
       ['visitor', 'customer', 'provider', 'arbitrator', 'admin']
         .map(async (name) => [name, await browser.newContext()]),
@@ -581,7 +581,7 @@ test.describe.serial('ServiceHub evaluator walkthrough', () => {
       };
       visit(frontendRoot);
       htmlPaths.sort();
-      expect(htmlPaths).toHaveLength(81);
+      expect(htmlPaths).toHaveLength(84);
 
       for (const relativePath of htmlPaths) {
         const route = `/${relativePath.replaceAll('\\', '/')}`;

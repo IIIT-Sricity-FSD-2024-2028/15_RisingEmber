@@ -659,3 +659,44 @@ body {
     color: #6B7280;
     font-size: 0.9rem;
 }
+
+/* Responsive registration and arbitrator workspace */
+@media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 28px; margin: 36px 0; }
+    .works-grid { grid-template-columns: 1fr; }
+    .form-title, .hero-content h1 { font-size: clamp(2rem, 8vw, 3rem); }
+    .form-subtitle { margin-bottom: 36px; }
+
+    .arbitrator-sidebar {
+        position: relative;
+        width: 100%;
+        max-width: none;
+        height: auto;
+        overflow: visible;
+    }
+    .arbitrator-sidebar.collapsed { width: 100%; max-width: none; transform: none; opacity: 1; visibility: visible; }
+    .arbitrator-nav-list { flex-direction: row; overflow-x: auto; padding: 0 12px 12px; }
+    .arbitrator-nav-item { flex: 0 0 auto; }
+    .arbitrator-nav-item a { padding: 10px 14px; }
+    .arbitrator-nav-item a.active { border-right: 0; border-bottom: 3px solid var(--arb-accent); }
+    .sidebar-toggle-btn, .sidebar-toggle-float { display: none !important; }
+    .arb-main, .arb-main.sidebar-collapsed { margin-left: 0; min-width: 0; }
+    .arbitrator-top-bar { height: auto; min-height: 72px; padding: 12px 18px; gap: 12px; flex-wrap: wrap; }
+    .arbitrator-search-container, .arbitrator-search { width: 100%; }
+    .arbitrator-user-info { margin-left: auto; }
+    .arb-content { padding: 24px 18px; }
+    .arb-stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .arb-main-grid { grid-template-columns: 1fr; gap: 18px; }
+    .arb-panel { overflow-x: auto; }
+    .arb-table { min-width: 680px; }
+}
+
+@media (max-width: 560px) {
+    .navbar { align-items: flex-start; gap: 14px; flex-wrap: wrap; padding: 16px 20px; }
+    .navbar .btn { width: 100%; text-align: center; overflow-wrap: anywhere; }
+    .stepper { overflow-x: auto; padding-bottom: 12px; }
+    .step-item { min-width: 118px; }
+    .arb-stats-grid { grid-template-columns: 1fr; }
+    .arb-content { padding: 20px 14px; }
+    .user-name-wrapper span { display: none; }
+}

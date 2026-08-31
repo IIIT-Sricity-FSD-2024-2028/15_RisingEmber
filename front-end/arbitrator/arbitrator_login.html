@@ -176,16 +176,9 @@
           return;
         }
 
-        const nextPassword = await window.showAppPrompt('Reset Password', `Enter a new password for this arbitrator account: ${email}`, {
-          inputType: 'password',
-          placeholder: 'New password (8+ chars)'
-        });
-        if (nextPassword === null || nextPassword === false) return;
-
         try {
-          await resetArbitratorPassword(email, nextPassword);
-          document.getElementById('loginPassword').value = nextPassword;
-          window.showAppToast('Password reset complete. You can log in with the new password now.', 'success');
+          await resetArbitratorPassword(email);
+          window.showAppToast('If that account exists, password-reset assistance has been requested.', 'success');
         } catch (error) {
           window.showAppToast(error.message, 'error');
         }
