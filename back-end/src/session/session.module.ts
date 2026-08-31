@@ -1,8 +1,19 @@
-import { Body, Controller, Injectable, Module, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Injectable,
+  Module,
+  Patch,
+  Post,
+  Req,
+} from '@nestjs/common';
 import { IsEmail, IsEnum, IsString, MinLength } from 'class-validator';
 import { Public } from '../common/decorators/public.decorator';
 import { StoreService } from '../store/store.service';
 import { Role } from '../store/entities';
+import { RequestActor } from '../common/interfaces/request-actor.interface';
 
 class LoginDto {
   @IsEnum(Role)
@@ -28,6 +39,16 @@ class ResetPasswordDto {
   password!: string;
 }
 
+class ChangePasswordDto {
+  @IsString()
+  @MinLength(6)
+  currentPassword!: string;
+
+  @IsString()
+  @MinLength(8)
+  nextPassword!: string;
+}
+
 @Injectable()
 class SessionService {
   constructor(private readonly storeService: StoreService) {}
@@ -37,7 +58,15 @@ class SessionService {
   }
 
   resetPassword(payload: ResetPasswordDto) {
-    return this.storeService.resetPassword(payload.role, payload.identifier, payload.password);
+    return this.storeService.requestPasswordReset(payload.role, payload.identifier);
+  }
+
+  changePassword(actor: RequestActor, payload: ChangePasswordDto) {
+    return this.storeService.changePassword(actor, payload.currentPassword, payload.nextPassword);
+  }
+
+  logout(actor: RequestActor) {
+    return this.storeService.logoutSession(actor.sessionToken);
   }
 }
 
@@ -55,11 +84,29 @@ class SessionController {
   }
 
   @Public()
+  @HttpCode(HttpStatus.ACCEPTED)
   @Post('password-reset')
   resetPassword(@Body() payload: ResetPasswordDto) {
     return {
       data: this.sessionService.resetPassword(payload),
-      message: 'Password reset successfully.',
+      message: 'If the account exists, password-reset assistance has been requested.',
+    };
+  }
+
+  @Patch('password')
+  changePassword(@Req() req: { actor: RequestActor }, @Body() payload: ChangePasswordDto) {
+    return {
+      data: this.sessionService.changePassword(req.actor, payload),
+      message: 'Password changed successfully. Please sign in again.',
+    };
+  }
+
+  @HttpCode(HttpStatus.OK)
+  @Post('logout')
+  logout(@Req() req: { actor: RequestActor }) {
+    return {
+      data: this.sessionService.logout(req.actor),
+      message: 'Logged out successfully.',
     };
   }
 }

@@ -28,6 +28,10 @@ export default defineConfig({
     {
       command: 'npm run start:dev',
       cwd: '../back-end',
+      env: {
+        ...process.env,
+        ALLOW_EVALUATION_ACTOR_HEADERS: 'true',
+      },
       url: 'http://127.0.0.1:3000/api/v1/services',
       reuseExistingServer: true,
       timeout: 30_000,

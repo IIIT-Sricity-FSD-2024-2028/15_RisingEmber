@@ -435,7 +435,8 @@ const blankProfileData = {
 const arbitratorAuthData = {
     id: "",
     email: "",
-    password: "",
+    sessionToken: "",
+    expiresAt: "",
     role: "arbitrator",
     approved: true
 };
@@ -673,7 +674,8 @@ function beginNewArbitratorApplication() {
     freshDraft.auth = {
         id: "",
         email: "",
-        password: "",
+        sessionToken: "",
+        expiresAt: "",
         role: "arbitrator",
         approved: true
     };
@@ -783,15 +785,15 @@ function normalizeArbitratorData(rawData) {
     normalizedData.auth.email = normalizeArbitratorEmail(normalizedData.auth.email || normalizedData.profile.email);
     normalizedData.auth.id = String(normalizedData.auth.id || normalizedData.profile.id || "");
     normalizedData.auth.role = "arbitrator";
-    normalizedData.auth.password = String(normalizedData.auth.password || "");
+    delete normalizedData.auth.password;
+    if (normalizedData.registration.formData) delete normalizedData.registration.formData.password;
     normalizedData.auth.approved = normalizedData.auth.approved !== false;
 
     const hasSavedApplication = Boolean(
         normalizedData.registration.formData &&
         (
             normalizedData.registration.formData.name ||
-            normalizedData.registration.formData.email ||
-            normalizedData.registration.formData.password
+            normalizedData.registration.formData.email
         )
     );
     const hasCompletedAccountIdentity = normalizedData.registration.isComplete === true && Boolean(
@@ -801,7 +803,7 @@ function normalizeArbitratorData(rawData) {
         normalizedData.profile.id
     );
 
-    if (!hasSavedApplication && !normalizedData.auth.password && !hasCompletedAccountIdentity) {
+    if (!hasSavedApplication && !hasCompletedAccountIdentity) {
         normalizedData.registration.isComplete = false;
         normalizedData.registration.lastStep = 0;
     }
@@ -828,6 +830,17 @@ async function requestArbitratorApi(path, options = {}) {
 
     const headers = { ...(options.headers || {}) };
     let body = options.body;
+
+    if (!headers.Authorization && !headers.authorization) {
+        const activeUser = readStorageJSONSafe("activeUser", null);
+        const session = readStorageJSONSafe("sh_arbitrator_auth", null);
+        const token = String(
+            (activeUser && activeUser.sessionToken)
+            || (session && session.sessionToken)
+            || ""
+        ).trim();
+        if (token) headers.Authorization = `Bearer ${token}`;
+    }
 
     if (body !== undefined && body !== null && !(body instanceof FormData)) {
         headers["Content-Type"] = headers["Content-Type"] || "application/json";

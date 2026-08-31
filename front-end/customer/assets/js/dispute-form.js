@@ -181,8 +181,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    if (!description || description.length < 1) {
-      updateFeedback("Please describe the issue.", "error");
+    if (!description || description.length < 50) {
+      updateFeedback("Please describe the issue in at least 50 characters.", "error");
       return;
     }
 

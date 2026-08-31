@@ -120,7 +120,7 @@ h2 { font-size: 2.25rem; font-weight: 800; margin-bottom: 16px; letter-spacing: 
 .nav-actions { display: flex; align-items: center; gap: 12px; }
 .mobile-only { display: none; }
 
-.mobile-menu-btn { display: none; font-size: 24px; color: var(--text-dark); cursor: pointer; z-index: 1001; }
+.mobile-menu-btn { display: none; padding: 6px; border: 0; background: transparent; font-size: 24px; color: var(--text-dark); cursor: pointer; z-index: 1001; }
 
 /* Hero */
 .hero { padding: 60px 0 80px; background: var(--surface); }
@@ -273,6 +273,7 @@ h2 { font-size: 2.25rem; font-weight: 800; margin-bottom: 16px; letter-spacing: 
   .nav-links li { width: 100%; }
   .nav-links a { display: block; padding: 12px 0; font-size: 1.1rem; border-bottom: 1px solid var(--border); }
   .nav-links .btn { padding: 12px; border: none; }
+  .nav-links a.btn-primary { color: #fff; }
   .nav-links .admin-teaser-btn {
     display: flex;
     margin-top: 8px;

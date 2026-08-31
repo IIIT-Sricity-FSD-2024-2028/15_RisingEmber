@@ -27,6 +27,12 @@ export enum EscrowStatus {
   REFUNDED = 'refunded',
 }
 
+export enum PlatformFeeStatus {
+  PENDING = 'pending',
+  EARNED = 'earned',
+  VOIDED = 'voided',
+}
+
 export enum CaseStatus {
   OPEN = 'open',
   UNDER_REVIEW = 'under_review',
@@ -163,6 +169,12 @@ export interface BookingRecord extends BaseRecord {
   totalAmount: number;
   currency: string;
   escrowStatus: EscrowStatus;
+  subtotalAmount?: number;
+  platformFeeRateBps?: number;
+  platformFeeAmount?: number;
+  providerPayoutAmount?: number;
+  platformFeeStatus?: PlatformFeeStatus;
+  idempotencyKey?: string;
   cancellationReason?: string;
   lastStatusNote?: string;
 }

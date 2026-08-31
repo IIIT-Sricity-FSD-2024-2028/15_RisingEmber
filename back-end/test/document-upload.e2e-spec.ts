@@ -2,6 +2,9 @@ import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { closeTestApp, createTestApp } from './test-app';
 import { StoreService } from '../src/store/store.service';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 const customerHeaders = {
   'x-role': 'customer',
@@ -28,9 +31,13 @@ function pngDataUrl(byteCount: number) {
 
 describe('ServiceHub document upload contract', () => {
   let app: INestApplication | undefined;
+  let uploadsDirectory: string;
+  const previousUploadsDirectory = process.env.SERVICEHUB_UPLOADS_DIR;
 
   beforeAll(async () => {
     jest.setTimeout(60_000);
+    uploadsDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'servicehub-document-upload-'));
+    process.env.SERVICEHUB_UPLOADS_DIR = uploadsDirectory;
     app = await createTestApp();
   });
 
@@ -40,6 +47,43 @@ describe('ServiceHub document upload contract', () => {
 
   afterAll(async () => {
     await closeTestApp(app);
+    fs.rmSync(uploadsDirectory, { recursive: true, force: true });
+    if (previousUploadsDirectory === undefined) delete process.env.SERVICEHUB_UPLOADS_DIR;
+    else process.env.SERVICEHUB_UPLOADS_DIR = previousUploadsDirectory;
+  });
+
+  it('writes multipart files only after case authorization and keeps them in the configured directory', async () => {
+    const beforeFiles = fs.readdirSync(uploadsDirectory);
+
+    await request(app!.getHttpServer())
+      .post('/api/v1/documents/upload')
+      .set(unassignedArbitratorHeaders)
+      .field('caseId', 'case_8001')
+      .field('title', 'Unauthorized multipart evidence')
+      .field('type', 'evidence')
+      .attach('file', Buffer.from('%PDF-1.4 unauthorized'), {
+        filename: 'unauthorized.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(403);
+
+    expect(fs.readdirSync(uploadsDirectory)).toEqual(beforeFiles);
+
+    const uploaded = await request(app!.getHttpServer())
+      .post('/api/v1/documents/upload')
+      .set(customerHeaders)
+      .field('caseId', 'case_8001')
+      .field('title', 'Authorized multipart evidence')
+      .field('type', 'evidence')
+      .attach('file', Buffer.from('%PDF-1.4 authorized'), {
+        filename: 'authorized evidence.pdf',
+        contentType: 'application/pdf',
+      })
+      .expect(201);
+
+    expect(path.dirname(uploaded.body.data.upload.storagePath)).toBe(uploadsDirectory);
+    expect(fs.existsSync(uploaded.body.data.upload.storagePath)).toBe(true);
+    expect(uploaded.body.data.fileName).toBe(uploaded.body.data.upload.savedAs);
   });
 
   it('accepts a small valid PDF data URL and exposes metadata to the assigned arbitrator', async () => {

@@ -7,7 +7,7 @@
 
   <link href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css" rel="stylesheet"/>
   <link rel="stylesheet" href="/assets/vendor/fontawesome-6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=2" />
 </head>
 <body>
 
@@ -55,26 +55,25 @@
         
         <div class="earning-stat-card">
           <div class="earning-stat-card__header">
-            <span class="earning-label">Total Earnings</span>
+            <span class="earning-label">Net Earnings</span>
             <div class="earning-icon earning-icon--blue"><i class="fa-solid fa-dollar-sign"></i></div>
           </div>
           <div class="earning-stat-card__value-row">
-            <span class="stat-card__value" id="earningTotal" data-dynamic="true">$0</span>
-            <span class="earning-change positive">+15.3%</span>
+            <span class="stat-card__value" id="earningTotal" data-dynamic="true">₹0</span>
+            <span class="earning-change positive">After fees</span>
           </div>
-          <p class="earning-subtitle">All time earnings</p>
+          <p class="earning-subtitle">Your completed-booking payouts</p>
         </div>
 
         <div class="earning-stat-card">
           <div class="earning-stat-card__header">
-            <span class="earning-label">This Month</span>
+            <span class="earning-label">Gross Completed</span>
             <div class="earning-icon earning-icon--green"><i class="fa-regular fa-calendar"></i></div>
           </div>
           <div class="earning-stat-card__value-row">
-            <span class="stat-card__value" id="earningMonth" data-dynamic="true">$0</span>
-            <span class="earning-change positive">+8.2%</span>
+            <span class="stat-card__value" id="earningGross" data-dynamic="true">₹0</span>
           </div>
-          <p class="earning-subtitle" id="earningMonthLabel">This month</p>
+          <p class="earning-subtitle">Listed prices before success fees</p>
         </div>
 
         <div class="earning-stat-card">
@@ -87,6 +86,18 @@
             <span class="earning-change positive">+12</span>
           </div>
           <p class="earning-subtitle">Total completed jobs</p>
+        </div>
+
+        <div class="earning-stat-card">
+          <div class="earning-stat-card__header">
+            <span class="earning-label">ServiceHub Fees</span>
+            <div class="earning-icon earning-icon--blue"><i class="fa-solid fa-receipt"></i></div>
+          </div>
+          <div class="earning-stat-card__value-row">
+            <span class="stat-card__value" id="earningFees" data-dynamic="true">₹0</span>
+            <span class="earning-change positive">5%</span>
+          </div>
+          <p class="earning-subtitle">Earned only after completion</p>
         </div>
 
       </div>
@@ -112,7 +123,9 @@
                 <th>Service</th>
                 <th>Customer</th>
                 <th>Date</th>
-                <th class="text-right">Amount</th>
+                <th class="text-right">Gross</th>
+                <th class="text-right">Fee (5%)</th>
+                <th class="text-right">Net Payout</th>
               </tr>
             </thead>
             <tbody>

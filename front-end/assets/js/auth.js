@@ -462,6 +462,17 @@ async function requestServiceHubApi(path, options = {}) {
   const headers = { ...(options.headers || {}) };
   let body = options.body;
 
+  if (!headers.Authorization && !headers.authorization) {
+    const activeUser = readStorageJSON(AUTH_KEYS.ACTIVE_USER, null);
+    const activeSession = readStorageJSON(AUTH_KEYS.ACTIVE_SESSION, null);
+    const token = String(
+      (activeUser && activeUser.sessionToken)
+      || (activeSession && activeSession.sessionToken)
+      || ''
+    ).trim();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
+
   if (body !== undefined && body !== null && !(body instanceof FormData)) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     body = typeof body === 'string' ? body : JSON.stringify(body);
@@ -517,7 +528,11 @@ function getProviderUsers() {
 }
 
 function saveProviderUsers(users) {
-  return writeStorageJSON('sh_providers_list', Array.isArray(users) ? users : []);
+  const safeUsers = (Array.isArray(users) ? users : []).map((user) => {
+    const { password: _password, paymentDetails: _paymentDetails, ...safeUser } = user || {};
+    return safeUser;
+  });
+  return writeStorageJSON('sh_providers_list', safeUsers);
 }
 
 function findProviderUserIndex(identifier, users = getProviderUsers()) {
@@ -542,15 +557,22 @@ function getProviderProfile() {
 
 function saveProviderProfile(profile) {
   const currentProfile = getProviderProfile();
-  return writeStorageJSON('sh_provider', { ...currentProfile, ...profile });
+  const nextProfile = { ...currentProfile, ...profile };
+  delete nextProfile.password;
+  delete nextProfile.paymentDetails;
+  return writeStorageJSON('sh_provider', nextProfile);
 }
 
 function persistActiveUser(user) {
-  const activeUser = { ...user, isLoggedIn: true };
+  const { password: _password, paymentDetails: _paymentDetails, ...safeUser } = user || {};
+  const activeUser = { ...safeUser, isLoggedIn: true };
   writeStorageJSON(AUTH_KEYS.ACTIVE_USER, activeUser);
   writeStorageJSON(AUTH_KEYS.ACTIVE_SESSION, {
+    id: activeUser.id,
     role: activeUser.role,
     email: activeUser.email,
+    sessionToken: activeUser.sessionToken,
+    expiresAt: activeUser.expiresAt,
     isLoggedIn: true
   });
   return activeUser;
@@ -569,7 +591,8 @@ function buildProviderSession(user) {
     bio: String(user.bio || '').trim(),
     avatar: String(user.avatar || '').trim(),
     businessName: String(user.businessName || '').trim(),
-    password: String(user.password || '').trim(),
+    sessionToken: String(user.sessionToken || '').trim(),
+    expiresAt: String(user.expiresAt || '').trim(),
     isLoggedIn: true,
     role: 'provider'
   };
@@ -598,7 +621,7 @@ function persistProviderSession(user) {
   return sessionUser;
 }
 
-function buildProviderSessionFromProfileSummary(profileSummary, passwordOverride = '') {
+function buildProviderSessionFromProfileSummary(profileSummary, sessionMetadata = {}) {
   const profile = profileSummary && profileSummary.profile ? profileSummary.profile : {};
   return {
     id: profileSummary.id,
@@ -612,14 +635,15 @@ function buildProviderSessionFromProfileSummary(profileSummary, passwordOverride
     bio: String(profile.bio || '').trim(),
     avatar: String(profileSummary.avatarUrl || '').trim(),
     businessName: String(profile.businessName || '').trim(),
-    password: String(passwordOverride || ''),
+    sessionToken: String(sessionMetadata.sessionToken || '').trim(),
+    expiresAt: String(sessionMetadata.expiresAt || '').trim(),
     isLoggedIn: true,
     role: 'provider'
   };
 }
 
-function persistProviderSessionFromProfileSummary(profileSummary, passwordOverride = '') {
-  const nextProvider = buildProviderSessionFromProfileSummary(profileSummary, passwordOverride);
+function persistProviderSessionFromProfileSummary(profileSummary, sessionMetadata = {}) {
+  const nextProvider = buildProviderSessionFromProfileSummary(profileSummary, sessionMetadata);
   const providersList = getProviderUsers();
   const nextProvidersList = providersList.slice();
   const providerIndex = nextProvidersList.findIndex((provider) => (
@@ -634,36 +658,17 @@ function persistProviderSessionFromProfileSummary(profileSummary, passwordOverri
 }
 
 async function resetProviderPassword(identifier, nextPassword) {
-  const users = getProviderUsers();
-  const userIndex = findProviderUserIndex(identifier, users);
-
-  if (userIndex === -1 && !isValidEmail(identifier) && !isValidPhone(identifier)) {
-    throw new Error('We could not find a provider account with that email or phone.');
+  if (!isValidEmail(identifier) && !isValidPhone(identifier)) {
+    throw new Error('Enter a valid provider email or phone number.');
   }
 
-  if (!isStrongPassword(nextPassword)) {
-    throw new Error('Your new password must be at least 8 characters and include upper, lower, number, and symbol.');
-  }
-
-  const resetResult = await requestServiceHubApi('/session/password-reset', {
+  return requestServiceHubApi('/session/password-reset', {
     method: 'POST',
     body: {
       role: 'provider',
-      identifier,
-      password: String(nextPassword || '')
+      identifier
     }
   });
-
-  if (userIndex !== -1) {
-    users[userIndex] = {
-      ...users[userIndex],
-      password: String(nextPassword || '')
-    };
-    saveProviderUsers(users);
-    return users[userIndex];
-  }
-
-  return persistProviderSessionFromProfileSummary(resetResult.profileSummary, nextPassword);
 }
 
 /* ============================================
@@ -732,7 +737,10 @@ function providerLogin(email, password, expectedRole = 'provider') {
             password
           }
         });
-        resolve(persistProviderSessionFromProfileSummary(loginData.profileSummary, password));
+        resolve(persistProviderSessionFromProfileSummary(loginData.profileSummary, {
+          sessionToken: loginData.sessionToken,
+          expiresAt: loginData.expiresAt
+        }));
       } catch (error) {
         reject(error);
       }
@@ -740,7 +748,7 @@ function providerLogin(email, password, expectedRole = 'provider') {
   });
 }
 
-function providerSignup(name, email, phone, password, category, experience, location, bio, paymentDetails) {
+function providerSignup(name, email, phone, password, category, experience, location, bio) {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
       const trimmedName = String(name || '').trim();
@@ -778,7 +786,7 @@ function providerSignup(name, email, phone, password, category, experience, loca
       }
 
       try {
-        const registration = await requestServiceHubApi('/providers/register', {
+        await requestServiceHubApi('/providers/register', {
           method: 'POST',
           body: {
             name: trimmedName,
@@ -789,12 +797,17 @@ function providerSignup(name, email, phone, password, category, experience, loca
             category: category || 'General Services',
             experienceLevel: experience || '1 – 3 years',
             serviceArea: location || 'Local Area',
-            bio: bio || 'Professional service provider.',
-            paymentDetails
+            bio: bio || 'Professional service provider.'
           }
         });
-
-        resolve(persistProviderSessionFromProfileSummary(registration.profileSummary, password));
+        const loginData = await requestServiceHubApi('/session/login', {
+          method: 'POST',
+          body: { role: 'provider', email: normalizedEmail, password }
+        });
+        resolve(persistProviderSessionFromProfileSummary(loginData.profileSummary, {
+          sessionToken: loginData.sessionToken,
+          expiresAt: loginData.expiresAt
+        }));
       } catch (error) {
         reject(error);
       }
@@ -807,9 +820,10 @@ function getProviderSession() {
 
   if (sessionData && sessionData.email) {
     const providerProfile = getProviderProfile();
+    const { password: _password, paymentDetails: _paymentDetails, ...safeSessionData } = sessionData;
     const normalizedSession = {
       ...providerProfile,
-      ...sessionData,
+      ...safeSessionData,
       id: String(sessionData.id || providerProfile.id || '').trim(),
       email: normalizeEmail(sessionData.email || providerProfile.email),
       phone: String(sessionData.phone || providerProfile.phone || '').trim(),
@@ -824,7 +838,8 @@ function getProviderSession() {
       bio: String(sessionData.bio || providerProfile.bio || '').trim(),
       avatar: String(sessionData.avatar || providerProfile.avatar || '').trim(),
       businessName: String(sessionData.businessName || providerProfile.businessName || '').trim(),
-      password: String(sessionData.password || providerProfile.password || '').trim(),
+      sessionToken: String(sessionData.sessionToken || '').trim(),
+      expiresAt: String(sessionData.expiresAt || '').trim(),
       role: 'provider',
       isLoggedIn: sessionData.isLoggedIn !== false
     };
@@ -844,6 +859,10 @@ function getProviderSession() {
 
 function providerLogout() {
   const activeUser = getActiveUser();
+
+  if (activeUser && activeUser.sessionToken) {
+    requestServiceHubApi('/session/logout', { method: 'POST' }).catch(() => {});
+  }
 
   localStorage.removeItem(AUTH_KEYS.PROVIDER);
 
@@ -883,7 +902,7 @@ function saveArbitratorDatabase(database) {
   return database;
 }
 
-function buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOverride = '') {
+function buildArbitratorWorkspaceFromProfileSummary(profileSummary, sessionMetadata = {}) {
   const profile = profileSummary && profileSummary.profile ? profileSummary.profile : {};
   const existingWorkspace = getArbitratorDatabase() || {};
   const previousProfile = { ...(existingWorkspace.profile || {}) };
@@ -905,8 +924,7 @@ function buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOver
         ...((existingWorkspace.registration && existingWorkspace.registration.formData) || {}),
         name: String(profileSummary.name || '').trim(),
         email: normalizeEmail(profileSummary.email),
-        phone: String(profileSummary.phone || '').trim(),
-        password: String(passwordOverride || ((existingWorkspace.auth && existingWorkspace.auth.password) || ''))
+        phone: String(profileSummary.phone || '').trim()
       }
     },
     profile: {
@@ -928,11 +946,15 @@ function buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOver
       ...(existingWorkspace.auth || {}),
       id: nextId,
       email: normalizeEmail(profileSummary.email),
-      password: String(passwordOverride || ((existingWorkspace.auth && existingWorkspace.auth.password) || '')),
+      sessionToken: String(sessionMetadata.sessionToken || '').trim(),
+      expiresAt: String(sessionMetadata.expiresAt || '').trim(),
       role: 'arbitrator',
       approved
     }
   };
+
+  delete workspace.registration.formData.password;
+  delete workspace.auth.password;
 
   if (typeof personalizeArbitratorWorkspace === 'function') {
     personalizeArbitratorWorkspace(workspace, workspace.profile, previousProfile);
@@ -941,8 +963,8 @@ function buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOver
   return { workspace, approved };
 }
 
-function persistArbitratorProfileSummary(profileSummary, passwordOverride = '', options = {}) {
-  const { workspace, approved } = buildArbitratorWorkspaceFromProfileSummary(profileSummary, passwordOverride);
+function persistArbitratorProfileSummary(profileSummary, sessionMetadata = {}, options = {}) {
+  const { workspace, approved } = buildArbitratorWorkspaceFromProfileSummary(profileSummary, sessionMetadata);
   const shouldActivateSession = options.activateSession !== false && approved;
 
   if (typeof setActiveArbitratorId === 'function') {
@@ -960,6 +982,8 @@ function persistArbitratorProfileSummary(profileSummary, passwordOverride = '', 
     name: workspace.profile.name,
     email: workspace.auth.email,
     phone: String(workspace.profile.phone || '').trim(),
+    sessionToken: String(workspace.auth.sessionToken || '').trim(),
+    expiresAt: String(workspace.auth.expiresAt || '').trim(),
     isLoggedIn: shouldActivateSession,
     role: 'arbitrator'
   };
@@ -982,8 +1006,9 @@ function getArbitratorSession() {
   const sessionData = readStorageJSON(AUTH_KEYS.ARBITRATOR, null);
 
   if (sessionData && sessionData.email) {
+    const { password: _password, ...safeSessionData } = sessionData;
     const normalizedSession = {
-      ...sessionData,
+      ...safeSessionData,
       id: String(sessionData.id || '').trim(),
       email: normalizeEmail(sessionData.email),
       phone: String(sessionData.phone || '').trim(),
@@ -1040,7 +1065,10 @@ function arbitratorLogin(email, password, expectedRole = 'arbitrator') {
           return;
         }
 
-        const result = persistArbitratorProfileSummary(loginData.profileSummary, providedPassword, { activateSession: true });
+        const result = persistArbitratorProfileSummary(loginData.profileSummary, {
+          sessionToken: loginData.sessionToken,
+          expiresAt: loginData.expiresAt
+        }, { activateSession: true });
         resolve(result.authData);
       } catch (error) {
         reject(error);
@@ -1093,7 +1121,7 @@ function arbitratorSignup(name, email, password, metadata = {}) {
           }
         });
 
-        const result = persistArbitratorProfileSummary(registration.profileSummary, providedPassword, { activateSession: false });
+        const result = persistArbitratorProfileSummary(registration.profileSummary, {}, { activateSession: false });
         resolve(result.authData);
       } catch (error) {
         reject(error);
@@ -1104,6 +1132,10 @@ function arbitratorSignup(name, email, password, metadata = {}) {
 
 function arbitratorLogout() {
   const activeUser = getActiveUser();
+
+  if (activeUser && activeUser.sessionToken) {
+    requestServiceHubApi('/session/logout', { method: 'POST' }).catch(() => {});
+  }
 
   localStorage.removeItem(AUTH_KEYS.ARBITRATOR);
 
@@ -1126,21 +1158,13 @@ async function resetArbitratorPassword(identifier, nextPassword) {
     throw new Error('Enter a valid arbitrator email address first.');
   }
 
-  if (!isStrongPassword(nextPassword)) {
-    throw new Error('Your new password must be at least 8 characters and include upper, lower, number, and symbol.');
-  }
-
-  const resetResult = await requestServiceHubApi('/session/password-reset', {
+  return requestServiceHubApi('/session/password-reset', {
     method: 'POST',
     body: {
       role: 'arbitrator',
-      identifier: lookupValue,
-      password: String(nextPassword || '')
+      identifier: lookupValue
     }
   });
-
-  const result = persistArbitratorProfileSummary(resetResult.profileSummary, nextPassword, { activateSession: false });
-  return result.workspace;
 }
 
 /* ============================================
@@ -1160,8 +1184,11 @@ function getActiveSession() {
   if (!activeUser) return null;
 
   return writeStorageJSON(AUTH_KEYS.ACTIVE_SESSION, {
+    id: activeUser.id,
     role: activeUser.role,
     email: activeUser.email,
+    sessionToken: activeUser.sessionToken,
+    expiresAt: activeUser.expiresAt,
     isLoggedIn: true
   });
 }

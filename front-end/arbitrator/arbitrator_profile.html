@@ -292,10 +292,17 @@
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating...';
 
             try {
-                if (window.ArbitratorData.auth) {
-                    window.ArbitratorData.auth.password = newPass;
-                }
-                saveData();
+                await requestArbitratorApi('/session/password', {
+                    method: 'PATCH',
+                    body: {
+                        currentPassword: curPass,
+                        nextPassword: newPass
+                    }
+                });
+                const email = window.ArbitratorData && window.ArbitratorData.auth
+                    ? window.ArbitratorData.auth.email
+                    : '';
+                await arbitratorLogin(email, newPass);
                 document.getElementById('passwordForm').reset();
                 window.showAppToast("Password changed successfully!", "success");
             } catch (err) {

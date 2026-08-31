@@ -122,6 +122,14 @@
                     </div>
                     <span class="badge-mini-purple">37 active</span>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+                    <div class="stat-data">
+                        <span class="value" id="stat-revenue">₹0</span>
+                        <span class="label">Earned Platform Revenue</span>
+                    </div>
+                    <span class="trend pos">5% success fees</span>
+                </div>
             </div>
 
             <div class="dashboard-mid-grid">
@@ -272,6 +280,7 @@
             document.getElementById('stat-pending').innerText = stats.pendingReviews || 0;
             document.getElementById('stat-verified').innerText = stats.verifiedArbitrators || 0;
             document.getElementById('stat-cases').innerText = stats.activeDisputes || 0;
+            document.getElementById('stat-revenue').innerText = `₹${Number(stats.platformRevenue || 0).toLocaleString('en-IN')}`;
 
             // Table with Filter Logic
             const tbody = document.getElementById('app-table-body');

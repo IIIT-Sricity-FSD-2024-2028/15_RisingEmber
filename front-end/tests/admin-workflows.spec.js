@@ -3,8 +3,8 @@ import { collectRuntimeFailures, expectNoRuntimeFailures } from './helpers/servi
 
 async function loginAdmin(page) {
   await page.goto('/admin/admin_landing.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#adminEmail').fill('admin@servicehub.test');
-  await page.locator('#adminPass').fill('admin123');
+  await page.locator('#adminEmail').fill('admin@gmail.com');
+  await page.locator('#adminPass').fill('123456Ab@');
   await page.locator('#adminLoginForm button[type="submit"]').click();
   await expect(page).toHaveURL(/\/admin\/admin_dashboard\.html/);
 }
@@ -20,7 +20,7 @@ test('admin can inspect prepared records and keep user/settings changes API-back
       data: {
         name: 'Evaluation Target',
         email: targetEmail,
-        password: 'customer123',
+        password: '123456Ab@',
         phone: '9999999900',
         city: 'Mumbai',
         address: 'Evaluation address',

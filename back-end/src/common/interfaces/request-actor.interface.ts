@@ -4,4 +4,5 @@ export interface RequestActor {
   id: string;
   role: UserRecord['role'];
   user: UserRecord;
+  sessionToken?: string;
 }

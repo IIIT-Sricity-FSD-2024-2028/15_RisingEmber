@@ -240,32 +240,13 @@
             </div>
           </div>
 
-          <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 12px; padding: 16px; margin-top: 10px; display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-size: 0.88rem; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; justify-content: space-between;">
-              <span><i class="fa-solid fa-credit-card" style="color: var(--primary); margin-right: 6px;"></i> Provider Onboarding Fee</span>
-              <span style="font-weight: 800; color: var(--primary);">$200 USD</span>
+          <div style="background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; padding: 16px; margin-top: 10px;">
+            <div style="font-size: 0.88rem; font-weight: 800; color: #166534; margin-bottom: 6px;">
+              <i class="fa-solid fa-circle-check" style="margin-right: 6px;"></i> No signup fee
             </div>
-            <p style="font-size: 0.8rem; color: var(--text-mid); margin: 0; line-height: 1.4;">
-              All service providers pay a one-time registration fee of $200 to join ServiceHub. Enter credit card details below to complete registration.
+            <p style="font-size: 0.8rem; color: #166534; margin: 0; line-height: 1.5;">
+              ServiceHub deducts a 5% success fee only after a completed booking. You keep 95% of the listed service price; cancelled bookings earn no fee.
             </p>
-            <div class="form-group">
-              <label>Cardholder Name</label>
-              <input type="text" id="cardholderName" placeholder="Name on credit card" required />
-            </div>
-            <div class="form-group">
-              <label>Card Number</label>
-              <input type="text" id="cardNumber" placeholder="1234 5678 9101 1121" maxlength="19" required />
-            </div>
-            <div style="display: flex; gap: 12px;">
-              <div class="form-group" style="flex: 1;">
-                <label>Expiration Date</label>
-                <input type="text" id="expDate" placeholder="MM/YY" maxlength="5" required />
-              </div>
-              <div class="form-group" style="flex: 1;">
-                <label>CVV</label>
-                <input type="password" id="cvv" placeholder="123" maxlength="4" required />
-              </div>
-            </div>
           </div>
 
           <div class="auth-checkbox">
@@ -275,7 +256,7 @@
             </label>
           </div>
 
-          <button type="submit" class="btn btn--primary btn--full auth-submit" id="submitBtn">Create Account & Pay $200</button>
+          <button type="submit" class="btn btn--primary btn--full auth-submit" id="submitBtn">Create Provider Account</button>
         </form>
 
         <div class="auth-footer">
@@ -352,35 +333,18 @@
         const pass = document.getElementById('signupPassword').value;
         const confPass = document.getElementById('confirmPassword').value;
 
-        const cardholderName = document.getElementById('cardholderName') ? document.getElementById('cardholderName').value.trim() : '';
-        const cardNumber = document.getElementById('cardNumber') ? document.getElementById('cardNumber').value.trim() : '';
-        const expDate = document.getElementById('expDate') ? document.getElementById('expDate').value.trim() : '';
-        const cvv = document.getElementById('cvv') ? document.getElementById('cvv').value.trim() : '';
-
         if (pass !== confPass) {
           showAppToast('Passwords do not match. Please try again.', 'warning');
           return;
         }
 
-        if (!cardNumber || !expDate || !cvv) {
-          showAppToast('Please enter credit card details for the $200 onboarding fee.', 'warning');
-          return;
-        }
-
-        const paymentDetails = {
-          cardholderName: cardholderName || fullName,
-          cardNumber,
-          expDate,
-          cvv
-        };
-
         const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing $200 Payment...';
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...';
         submitBtn.style.opacity = '0.8';
         submitBtn.style.pointerEvents = 'none';
 
         try {
-          await providerSignup(fullName, email, phone, pass, category, experience, location, bio, paymentDetails);
+          await providerSignup(fullName, email, phone, pass, category, experience, location, bio);
           window.location.replace('provider_dashboard.html');
         } catch (err) {
           showAppToast(err.message, 'error');

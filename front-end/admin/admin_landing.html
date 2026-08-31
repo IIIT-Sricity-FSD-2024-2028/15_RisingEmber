@@ -170,6 +170,8 @@
                         isLoggedIn: true,
                         lastLogin: new Date().toLocaleString(),
                         actorId,
+                        sessionToken: loginData.sessionToken || '',
+                        expiresAt: loginData.expiresAt || '',
                         role: 'admin'
                     };
                     if (profileSummary) {

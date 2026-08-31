@@ -35,6 +35,12 @@ class CreateBookingDto {
   @IsString()
   @MinLength(5)
   address?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(8)
+  @MaxLength(100)
+  idempotencyKey?: string;
 }
 
 class UpdateBookingDto {

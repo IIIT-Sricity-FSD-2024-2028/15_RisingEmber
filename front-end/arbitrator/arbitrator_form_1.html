@@ -11,7 +11,7 @@
 <body>
     <nav class="navbar">
         <a href="../Landing_Page/index.html" class="logo">ServiceHub</a>
-        <button class="btn btn-blue">Contact : ABC@gmail.com</button>
+        <a class="btn btn-blue" href="mailto:arbitration@servicehub.com">Contact: arbitration@servicehub.com</a>
     </nav>
 
     <div class="container">
@@ -134,8 +134,6 @@
             const title = document.getElementById('title').value.trim();
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            const savedPassword = ArbitratorData.registration.formData.password || '';
-            const effectivePassword = password || savedPassword;
 
             // Strict Validation
             if (!(typeof isValidHumanName === 'function' ? isValidHumanName(name) : /^[A-Za-z]+(?:[ '.-][A-Za-z]+)*$/.test(name))) { 
@@ -157,7 +155,7 @@
                 return showError('country', 'Country / Jurisdiction is required.');
             }
 
-            if (!effectivePassword || effectivePassword.length < 8) {
+            if (!password || password.length < 8) {
                 return showError('password', 'Password must be at least 8 characters long.');
             }
 
@@ -173,8 +171,7 @@
                     phone: rawPhone,
                     country,
                     linkedin,
-                    title,
-                    password: effectivePassword
+                    title
                 });
                 
                 // Navigate

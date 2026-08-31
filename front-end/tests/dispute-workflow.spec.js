@@ -3,32 +3,32 @@ import { collectRuntimeFailures, expectNoRuntimeFailures } from './helpers/servi
 
 async function loginCustomer(page) {
   await page.goto('/customer/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginIdentifier').fill('siya@servicehub.test');
-  await page.locator('#loginPassword').fill('customer123');
+  await page.locator('#loginIdentifier').fill('siya@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#customerLoginForm button[type="submit"]').click();
   await expect(page).toHaveURL(/\/customer\/customer_dashboard\.html/);
 }
 
 async function loginProvider(page) {
   await page.goto('/provider/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('neha@servicehub.test');
-  await page.locator('#loginPassword').fill('provider123');
+  await page.locator('#loginEmail').fill('neha@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#loginForm button[type="submit"]').click();
   await expect(page).toHaveURL(/\/provider\/provider_dashboard\.html/);
 }
 
 async function loginArbitrator(page) {
   await page.goto('/arbitrator/arbitrator_login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('kabir@servicehub.test');
-  await page.locator('#loginPassword').fill('arbitrator123');
+  await page.locator('#loginEmail').fill('kabir@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#loginForm button[type="submit"]').click();
   await expect(page).toHaveURL(/\/arbitrator\/arbitrator_dashboard\.html/);
 }
 
 async function loginAdmin(page) {
   await page.goto('/admin/admin_landing.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#adminEmail').fill('admin@servicehub.test');
-  await page.locator('#adminPass').fill('admin123');
+  await page.locator('#adminEmail').fill('admin@gmail.com');
+  await page.locator('#adminPass').fill('123456Ab@');
   await page.locator('#adminLoginForm button[type="submit"]').click();
   await expect(page).toHaveURL(/\/admin\/admin_dashboard\.html/);
 }

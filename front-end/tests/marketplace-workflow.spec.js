@@ -2,13 +2,13 @@ import { expect, test } from '@playwright/test';
 import { collectRuntimeFailures, expectNoRuntimeFailures } from './helpers/servicehub.js';
 
 const customerCredentials = {
-  email: 'aarav@servicehub.test',
-  password: 'customer123',
+  email: 'aarav@gmail.com',
+  password: '123456Ab@',
 };
 
 const providerCredentials = {
-  email: 'rohan@servicehub.test',
-  password: 'provider123',
+  email: 'rohan@gmail.com',
+  password: '123456Ab@',
 };
 
 function futureBookingDate() {

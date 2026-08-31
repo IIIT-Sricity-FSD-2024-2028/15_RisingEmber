@@ -7,7 +7,7 @@
 
   <link href="/assets/vendor/fonts/plus-jakarta-sans/plus-jakarta-sans.css" rel="stylesheet"/>
   <link rel="stylesheet" href="/assets/vendor/fontawesome-6.5.0/css/all.min.css"/>
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=2" />
   <style>
     .details-container { max-width: 900px; }
     .card-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; margin-bottom: 24px; box-shadow: var(--shadow-sm); }
@@ -192,8 +192,12 @@
         document.getElementById('verdictSummaryText').textContent = dispute.awardSummary || 'Arbitrator completed review and issued a binding award.';
         
         const dlBtn = document.getElementById('downloadAwardPdfBtn');
-        dlBtn.href = dispute.awardPdfUrl || '#';
-        dlBtn.download = dispute.awardPdfName || `Final_Award_${dispute.id}.pdf`;
+        if (dispute.awardPdfUrl) {
+          dlBtn.href = dispute.awardPdfUrl;
+          dlBtn.download = dispute.awardPdfName || `Final_Award_${dispute.id}.pdf`;
+        } else {
+          dlBtn.style.display = 'none';
+        }
       }
 
       // Evidence Grid
@@ -211,7 +215,7 @@
       } else {
         grid.innerHTML = evidence.map(file => {
           const name = file.name || 'Evidence_Document.pdf';
-          const link = file.fileLink || file.url || '#';
+          const link = file.fileLink || file.url || '';
           return `
             <div class="evidence-card">
               <div class="evidence-info">
@@ -221,9 +225,9 @@
                   <span>PDF Document</span>
                 </div>
               </div>
-              <a href="${link}" download="${name}" target="_blank" class="btn btn--outline btn--sm" style="padding: 6px 12px;">
-                <i class="fa-solid fa-download"></i>
-              </a>
+              ${link
+                ? `<a href="${link}" download="${name}" target="_blank" class="btn btn--outline btn--sm" style="padding: 6px 12px;"><i class="fa-solid fa-download"></i></a>`
+                : '<span style="font-size:0.78rem;color:var(--text-soft);">File unavailable</span>'}
             </div>
           `;
         }).join('');

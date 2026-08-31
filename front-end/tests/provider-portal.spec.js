@@ -26,8 +26,8 @@ async function expectProviderPageContent(page) {
 
 async function loginProvider(page) {
   await page.goto('/provider/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('rohan@servicehub.test');
-  await page.locator('#loginPassword').fill('provider123');
+  await page.locator('#loginEmail').fill('rohan@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#loginForm button[type="submit"]').click();
   await expect(page).toHaveURL(/\/provider\/provider_dashboard\.html/);
 }

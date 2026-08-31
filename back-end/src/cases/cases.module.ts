@@ -28,7 +28,7 @@ class CreateCaseDto {
   title!: string;
 
   @IsString()
-  @MinLength(1)
+  @MinLength(50)
   @MaxLength(2000)
   description!: string;
 

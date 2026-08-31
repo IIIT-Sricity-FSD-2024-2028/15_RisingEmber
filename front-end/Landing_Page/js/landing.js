@@ -183,13 +183,15 @@
     const icon = mobileBtn.querySelector('i');
     const closeMenu = () => {
       navLinks.classList.remove('active');
+      mobileBtn.setAttribute('aria-expanded', 'false');
       if (icon && icon.classList.contains('fa-xmark')) {
         icon.classList.replace('fa-xmark', 'fa-bars');
       }
     };
 
     mobileBtn.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
+      const active = navLinks.classList.toggle('active');
+      mobileBtn.setAttribute('aria-expanded', String(active));
       if (!icon) return;
 
       if (navLinks.classList.contains('active')) {

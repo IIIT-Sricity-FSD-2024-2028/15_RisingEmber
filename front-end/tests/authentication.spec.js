@@ -4,8 +4,8 @@ import { collectRuntimeFailures, expectNoRuntimeFailures } from './helpers/servi
 test('customer login uses the backend session and persists the returned actor', async ({ page }) => {
   const failures = collectRuntimeFailures(page);
   await page.goto('/customer/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginIdentifier').fill('aarav@servicehub.test');
-  await page.locator('#loginPassword').fill('customer123');
+  await page.locator('#loginIdentifier').fill('aarav@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#customerLoginForm button[type="submit"]').click();
 
   await expect(page).toHaveURL(/\/customer\/customer_dashboard\.html/);
@@ -17,7 +17,7 @@ test('customer login uses the backend session and persists the returned actor', 
 test('customer login rejects invalid backend credentials', async ({ page }) => {
   const failures = collectRuntimeFailures(page);
   await page.goto('/customer/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginIdentifier').fill('aarav@servicehub.test');
+  await page.locator('#loginIdentifier').fill('aarav@gmail.com');
   await page.locator('#loginPassword').fill('wrong-password');
   await page.locator('#customerLoginForm button[type="submit"]').click();
 
@@ -29,8 +29,8 @@ test('customer login rejects invalid backend credentials', async ({ page }) => {
 test('provider login uses the backend session and persists the returned actor', async ({ page }) => {
   const failures = collectRuntimeFailures(page);
   await page.goto('/provider/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('rohan@servicehub.test');
-  await page.locator('#loginPassword').fill('provider123');
+  await page.locator('#loginEmail').fill('rohan@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#loginForm button[type="submit"]').click();
 
   await expect(page).toHaveURL(/\/provider\/provider_dashboard\.html/);
@@ -42,7 +42,7 @@ test('provider login uses the backend session and persists the returned actor', 
 test('provider login rejects invalid backend credentials', async ({ page }) => {
   const failures = collectRuntimeFailures(page);
   await page.goto('/provider/login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('rohan@servicehub.test');
+  await page.locator('#loginEmail').fill('rohan@gmail.com');
   await page.locator('#loginPassword').fill('wrong-password');
   await page.locator('#loginForm button[type="submit"]').click();
 
@@ -54,8 +54,8 @@ test('provider login rejects invalid backend credentials', async ({ page }) => {
 test('arbitrator login uses the backend session', async ({ page }) => {
   const failures = collectRuntimeFailures(page);
   await page.goto('/arbitrator/arbitrator_login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('kabir@servicehub.test');
-  await page.locator('#loginPassword').fill('arbitrator123');
+  await page.locator('#loginEmail').fill('kabir@gmail.com');
+  await page.locator('#loginPassword').fill('123456Ab@');
   await page.locator('#loginForm button[type="submit"]').click();
 
   await expect(page).toHaveURL(/\/arbitrator\/arbitrator_dashboard\.html/);
@@ -67,7 +67,7 @@ test('arbitrator login uses the backend session', async ({ page }) => {
 test('arbitrator login rejects invalid backend credentials', async ({ page }) => {
   const failures = collectRuntimeFailures(page);
   await page.goto('/arbitrator/arbitrator_login.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#loginEmail').fill('kabir@servicehub.test');
+  await page.locator('#loginEmail').fill('kabir@gmail.com');
   await page.locator('#loginPassword').fill('wrong-password');
   await page.locator('#loginForm button[type="submit"]').click();
 
@@ -80,7 +80,7 @@ test('admin login rejects invalid backend credentials instead of creating a loca
   const failures = collectRuntimeFailures(page);
   await page.addInitScript(() => localStorage.clear());
   await page.goto('/admin/admin_landing.html', { waitUntil: 'domcontentloaded' });
-  await page.locator('#adminEmail').fill('admin@servicehub.test');
+  await page.locator('#adminEmail').fill('admin@gmail.com');
   await page.locator('#adminPass').fill('wrong-password');
   await page.locator('#adminLoginForm button[type="submit"]').click();
 
@@ -95,8 +95,8 @@ test('admin login persists the actor returned by the backend', async ({ page }) 
   const failures = collectRuntimeFailures(page);
   await page.goto('/admin/admin_landing.html', { waitUntil: 'domcontentloaded' });
   await page.evaluate(() => localStorage.clear());
-  await page.locator('#adminEmail').fill('admin@servicehub.test');
-  await page.locator('#adminPass').fill('admin123');
+  await page.locator('#adminEmail').fill('admin@gmail.com');
+  await page.locator('#adminPass').fill('123456Ab@');
   await page.locator('#adminLoginForm button[type="submit"]').click();
 
   await expect(page).toHaveURL(/\/admin\/admin_dashboard\.html/);

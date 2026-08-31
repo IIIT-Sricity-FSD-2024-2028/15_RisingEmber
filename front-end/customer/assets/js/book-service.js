@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("serviceTitle").textContent = pendingBooking.title;
   document.getElementById("providerName").textContent = pendingBooking.provider;
   document.getElementById("serviceHero").src = pendingBooking.image;
-  document.getElementById("serviceRate").innerHTML = `$${pendingBooking.price} <span>/hour</span>`;
+  document.getElementById("serviceRate").innerHTML = `₹${Number(pendingBooking.price || 0).toLocaleString("en-IN")} <span>/service</span>`;
   document.getElementById("providerImg").src = app
     ? app.buildAvatarUrl(pendingBooking.provider, pendingBooking.providerImage)
     : `https://ui-avatars.com/api/?name=${encodeURIComponent(pendingBooking.provider)}&background=2F54EB&color=fff`;
@@ -63,14 +63,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     addressInput.value = customer.location;
   }
 
-  const hours = 2;
-  const subtotal = (Number(pendingBooking.price) || 0) * hours;
-  const fee = subtotal * 0.05;
-  const total = subtotal + fee;
+  const subtotal = Number(pendingBooking.price) || 0;
+  const total = subtotal;
 
-  document.getElementById("summaryPrice").textContent = `$${subtotal.toFixed(2)}`;
-  document.getElementById("summaryFee").textContent = `$${fee.toFixed(2)}`;
-  document.getElementById("summaryTotal").textContent = `$${total.toFixed(2)}`;
+  document.getElementById("summaryPrice").textContent = `₹${subtotal.toLocaleString("en-IN")}`;
+  document.getElementById("summaryFee").textContent = "₹0";
+  document.getElementById("summaryTotal").textContent = `₹${total.toLocaleString("en-IN")}`;
 
   function setAddressValidity(message) {
     if (!addressError || !addressInput) return;
@@ -125,13 +123,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       setAddressValidity("");
 
       try {
+        const idempotencyKey = pendingBooking.idempotencyKey || `booking-${pendingBooking.id}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+        if (!pendingBooking.idempotencyKey) {
+          pendingBooking.idempotencyKey = idempotencyKey;
+          localStorage.setItem("pendingBooking", JSON.stringify(pendingBooking));
+        }
+        confirmButton.disabled = true;
+        confirmButton.textContent = "Confirming…";
         const newBooking = app && typeof app.createCustomerBooking === "function"
           ? await app.createCustomerBooking({
               serviceId: pendingBooking.id,
               title: pendingBooking.title,
               date: bookingDate,
               time: bookingTime,
-              address
+              address,
+              idempotencyKey
             })
           : null;
 
@@ -151,6 +157,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         window.location.href = "booking-confirmation.html";
       } catch (error) {
         notify(error.message, "error");
+        confirmButton.disabled = false;
+        confirmButton.textContent = "Confirm Booking";
       }
     });
   }
